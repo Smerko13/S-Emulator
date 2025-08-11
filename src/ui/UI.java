@@ -18,6 +18,7 @@ public class UI {
         while (!exit) {
             switch (choice) {
                 case 1:
+                    engine.readProgramFromXml();
                     break;
                 case 2:
                     break;
