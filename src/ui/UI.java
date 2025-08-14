@@ -1,12 +1,14 @@
 package ui;
 
 import engine.Engine;
+import engine.S_Emulator;
+import engine.commands.Command;
 
 public class UI {
     Menu menu;
-    Engine engine;
+    S_Emulator engine;
 
-    public UI(Engine engine) {
+    public UI(S_Emulator engine) {
         this.engine = engine;
         this.menu = new Menu();
     }
@@ -21,10 +23,12 @@ public class UI {
                     engine.readProgramFromXml();
                     break;
                 case 2:
+                    showProgram(this.engine);
                     break;
                 case 3:
                     break;
                 case 4:
+                    executeProgram(this.engine);
                     break;
                 case 5:
                     break;
@@ -37,5 +41,22 @@ public class UI {
                 choice = menu.displayMenu();
             }
         }
+    }
+
+    private void executeProgram(S_Emulator engine) {
+        System.out.println("Maximum expansion depth: " + engine.getMaxExpansionDepth());
+
+    }
+
+    private void showProgram(S_Emulator engine) {
+        System.out.println("Program details:");
+        System.out.println("    Program Name: " + engine.getCurrentProgramName());
+        System.out.println("    Input parameters: " + engine.getListOfInputParameters());
+        System.out.println("    Labels: " + engine.getLabels());
+        System.out.println("    Commands: ");
+        for (Command command : engine.getCommands()) {
+            System.out.println("        " + command.getCommandRepresentation());
+        }
+
     }
 }

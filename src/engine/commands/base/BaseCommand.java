@@ -7,5 +7,6 @@ public abstract class BaseCommand extends Command {
         super();
         this.isExpandable = false; // BaseCommand is not expandable
         this.commandType = 'B'; // BaseCommand type
+        this.levelOfExpansion = 0;
     }
 }

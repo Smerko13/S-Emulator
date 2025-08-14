@@ -2,18 +2,29 @@ package engine;
 
 import engine.arguments.Argument;
 import engine.commands.Command;
+import engine.commands.base.types.Decrease;
+import engine.commands.base.types.Increase;
+import engine.commands.base.types.JumpNotZero;
+import engine.commands.base.types.Neutral;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import schema.*;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 public class Engine implements S_Emulator {
     private List<Command> commands;
     private String currentProgramName;
+    public static Set<Argument> arguments;
+
+    public Engine() {
+        this.commands = new java.util.ArrayList<>();
+        arguments = new java.util.HashSet<>();
+    }
 
     public String getCurrentProgramName() {
         return currentProgramName;
@@ -36,43 +47,64 @@ public class Engine implements S_Emulator {
         this.currentProgramName = program.getName();
         SInstructions instructions = program.getSInstructions();
         for( SInstruction instruction : instructions.getSInstruction()) {
-            System.out.print("\n");
-            SInstructionArguments args = instruction.getSInstructionArguments();
-            if( args != null ) {
-                for (SInstructionArgument arg : args.getSInstructionArgument()) {
-                    System.out.println(arg.getName());
-                    System.out.println(arg.getValue());
-                }
+            if(Objects.equals(instruction.getType(), "basic")){
+                this.commands.add(createBaseCommandFromInstruction(instruction));
             }
-            else
-            {
-                System.out.println("No arguments for instruction: " + instruction.getName());
-            }
-            if(instruction.getSVariable() != null) {
-                System.out.println(instruction.getSVariable());
+            else if (Objects.equals(instruction.getType(), "synthetic")){
+                System.out.println("Got a synthetic instruction: " + instruction.getName());
             }
             else {
-                System.out.println("No variable for instruction: " + instruction.getName());
+                System.out.println("Unknown instruction type: " + instruction.getType());
             }
-
-            if( instruction.getSLabel() != null ) {
-                System.out.println(instruction.getSLabel());
-            }
-            else {
-                System.out.println("No label for instruction: " + instruction.getName());
-            }
-            if(instruction.getName()!= null)
-                System.out.println("Instruction name: " + instruction.getName());
-            else
-                System.out.println("No name for instruction");
-
-            if(instruction.getType() != null) {
-                System.out.println(instruction.getType());
-            }
-            else {
-                System.out.println("No type for instruction: " + instruction.getName());
-            }
-            System.out.print("\n");
         }
     }
+
+    private Command createBaseCommandFromInstruction(SInstruction instruction) {
+        return switch (instruction.getName()) {
+            case "DECREASE" -> new Decrease(instruction);
+            case "INCREASE" -> new Increase(instruction);
+            case "NEUTRAL" -> new Neutral(instruction);
+            case "JUMP_NOT_ZERO" -> new JumpNotZero(instruction);
+            default -> null;
+        };
+    }
+
+    public String getListOfInputParameters() {
+        StringBuilder sb = new StringBuilder();
+        for (Argument argument : arguments) {
+            if (argument instanceof engine.arguments.types.InputArgument) {
+                sb.append(argument.getName()).append(" ");
+            }
+        }
+        return sb.toString().trim();
+    }
+
+    @Override
+    public String getLabels() {
+        StringBuilder sb = new StringBuilder();
+        for (Command command : commands) {
+            if (!Objects.equals(command.getLabel(), "  ")) {
+                sb.append(command.getLabel()).append(" ");
+            }
+        }
+        return sb.toString().trim();
+    }
+
+    @Override
+    public List<Command> getCommands() {
+        return commands;
+    }
+
+    @Override
+    public int getMaxExpansionDepth() {
+        int maxDepth = 0;
+        for (Command command : commands) {
+            if (command.getExpansionDepth() > maxDepth) {
+                maxDepth = command.getExpansionDepth();
+            }
+        }
+        return maxDepth;
+    }
+
+
 }

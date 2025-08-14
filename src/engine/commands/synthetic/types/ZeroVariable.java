@@ -13,11 +13,6 @@ public class ZeroVariable extends SyntheticCommand {
 
 
     public ZeroVariable(){
-        super();
-        this.commandName = "ZERO_VARIABLE";
-        this.cycles = 1;
-        this.BaseCommands = new ArrayList<Command>();
-        this.decrease = new Decrease();
     }
 
     public int zeroVariable(int V) {
