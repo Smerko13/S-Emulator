@@ -17,18 +17,24 @@ public class UI {
         menu.displayWelcomeMessage();
         int choice = menu.displayMenu();
         boolean exit = false;
+        boolean readFile = false;
         while (!exit) {
             switch (choice) {
                 case 1:
-                    engine.readProgramFromXml();
+                    String filePath = menu.getFilePath();
+                    readFile = menu.validatePath(filePath) && engine.readProgramFromXml(filePath);
+                    menu.displayLoadStatus(readFile);
                     break;
                 case 2:
-                    showProgram(this.engine);
+                    if (readFile) {
+                        menu.showProgram(engine);
+                    } else {
+                        menu.displayFailedToLoadMessage();
+                    }
                     break;
                 case 3:
                     break;
                 case 4:
-                    executeProgram(this.engine);
                     break;
                 case 5:
                     break;
@@ -43,20 +49,5 @@ public class UI {
         }
     }
 
-    private void executeProgram(S_Emulator engine) {
-        System.out.println("Maximum expansion depth: " + engine.getMaxExpansionDepth());
 
-    }
-
-    private void showProgram(S_Emulator engine) {
-        System.out.println("Program details:");
-        System.out.println("    Program Name: " + engine.getCurrentProgramName());
-        System.out.println("    Input parameters: " + engine.getListOfInputParameters());
-        System.out.println("    Labels: " + engine.getLabels());
-        System.out.println("    Commands: ");
-        for (Command command : engine.getCommands()) {
-            System.out.println("        " + command.getCommandRepresentation());
-        }
-
-    }
 }

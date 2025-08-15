@@ -1,5 +1,8 @@
 package ui;
 
+import engine.S_Emulator;
+import engine.commands.Command;
+
 import java.util.Scanner;
 
 public class Menu {
@@ -37,5 +40,39 @@ public class Menu {
     public void displayGoodbyeMessage() {
         System.out.println("Thank you for using S-Emulator!");
         System.out.println("Exiting the program. Goodbye!");
+    }
+
+    public void showProgram(S_Emulator engine) {
+        System.out.println("Program details:");
+        System.out.println("    Program Name: " + engine.getCurrentProgramName());
+        System.out.println("    Input parameters: " + engine.getListOfInputParameters());
+        System.out.println("    Labels: " + engine.getLabels());
+        System.out.println("    Commands: ");
+        for (Command command : engine.getCommands()) {
+            if( command == null) {
+                continue; // Skip null commands
+            }
+            System.out.println("        " + command.getCommandRepresentation());
+        }
+    }
+
+    public String getFilePath() {
+        System.out.print("Enter the full file path of the program (must be an xml file): ");
+        return scanner.next();
+    }
+
+    public void displayLoadStatus(boolean success) {
+        if (success) {
+            System.out.println("Program loaded successfully!");
+        } else {
+            displayFailedToLoadMessage();
+        }
+    }
+    public void displayFailedToLoadMessage() {
+        System.out.println("Failed to load the program. Please check the file path and format.");
+    }
+
+    public boolean validatePath(String filePath) {
+        return filePath != null && filePath.endsWith(".xml");
     }
 }

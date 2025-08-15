@@ -1,46 +1,45 @@
 package engine;
 
-import engine.arguments.Argument;
+import engine.arguments.Varible;
+import engine.arguments.types.InputVarible;
 import engine.commands.Command;
-import engine.commands.base.types.Decrease;
-import engine.commands.base.types.Increase;
-import engine.commands.base.types.JumpNotZero;
-import engine.commands.base.types.Neutral;
+import engine.commands.base.types.*;
+import engine.commands.synthetic.types.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import schema.*;
 
 import java.io.File;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class Engine implements S_Emulator {
     private List<Command> commands;
     private String currentProgramName;
-    public static Set<Argument> arguments;
+    public static Set<Varible> varibles;
 
     public Engine() {
-        this.commands = new java.util.ArrayList<>();
-        arguments = new java.util.HashSet<>();
+        this.commands = new ArrayList<>();
+        varibles = new HashSet<>();
     }
 
     public String getCurrentProgramName() {
         return currentProgramName;
     }
 
-    public void readProgramFromXml() {
+    public Boolean readProgramFromXml(String filePath) {
+        boolean found = false;
         try {
-            File xmlFile = new File("src/programs/basic.xml");
-            JAXBContext jaxbContext = JAXBContext.newInstance(SProgram.class);
-
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            SProgram program = (SProgram) jaxbUnmarshaller.unmarshal(xmlFile);
-            parseObjectToLocalVariables(program);
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
+            File xmlFile = new File(filePath);
+            if (xmlFile.exists()) {
+                found = true;
+                JAXBContext jaxbContext = JAXBContext.newInstance(SProgram.class);
+                Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+                SProgram program = (SProgram) jaxbUnmarshaller.unmarshal(xmlFile);
+                parseObjectToLocalVariables(program);
+            }
+        } catch (JAXBException ignored) {}
+        return found;
     }
 
     private void parseObjectToLocalVariables(SProgram program) {
@@ -51,12 +50,21 @@ public class Engine implements S_Emulator {
                 this.commands.add(createBaseCommandFromInstruction(instruction));
             }
             else if (Objects.equals(instruction.getType(), "synthetic")){
-                System.out.println("Got a synthetic instruction: " + instruction.getName());
+                this.commands.add(createSyntheticCommandFromInstruction(instruction));
             }
             else {
                 System.out.println("Unknown instruction type: " + instruction.getType());
             }
         }
+    }
+
+    private Command createSyntheticCommandFromInstruction(SInstruction instruction) {
+        return switch (instruction.getName()) {
+            case "ZERO_VARIABLE" -> new ZeroVariable(instruction);
+            case "GOTO_LABEL" -> new GotoLabel(instruction);
+            case "ASSIGNMENT" -> new Assignment(instruction);
+            default -> null;
+        };
     }
 
     private Command createBaseCommandFromInstruction(SInstruction instruction) {
@@ -71,9 +79,9 @@ public class Engine implements S_Emulator {
 
     public String getListOfInputParameters() {
         StringBuilder sb = new StringBuilder();
-        for (Argument argument : arguments) {
-            if (argument instanceof engine.arguments.types.InputArgument) {
-                sb.append(argument.getName()).append(" ");
+        for (Varible varible : varibles) {
+            if (varible instanceof InputVarible) {
+                sb.append(varible.getName()).append(" ");
             }
         }
         return sb.toString().trim();
@@ -83,6 +91,9 @@ public class Engine implements S_Emulator {
     public String getLabels() {
         StringBuilder sb = new StringBuilder();
         for (Command command : commands) {
+            if(command == null) {
+                continue; // Skip null commands
+            }
             if (!Objects.equals(command.getLabel(), "  ")) {
                 sb.append(command.getLabel()).append(" ");
             }

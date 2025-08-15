@@ -6,7 +6,7 @@ import java.util.List;
 public interface S_Emulator {
     String getCurrentProgramName();
 
-    void readProgramFromXml();
+    Boolean readProgramFromXml(String filePath);
 
     String getListOfInputParameters();
 

@@ -1,10 +1,10 @@
 package engine.arguments.types;
 
-import engine.arguments.Argument;
+import engine.arguments.Varible;
 
-public class InputArgument extends Argument {
+public class InputVarible extends Varible {
 
-    public InputArgument(String name) {
+    public InputVarible(String name) {
         this.id = name.charAt(1) - '0'; // Extracting ID from the name
         this.type = 'x'; // 'I' for Input
         this.name = name;

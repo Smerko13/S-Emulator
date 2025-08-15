@@ -1,11 +1,10 @@
 package engine.commands;
 
 import engine.Engine;
-import engine.arguments.Argument;
-import engine.arguments.types.OutputArgument;
-
-import java.util.ArrayList;
-import java.util.List;
+import engine.arguments.Varible;
+import engine.arguments.types.InputVarible;
+import engine.arguments.types.OutputVarible;
+import engine.arguments.types.WorkVarible;
 
 public abstract class Command {
     private static int commandIdTracker = 1;
@@ -15,13 +14,40 @@ public abstract class Command {
     protected char commandType;
     protected Boolean isExpandable;
     protected String commandName;
-    protected List<Argument> arguments;
     protected int levelOfExpansion;
 
     public Command() {
         this.commandId = commandIdTracker;
         commandIdTracker++;
-        arguments = new ArrayList<>();
+    }
+
+    protected static Varible extractVariables(String var, Varible varible) {
+        if(var.charAt(0) == 'x') {
+            varible = new InputVarible(var);
+            validateVariableExistenceInGlobalScope(varible);
+        }
+        else if(var.charAt(0) == 'z') {
+            varible = new WorkVarible(var);
+            validateVariableExistenceInGlobalScope(varible);
+        }
+        else if (var.charAt(0) == 'y') {
+            varible = new OutputVarible();
+            validateVariableExistenceInGlobalScope(varible);
+        }
+        return varible;
+    }
+
+    private static void validateVariableExistenceInGlobalScope(Varible varible) {
+        boolean exists = false;
+        for (Varible arg : Engine.varibles) {
+            if (arg.getName().equals(varible.getName())) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            Engine.varibles.add(varible);
+        }
     }
 
     public String getLabel() {
