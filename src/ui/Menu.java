@@ -75,4 +75,36 @@ public class Menu {
     public boolean validatePath(String filePath) {
         return filePath != null && filePath.endsWith(".xml");
     }
+
+    public int getExpansionLevel(S_Emulator engine) {
+        int maxExpansionLevel = engine.getMaxExpansionDepth();
+        int expansionLevel = 0;
+        do {
+            System.out.print("Enter the expansion level (0 to " + maxExpansionLevel + "): ");
+            expansionLevel = scanner.nextInt();
+            if (expansionLevel < 0 || expansionLevel > maxExpansionLevel) {
+                System.out.println("Invalid expansion level. Please try again.");
+            }
+        } while (expansionLevel < 0 || expansionLevel > maxExpansionLevel);
+        return expansionLevel;
+    }
+
+    public void showInputVariables(S_Emulator engine) {
+        String inputVariables = engine.getListOfInputParameters();
+        System.out.println("Input Variables:");
+        if (inputVariables.isEmpty()) {
+            System.out.println("    No input variables found.");
+        } else {
+            System.out.println(inputVariables);
+        }
+    }
+
+    public void getInputVariablesValues(S_Emulator engine) {
+        System.out.println("Please enter values for the input variables:");
+        System.out.println("(A list of numbers separated by the character (,) eg: 1,2,3)");
+        String input = scanner.next();
+        String[] values = input.split(",");
+        engine.SetInputVariablesValues(values);
+
+    }
 }

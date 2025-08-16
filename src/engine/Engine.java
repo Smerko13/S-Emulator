@@ -52,9 +52,6 @@ public class Engine implements S_Emulator {
             else if (Objects.equals(instruction.getType(), "synthetic")){
                 this.commands.add(createSyntheticCommandFromInstruction(instruction));
             }
-            else {
-                System.out.println("Unknown instruction type: " + instruction.getType());
-            }
         }
     }
 
@@ -121,5 +118,8 @@ public class Engine implements S_Emulator {
         return maxDepth;
     }
 
+    @Override
+    public void SetInputVariablesValues(String[] values) {
 
+    }
 }

@@ -29,6 +29,7 @@ public abstract class Command {
     }
 
     protected static Varible extractVariables(String var) {
+        //need to check if the variable already exists in the global scope
         Varible varible = null;
         if(var.charAt(0) == 'x') {
             varible = new InputVarible(var);

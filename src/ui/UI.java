@@ -35,6 +35,14 @@ public class UI {
                 case 3:
                     break;
                 case 4:
+                    if(readFile) {
+                        int expansionLevel = menu.getExpansionLevel(engine);
+                        menu.showInputVariables(engine);
+                        menu.getInputVariablesValues(engine);
+                    }
+                    else {
+                        menu.displayFailedToLoadMessage();
+                    }
                     break;
                 case 5:
                     break;

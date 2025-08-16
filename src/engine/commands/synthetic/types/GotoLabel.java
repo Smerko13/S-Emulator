@@ -3,14 +3,14 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 public class GotoLabel extends SyntheticCommand {
-    private String targetLabel;
+    private String gototLabel;
 
     public GotoLabel(SInstruction instruction) {
         super(instruction);
         this.commandName = "GOTO_LABEL";
         this.cycles = 1;
         this.levelOfExpansion = 1;
-        targetLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
+        gototLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
     }
 
     @Override
@@ -19,6 +19,6 @@ public class GotoLabel extends SyntheticCommand {
 
     @Override
     public String toString() {
-        return "GOTO " + targetLabel;
+        return "GOTO " + gototLabel;
     }
 }

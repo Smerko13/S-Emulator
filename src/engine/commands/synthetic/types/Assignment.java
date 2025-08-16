@@ -1,10 +1,11 @@
 package engine.commands.synthetic.types;
 
+import engine.arguments.Varible;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 public class Assignment extends SyntheticCommand {
-    protected engine.arguments.Varible assignedVarible;
+    protected Varible assignedVarible;
 
     public Assignment(SInstruction instruction) {
         super(instruction);

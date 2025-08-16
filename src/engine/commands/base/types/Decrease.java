@@ -1,6 +1,5 @@
 package engine.commands.base.types;
 
-import engine.arguments.Varible;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
 

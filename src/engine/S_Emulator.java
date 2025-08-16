@@ -15,4 +15,6 @@ public interface S_Emulator {
     List<Command> getCommands();
 
     int getMaxExpansionDepth();
+
+    void SetInputVariablesValues(String[] values);
 }
