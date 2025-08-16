@@ -63,6 +63,10 @@ public class Engine implements S_Emulator {
             case "ZERO_VARIABLE" -> new ZeroVariable(instruction);
             case "GOTO_LABEL" -> new GotoLabel(instruction);
             case "ASSIGNMENT" -> new Assignment(instruction);
+            case "CONSTANT_ASSIGNMENT" -> new ConstantAssignment(instruction);
+            case "JUMP_ZERO" -> new JumpZero(instruction);
+            case "JUMP_EQUAL_CONSTANT" -> new JumpEqualConstant(instruction);
+            case "JUMP_EQUAL_VARIABLE" -> new JumpEqualVariable(instruction);
             default -> null;
         };
     }

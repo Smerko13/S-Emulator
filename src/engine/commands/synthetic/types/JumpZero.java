@@ -1,24 +1,26 @@
 package engine.commands.synthetic.types;
+
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-public class GotoLabel extends SyntheticCommand {
+public class JumpZero extends SyntheticCommand {
     private String targetLabel;
 
-    public GotoLabel(SInstruction instruction) {
+    public JumpZero(SInstruction instruction) {
         super(instruction);
-        this.commandName = "GOTO_LABEL";
-        this.cycles = 1;
+        this.commandName = "JUMP_ZERO";
+        this.cycles = 2;
         this.levelOfExpansion = 1;
         targetLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
     }
 
     @Override
     public void initializeExpandedCommands() {
+
     }
 
     @Override
     public String toString() {
-        return "GOTO " + targetLabel;
+        return "IF " + varible.getName() + " = 0 GOTO " + targetLabel;
     }
 }

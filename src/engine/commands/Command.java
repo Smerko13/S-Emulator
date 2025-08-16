@@ -5,23 +5,31 @@ import engine.arguments.Varible;
 import engine.arguments.types.InputVarible;
 import engine.arguments.types.OutputVarible;
 import engine.arguments.types.WorkVarible;
+import schema.SInstruction;
 
 public abstract class Command {
     private static int commandIdTracker = 1;
-    private int commandId = 0;
+    private int commandId=0;
     protected String label = "  "; // Default label
     protected int cycles;
     protected char commandType;
     protected Boolean isExpandable;
     protected String commandName;
     protected int levelOfExpansion;
+    protected Varible varible;
 
-    public Command() {
+    public Command(SInstruction instruction) {
         this.commandId = commandIdTracker;
         commandIdTracker++;
+        if (instruction.getSLabel() != null) {
+            this.label = instruction.getSLabel();
+        }
+        String var = instruction.getSVariable();
+        this.varible = extractVariables(var);
     }
 
-    protected static Varible extractVariables(String var, Varible varible) {
+    protected static Varible extractVariables(String var) {
+        Varible varible = null;
         if(var.charAt(0) == 'x') {
             varible = new InputVarible(var);
             validateVariableExistenceInGlobalScope(varible);
@@ -59,7 +67,7 @@ public abstract class Command {
                              commandId,
                              commandType,
                              label,
-                             this.toString(),
+                             this,
                              cycles);
     }
 

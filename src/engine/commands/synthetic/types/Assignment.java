@@ -5,17 +5,14 @@ import schema.SInstruction;
 
 public class Assignment extends SyntheticCommand {
     protected engine.arguments.Varible assignedVarible;
+
     public Assignment(SInstruction instruction) {
-        super();
+        super(instruction);
         this.commandName = "ASSIGNMENT";
-        if (instruction.getSLabel() != null) {this.label = instruction.getSLabel();}
-        this.cycles = 4; // Assuming assignment takes 1 cycle
-        String var = instruction.getSVariable();
-        this.varible = extractVariables(var, this.varible);
-        String assignedVar = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
-        this.assignedVarible = extractVariables(assignedVar, this.assignedVarible);
+        this.cycles = 4;
         this.levelOfExpansion = 2;
-        initializeExpandedCommands();
+        String assignedVar = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
+        this.assignedVarible = extractVariables(assignedVar);
     }
 
     @Override
