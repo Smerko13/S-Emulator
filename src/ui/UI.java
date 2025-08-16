@@ -39,6 +39,8 @@ public class UI {
                         int expansionLevel = menu.getExpansionLevel(engine);
                         menu.showInputVariables(engine);
                         menu.getInputVariablesValues(engine);
+                        engine.executeProgram(expansionLevel);
+                        menu.displayVariables(engine); // just for testing purposes
                     }
                     else {
                         menu.displayFailedToLoadMessage();

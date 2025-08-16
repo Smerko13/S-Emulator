@@ -1,6 +1,7 @@
 package ui;
 
 import engine.S_Emulator;
+import engine.arguments.Varible;
 import engine.commands.Command;
 
 import java.util.Scanner;
@@ -105,6 +106,14 @@ public class Menu {
         String input = scanner.next();
         String[] values = input.split(",");
         engine.SetInputVariablesValues(values);
+    }
 
+    public void displayVariables(S_Emulator engine) {
+        System.out.println("Variables:");
+        for (Varible varible : engine.getVariables()) {
+            if (varible != null) {
+                System.out.println("    " + varible.getName() + " = " + varible.getValue());
+            }
+        }
     }
 }

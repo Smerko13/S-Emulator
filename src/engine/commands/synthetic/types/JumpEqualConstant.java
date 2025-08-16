@@ -23,6 +23,17 @@ public class JumpEqualConstant extends SyntheticCommand {
     }
 
     @Override
+    public String execute(int expansionLevel) {
+        // Check if the variable's value equals the constant value
+        if (varible.getValue() == constantValue) {
+            // If equal, return the label for jumping
+            return JEConstantLabel;
+        }
+        // If not equal, do nothing and continue execution
+        return null;
+    }
+
+    @Override
     public String toString() {
         return "IF " + varible.getName() + " = " + constantValue + " GOTO " + JEConstantLabel;
     }

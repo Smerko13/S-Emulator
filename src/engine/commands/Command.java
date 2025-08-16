@@ -10,7 +10,7 @@ import schema.SInstruction;
 public abstract class Command {
     private static int commandIdTracker = 1;
     private int commandId=0;
-    protected String label = "  "; // Default label
+    protected String label = "   "; // Default label
     protected int cycles;
     protected char commandType;
     protected Boolean isExpandable;
@@ -22,7 +22,11 @@ public abstract class Command {
         this.commandId = commandIdTracker;
         commandIdTracker++;
         if (instruction.getSLabel() != null) {
-            this.label = instruction.getSLabel();
+            String label = instruction.getSLabel();
+            if(label.length() == 2) {
+                label = label + " "; // Ensure label has at least 3 characters
+            }
+            this.label = label;
         }
         String var = instruction.getSVariable();
         this.varible = extractVariables(var);
@@ -33,30 +37,24 @@ public abstract class Command {
         Varible varible = null;
         if(var.charAt(0) == 'x') {
             varible = new InputVarible(var);
-            validateVariableExistenceInGlobalScope(varible);
         }
         else if(var.charAt(0) == 'z') {
             varible = new WorkVarible(var);
-            validateVariableExistenceInGlobalScope(varible);
         }
         else if (var.charAt(0) == 'y') {
             varible = new OutputVarible();
-            validateVariableExistenceInGlobalScope(varible);
         }
-        return varible;
+        return cannonicalizeInGlobalScope(varible);
     }
 
-    private static void validateVariableExistenceInGlobalScope(Varible varible) {
-        boolean exists = false;
-        for (Varible arg : Engine.varibles) {
-            if (arg.getName().equals(varible.getName())) {
-                exists = true;
-                break;
+    private static Varible cannonicalizeInGlobalScope(Varible varible) {
+        for(Varible existingVar : Engine.varibles) {
+            if (existingVar.getName().equals(varible.getName())) {
+                return existingVar; // Return the existing variable if found
             }
         }
-        if (!exists) {
-            Engine.varibles.add(varible);
-        }
+        Engine.varibles.add(varible); // Add the new variable to the global scope
+        return varible;
     }
 
     public String getLabel() {
@@ -76,4 +74,10 @@ public abstract class Command {
     public int getExpansionDepth() {
         return levelOfExpansion;
     }
+
+    public Object getVarible() {
+        return varible;
+    }
+
+    public abstract String execute(int expansionLevel);
 }

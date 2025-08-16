@@ -20,6 +20,17 @@ public class JumpZero extends SyntheticCommand {
     }
 
     @Override
+    public String execute(int expansionLevel) {
+        // Check if the variable is zero
+        if (varible.getValue() == 0) {
+            // If zero, return the label for jumping
+            return JZLabel;
+        }
+        // If not zero, do nothing and continue execution
+        return null;
+    }
+
+    @Override
     public String toString() {
         return "IF " + varible.getName() + " = 0 GOTO " + JZLabel;
     }

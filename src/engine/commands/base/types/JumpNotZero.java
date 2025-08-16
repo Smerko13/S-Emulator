@@ -15,6 +15,17 @@ public class JumpNotZero extends BaseCommand {
     }
 
     @Override
+    public String execute(int expansionLevel) {
+        // Check if the variable is not zero
+        if (varible.getValue() != 0) {
+            // If not zero, return the target label for jumping
+            return targetLabel;
+        }
+        // If zero, do nothing and continue execution
+        return null;
+    }
+
+    @Override
     public String toString() {
         return "IF " + varible.getName() + " != 0 THEN JUMP TO " + targetLabel;
     }

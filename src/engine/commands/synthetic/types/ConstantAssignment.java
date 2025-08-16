@@ -20,6 +20,13 @@ public class ConstantAssignment extends SyntheticCommand {
     }
 
     @Override
+    public String execute(int expansionLevel) {
+        // Assign the constant value to the variable
+        varible.setValue(constantValue);
+        return null; // No further action needed, just assignment
+    }
+
+    @Override
     public String toString() {
         return varible.getName() + " <- " + constantValue; // Assigning a constant value to the variable
     }

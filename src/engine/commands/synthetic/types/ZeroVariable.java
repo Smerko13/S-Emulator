@@ -1,13 +1,7 @@
 package engine.commands.synthetic.types;
 
-import engine.commands.base.types.Decrease;
-import engine.commands.Command;
-import engine.commands.base.types.JumpNotZero;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ZeroVariable extends SyntheticCommand {
 
@@ -19,6 +13,12 @@ public class ZeroVariable extends SyntheticCommand {
     }
 
     public void initializeExpandedCommands() {
+    }
+
+    @Override
+    public String execute(int expansionLevel) {
+        this.varible.setValue(0);
+        return null;
     }
 
     @Override

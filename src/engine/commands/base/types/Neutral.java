@@ -11,6 +11,12 @@ public class Neutral extends BaseCommand {
     }
 
     @Override
+    public String execute(int expansionLevel) {
+        // Neutral command does not change the variable's value
+        return null;
+    }
+
+    @Override
     public String toString() {
         return varible.getName() + " <- " + varible.getName();
     }

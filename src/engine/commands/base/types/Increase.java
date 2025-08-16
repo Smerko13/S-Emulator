@@ -11,6 +11,14 @@ public class Increase extends BaseCommand {
     }
 
     @Override
+    public String execute(int expansionLevel) {
+        // Increase the variable's value by 1
+        int currentValue = varible.getValue();
+        varible.setValue(currentValue + 1);
+        return null;
+    }
+
+    @Override
     public String toString() {
         return varible.getName() + " <- " + varible.getName() + " + 1";
     }

@@ -1,7 +1,10 @@
 package engine;
 
+import com.sun.jdi.connect.Connector;
+import engine.arguments.Varible;
 import engine.commands.Command;
 import java.util.List;
+import java.util.Set;
 
 public interface S_Emulator {
     String getCurrentProgramName();
@@ -17,4 +20,8 @@ public interface S_Emulator {
     int getMaxExpansionDepth();
 
     void SetInputVariablesValues(String[] values);
+
+    Set<Varible> getVariables();
+
+    void executeProgram(int expansionLevel);
 }

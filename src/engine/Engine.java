@@ -20,7 +20,7 @@ public class Engine implements S_Emulator {
 
     public Engine() {
         this.commands = new ArrayList<>();
-        varibles = new HashSet<>();
+        varibles = new LinkedHashSet<>();
     }
 
     public String getCurrentProgramName() {
@@ -120,6 +120,57 @@ public class Engine implements S_Emulator {
 
     @Override
     public void SetInputVariablesValues(String[] values) {
+        int index = 0;
+        for( Varible varible : varibles) {
+            if (varible instanceof InputVarible && varible.getName().charAt(1) == (index+1)+ '0') {
+                if (index < values.length) {
+                    varible.setValue(Integer.parseInt(values[index]));
+                }
+                index++;
+            }
+        }
+        if(index < values.length) {
+            while(index < values.length) {
+                varibles.add(new InputVarible("x" + (index+1), Integer.parseInt(values[index])));
+                index++;
+            }
+        }
+    }
 
+    public Set<Varible> getVariables() {
+        return varibles;
+    }
+
+    @Override
+    public void executeProgram(int expansionLevel) {
+        int index = 0;
+        Command currentCommand = this.commands.get(index);
+        while (currentCommand != null) {
+            String executionLabel = currentCommand.execute(expansionLevel);
+            if(executionLabel != null) {
+                if (executionLabel.length() == 2) {
+                    executionLabel = executionLabel + " "; // Ensure label has at least 3 characters
+                }
+                if (executionLabel.equals("END")) {
+                    break; // End of program
+                }
+                for (Command command : commands) {
+                    String currentLabel = command.getLabel();
+                    if (currentLabel.equals(executionLabel)) {
+                        currentCommand = command;
+                        index = commands.indexOf(currentCommand);
+                        break;
+                    }
+                }
+            }
+            else {
+                index++;
+                if (index < commands.size()) {
+                    currentCommand = commands.get(index);
+                } else {
+                    currentCommand = null; // No more commands to execute
+                }
+            }
+        }
     }
 }

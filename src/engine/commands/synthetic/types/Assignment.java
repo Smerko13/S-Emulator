@@ -22,6 +22,15 @@ public class Assignment extends SyntheticCommand {
     }
 
     @Override
+    public String execute(int expansionLevel) {
+        // Assign the value of the assigned variable to the variable
+        if (assignedVarible != null) {
+            varible.setValue(assignedVarible.getValue());
+        }
+        return null;
+    }
+
+    @Override
     public String toString() {
         return varible.getName() + " <- " + assignedVarible.getName();
     }

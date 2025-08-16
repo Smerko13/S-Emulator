@@ -13,4 +13,12 @@ public abstract class Varible {
     public Integer getId() {
         return id;
     }
+
+    public void setValue(int value) {
+        this.value = value;
+    }
+
+    public int getValue() {
+        return value;
+    }
 }
