@@ -2,9 +2,15 @@ package ui;
 
 import engine.S_Emulator;
 import engine.arguments.Varible;
+import engine.arguments.types.InputVarible;
+import engine.arguments.types.OutputVarible;
+import engine.arguments.types.WorkVarible;
 import engine.commands.Command;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 public class Menu {
     private Scanner scanner;
@@ -53,7 +59,7 @@ public class Menu {
             if( command == null) {
                 continue; // Skip null commands
             }
-            System.out.println("        " + command.getCommandRepresentation());
+            System.out.println("        " + command.getCommandRepresentation(engine.getCommands().indexOf(command)+1));
         }
     }
 
@@ -80,8 +86,9 @@ public class Menu {
     public int getExpansionLevel(S_Emulator engine) {
         int maxExpansionLevel = engine.getMaxExpansionDepth();
         int expansionLevel = 0;
+        System.out.println("Maximum expansion level for this program is: " + maxExpansionLevel);
         do {
-            System.out.print("Enter the expansion level (0 to " + maxExpansionLevel + "): ");
+            System.out.print("Enter the desired expansion level (0 to " + maxExpansionLevel + "): ");
             expansionLevel = scanner.nextInt();
             if (expansionLevel < 0 || expansionLevel > maxExpansionLevel) {
                 System.out.println("Invalid expansion level. Please try again.");
@@ -92,28 +99,61 @@ public class Menu {
 
     public void showInputVariables(S_Emulator engine) {
         String inputVariables = engine.getListOfInputParameters();
-        System.out.println("Input Variables:");
+        System.out.println("*****Input Variables:*****");
         if (inputVariables.isEmpty()) {
-            System.out.println("    No input variables found.");
+            System.out.println("No input variables found.");
         } else {
             System.out.println(inputVariables);
         }
     }
 
     public void getInputVariablesValues(S_Emulator engine) {
-        System.out.println("Please enter values for the input variables:");
-        System.out.println("(A list of numbers separated by the character (,) eg: 1,2,3)");
+        System.out.println("*****Please enter values for the input variables:*****");
+        System.out.println("[A list of numbers separated by the character (,) eg: 1,2,3]");
         String input = scanner.next();
         String[] values = input.split(",");
         engine.SetInputVariablesValues(values);
     }
 
     public void displayVariables(S_Emulator engine) {
-        System.out.println("Variables:");
+        System.out.println("*****Other variables(After program execution):*****");
+        List<Varible> inputVariables = new java.util.ArrayList<>(engine.getVariables().stream()
+                .filter(varible -> varible instanceof InputVarible)
+                .toList());
+        List<Varible> workVariables = new java.util.ArrayList<>(engine.getVariables().stream()
+                .filter(varible -> varible instanceof WorkVarible)
+                .toList());
+        inputVariables.sort(Comparator.comparingInt(Varible::getValue));
+        workVariables.sort(Comparator.comparingInt(Varible::getValue));
+
+        for (Varible varible : inputVariables) {
+            System.out.println("    " + varible.getName() + " = " + varible.getValue());
+        }
+        for (Varible varible : workVariables) {
+            System.out.println("    " + varible.getName() + " = " + varible.getValue());
+        }
+    }
+
+    public void showOutputVariable(S_Emulator engine) {
+        System.out.println("*****Output Variable(After program execution):*****");
+        OutputVarible outputVarible = null;
         for (Varible varible : engine.getVariables()) {
-            if (varible != null) {
-                System.out.println("    " + varible.getName() + " = " + varible.getValue());
+            if (varible instanceof OutputVarible) {
+                outputVarible = (OutputVarible) varible;
+                break;
             }
         }
+        if (outputVarible != null) {
+            System.out.println("    " + outputVarible.getName() + " = " + outputVarible.getValue());
+        } else {
+            System.out.println("No output variable found.");
+        }
+
+    }
+
+    public void displayCycleSum(S_Emulator engine) {
+        System.out.println("*****Total Cycles Executed:*****");
+        int cycleSum = engine.getCycleSum();
+        System.out.println("    Total Cycles Executed: " + cycleSum);
     }
 }

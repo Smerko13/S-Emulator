@@ -8,8 +8,6 @@ import engine.arguments.types.WorkVarible;
 import schema.SInstruction;
 
 public abstract class Command {
-    private static int commandIdTracker = 1;
-    private int commandId=0;
     protected String label = "   "; // Default label
     protected int cycles;
     protected char commandType;
@@ -19,8 +17,6 @@ public abstract class Command {
     protected Varible varible;
 
     public Command(SInstruction instruction) {
-        this.commandId = commandIdTracker;
-        commandIdTracker++;
         if (instruction.getSLabel() != null) {
             String label = instruction.getSLabel();
             if(label.length() == 2) {
@@ -61,9 +57,9 @@ public abstract class Command {
         return label;
     }
 
-    public String getCommandRepresentation() {
+    public String getCommandRepresentation(int i) {
         return String.format("#%d (%c) [ %s ] %s (%d)",
-                             commandId,
+                             i,
                              commandType,
                              label,
                              this,
@@ -80,4 +76,8 @@ public abstract class Command {
     }
 
     public abstract String execute(int expansionLevel);
+
+    public int getCycles() {
+        return cycles;
+    }
 }

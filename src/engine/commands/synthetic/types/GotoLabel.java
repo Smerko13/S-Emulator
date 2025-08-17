@@ -28,6 +28,7 @@ public class GotoLabel extends SyntheticCommand {
                 if(((WorkVarible) variable).isForGotoLabel())
                 {
                     variable.setValue(variable.getValue()+1);
+                    ((WorkVarible) variable).setForGotoLabel(true);
                     return gototLabel;
                 }
             }
@@ -35,7 +36,12 @@ public class GotoLabel extends SyntheticCommand {
                 workArgIndex++;
             }
         }
-        Engine.varibles.add(new WorkVarible("z"+workArgIndex));
+        // If no work variable found, create a new one
+        WorkVarible newWorkVar = new WorkVarible("z" + workArgIndex);
+        newWorkVar.setValue(1);
+        newWorkVar.setForGotoLabel(true);
+        Engine.varibles.add(newWorkVar);
+
         return gototLabel;
     }
 

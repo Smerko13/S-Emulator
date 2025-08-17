@@ -17,6 +17,8 @@ public class Engine implements S_Emulator {
     private List<Command> commands;
     private String currentProgramName;
     public static Set<Varible> varibles;
+    private int cycleSum;
+
 
     public Engine() {
         this.commands = new ArrayList<>();
@@ -144,14 +146,16 @@ public class Engine implements S_Emulator {
     @Override
     public void executeProgram(int expansionLevel) {
         int index = 0;
+        this.cycleSum = 0;
         Command currentCommand = this.commands.get(index);
         while (currentCommand != null) {
             String executionLabel = currentCommand.execute(expansionLevel);
+            this.cycleSum += currentCommand.getCycles();
             if(executionLabel != null) {
                 if (executionLabel.length() == 2) {
                     executionLabel = executionLabel + " "; // Ensure label has at least 3 characters
                 }
-                if (executionLabel.equals("END")) {
+                if (executionLabel.equals("EXIT")) {
                     break; // End of program
                 }
                 for (Command command : commands) {
@@ -172,5 +176,10 @@ public class Engine implements S_Emulator {
                 }
             }
         }
+    }
+
+    @Override
+    public int getCycleSum() {
+        return cycleSum;
     }
 }

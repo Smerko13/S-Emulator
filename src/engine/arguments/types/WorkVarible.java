@@ -14,4 +14,8 @@ public class WorkVarible extends Varible {
     public boolean isForGotoLabel() {
         return isForGotoLabel;
     }
+
+    public void setForGotoLabel(boolean isForGotoLabel) {
+        this.isForGotoLabel = isForGotoLabel;
+    }
 }

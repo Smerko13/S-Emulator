@@ -40,7 +40,11 @@ public class UI {
                         menu.showInputVariables(engine);
                         menu.getInputVariablesValues(engine);
                         engine.executeProgram(expansionLevel);
-                        menu.displayVariables(engine); // just for testing purposes
+                        System.out.println("*****The program that was executed:*****");
+                        menu.showProgram(engine);
+                        menu.showOutputVariable(engine);
+                        menu.displayVariables(engine);
+                        menu.displayCycleSum(engine);
                     }
                     else {
                         menu.displayFailedToLoadMessage();
