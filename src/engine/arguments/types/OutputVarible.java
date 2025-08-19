@@ -10,6 +10,11 @@ public class OutputVarible extends Varible {
         this.name = "y";
     }
 
+    public OutputVarible(OutputVarible varible) {
+        super(varible);
+        new OutputVarible();
+    }
+
     @Override
     public String getName() {
         return this.name; // Output variable always has the name "y"

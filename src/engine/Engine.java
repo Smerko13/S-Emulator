@@ -18,11 +18,14 @@ public class Engine implements S_Emulator {
     private String currentProgramName;
     public static Set<Varible> varibles;
     private int cycleSum;
+    private Stats stats;
 
 
     public Engine() {
         this.commands = new ArrayList<>();
         varibles = new LinkedHashSet<>();
+        this.stats = new Stats();
+
     }
 
     public String getCurrentProgramName() {
@@ -39,6 +42,7 @@ public class Engine implements S_Emulator {
                 Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
                 SProgram program = (SProgram) jaxbUnmarshaller.unmarshal(xmlFile);
                 parseObjectToLocalVariables(program);
+                this.stats.reset();
             }
         } catch (JAXBException ignored) {}
         return found;
@@ -176,10 +180,18 @@ public class Engine implements S_Emulator {
                 }
             }
         }
+        this.stats.updateStatEntry(expansionLevel, varibles, cycleSum);
     }
 
     @Override
     public int getCycleSum() {
         return cycleSum;
     }
+
+    @Override
+    public Stats getExecutionHistory() {
+        return stats;
+    }
+
+
 }

@@ -40,10 +40,10 @@ public abstract class Command {
         else if (var.charAt(0) == 'y') {
             varible = new OutputVarible();
         }
-        return cannonicalizeInGlobalScope(varible);
+        return canonicalInGlobalScope(varible);
     }
 
-    private static Varible cannonicalizeInGlobalScope(Varible varible) {
+    private static Varible canonicalInGlobalScope(Varible varible) {
         for(Varible existingVar : Engine.varibles) {
             if (existingVar.getName().equals(varible.getName())) {
                 return existingVar; // Return the existing variable if found

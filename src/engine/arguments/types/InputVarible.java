@@ -16,4 +16,8 @@ public class InputVarible extends Varible {
         this.name = name;
         this.value = value; // Setting the initial value
     }
+
+    public InputVarible(InputVarible varible) {
+        super(varible);
+    }
 }

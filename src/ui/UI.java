@@ -51,6 +51,11 @@ public class UI {
                     }
                     break;
                 case 5:
+                    if (readFile) {
+                        menu.showStatisticsHistory(engine);
+                    } else {
+                        menu.displayFailedToLoadMessage();
+                    }
                     break;
                 case 6:
                     exit = true;

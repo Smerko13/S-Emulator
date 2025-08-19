@@ -1,6 +1,7 @@
 package ui;
 
 import engine.S_Emulator;
+import engine.Stats;
 import engine.arguments.Varible;
 import engine.arguments.types.InputVarible;
 import engine.arguments.types.OutputVarible;
@@ -10,7 +11,6 @@ import engine.commands.Command;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 
 public class Menu {
     private Scanner scanner;
@@ -155,5 +155,11 @@ public class Menu {
         System.out.println("*****Total Cycles Executed:*****");
         int cycleSum = engine.getCycleSum();
         System.out.println("    Total Cycles Executed: " + cycleSum);
+    }
+
+    public void showStatisticsHistory(S_Emulator engine) {
+        System.out.println("*****Statistics/History:*****");
+        Stats executionHistory = engine.getExecutionHistory();
+        System.out.println(executionHistory.toString());
     }
 }

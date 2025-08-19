@@ -1,6 +1,5 @@
 package engine;
 
-import com.sun.jdi.connect.Connector;
 import engine.arguments.Varible;
 import engine.commands.Command;
 import java.util.List;
@@ -26,4 +25,6 @@ public interface S_Emulator {
     void executeProgram(int expansionLevel);
 
     int getCycleSum();
+
+    Stats getExecutionHistory();
 }

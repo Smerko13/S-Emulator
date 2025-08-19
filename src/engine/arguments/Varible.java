@@ -21,4 +21,14 @@ public abstract class Varible {
     public int getValue() {
         return value;
     }
+
+    public Varible(){
+    }
+
+    public Varible(Varible varible) {
+        this.type = varible.type;
+        this.value = varible.value;
+        this.id = varible.id;
+        this.name = varible.name;
+    }
 }
