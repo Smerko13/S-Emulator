@@ -21,6 +21,14 @@ public class Assignment extends SyntheticCommand {
         this.assignedVarible = extractVariables(assignedVar);
     }
 
+    public Assignment(WorkVarible newWorkVarible, String label, Varible assignedVarible) {
+        super(newWorkVarible, label);
+        this.commandName = "ASSIGNMENT";
+        this.cycles = 4;
+        this.levelOfExpansion = 2;
+        this.assignedVarible = assignedVarible;
+    }
+
     @Override
     public void initializeExpandedCommands() {
         String newLabel1 = generateNewLabel();

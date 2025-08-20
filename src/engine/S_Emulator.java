@@ -12,7 +12,7 @@ public interface S_Emulator {
 
     String getListOfInputParameters();
 
-    String getLabels();
+    Set<String> getLabels();
 
     List<Command> getCommands();
 

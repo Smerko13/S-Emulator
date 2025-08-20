@@ -34,20 +34,13 @@ public abstract class SyntheticCommand extends Command {
     }
 
     public String generateNewLabel() {
-        String allLabels = Engine.labels;
-        String newLabel = "L";
         int labelIndex = 1;
-        boolean labelExists = true;
-        while (labelExists) {
-            labelExists = allLabels.contains(newLabel + labelIndex);
-            if (labelExists) {
+        for(String label : Engine.labels) {
+            if (label.charAt(0) == 'L' && label.charAt(1) == labelIndex + '0') {
                 labelIndex++;
-            } else {
-                newLabel += labelIndex;
             }
         }
-        Engine.labels += newLabel + " ";
-        return newLabel;
+        return "L" + labelIndex;
     }
 
     public String generateNewWorkVaribleName() {

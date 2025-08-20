@@ -4,6 +4,7 @@ import com.sun.jdi.connect.Connector;
 import engine.Engine;
 import engine.arguments.Varible;
 import engine.arguments.types.OutputVarible;
+import engine.arguments.types.WorkVarible;
 import engine.commands.base.types.JumpNotZero;
 import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
@@ -18,6 +19,14 @@ public class JumpZero extends SyntheticCommand {
         this.cycles = 2;
         this.levelOfExpansion = 2;
         JZLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
+    }
+
+    public JumpZero(WorkVarible newWorkVarible, String jeConstantLabel, String spaces) {
+        super(newWorkVarible,spaces);
+        this.commandName = "JUMP_ZERO";
+        this.cycles = 2;
+        this.levelOfExpansion = 2;
+        JZLabel = jeConstantLabel;
     }
 
     @Override

@@ -22,13 +22,14 @@ public class Engine implements S_Emulator {
     private int cycleSum;
     private Stats stats;
     private List<Command> expandedCommands;
-    public static String labels;
+    public static Set<String> labels;
 
 
     public Engine() {
         this.commands = new ArrayList<>();
         varibles = new LinkedHashSet<>();
         this.stats = new Stats();
+        labels = new LinkedHashSet<>();
     }
 
     public String getCurrentProgramName() {
@@ -105,17 +106,8 @@ public class Engine implements S_Emulator {
     }
 
     @Override
-    public String getLabels() {
-        StringBuilder sb = new StringBuilder();
-        for (Command command : commands) {
-            if(command == null) {
-                continue; // Skip null commands
-            }
-            if (!Objects.equals(command.getLabel(), "  ")) {
-                sb.append(command.getLabel()).append(" ");
-            }
-        }
-        return sb.toString().trim();
+    public Set<String> getLabels() {
+        return Engine.labels;
     }
 
     @Override
