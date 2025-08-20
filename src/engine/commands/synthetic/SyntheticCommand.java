@@ -18,4 +18,8 @@ public abstract class SyntheticCommand extends Command {
     public abstract void initializeExpandedCommands();
 
     public abstract String execute(int expansionLevel);
+
+    public List<Command> getExpandedCommands() {
+        return ExpandedCommands;
+    }
 }

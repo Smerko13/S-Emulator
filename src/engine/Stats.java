@@ -1,6 +1,5 @@
 package engine;
 
-import com.sun.jdi.connect.Connector;
 import engine.arguments.Varible;
 import engine.arguments.types.InputVarible;
 import engine.arguments.types.OutputVarible;
@@ -29,7 +28,7 @@ public class Stats {
 
     private class Execution {
         private static int id = 0;
-        private int currentId;
+        private final int currentId;
         private int expansionLevel;
         private List<Varible> inputVariables;
         private int cycleCount;

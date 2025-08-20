@@ -28,6 +28,20 @@ public abstract class Command {
         this.varible = extractVariables(var);
     }
 
+    public Command(Varible varible, String label) {
+        if(label.length() == 2) {
+            label = label + " "; // Ensure label has at least 3 characters
+        }
+        this.label = label;
+        String var = varible.getName();
+        this.varible = extractVariables(var);
+    }
+
+    public Command(Varible varible) {
+        String var = varible.getName();
+        this.varible = extractVariables(var);
+    }
+
     protected static Varible extractVariables(String var) {
         //need to check if the variable already exists in the global scope
         Varible varible = null;
@@ -79,5 +93,9 @@ public abstract class Command {
 
     public int getCycles() {
         return cycles;
+    }
+
+    public boolean isExpandable() {
+        return isExpandable;
     }
 }

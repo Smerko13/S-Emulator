@@ -27,4 +27,6 @@ public interface S_Emulator {
     int getCycleSum();
 
     Stats getExecutionHistory();
+
+    List<Command> getCommandsAtDesiredLevel(int expansionLevel);
 }

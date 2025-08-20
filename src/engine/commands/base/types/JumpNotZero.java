@@ -1,5 +1,6 @@
 package engine.commands.base.types;
 
+import engine.arguments.Varible;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
 import schema.SInstructionArgument;
@@ -12,6 +13,13 @@ public class JumpNotZero extends BaseCommand {
         this.commandName = "JUMP_NOT_ZERO";
         this.cycles = 2;
         this.targetLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
+    }
+
+    public JumpNotZero(Varible varible, String label) {
+        super(varible);
+        this.commandName = "JUMP_NOT_ZERO";
+        this.cycles = 2;
+        this.targetLabel = label;
     }
 
     @Override

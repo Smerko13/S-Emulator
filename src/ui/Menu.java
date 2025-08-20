@@ -162,4 +162,19 @@ public class Menu {
         Stats executionHistory = engine.getExecutionHistory();
         System.out.println(executionHistory.toString());
     }
+
+    public void showExpandedProgram(S_Emulator engine) {
+        int i = 1;
+        int expansionLevel = getExpansionLevel(engine);
+        System.out.println("Expanded Program at level " + expansionLevel + ":");
+        List<Command> commands = engine.getCommandsAtDesiredLevel(expansionLevel);
+        for (Command command : commands) {
+            if (command == null) {
+                continue; // Skip null commands
+            } else {
+                System.out.println("    " + command.getCommandRepresentation(i++));
+            }
+
+        }
+    }
 }

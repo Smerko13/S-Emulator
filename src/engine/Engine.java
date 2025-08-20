@@ -4,6 +4,7 @@ import engine.arguments.Varible;
 import engine.arguments.types.InputVarible;
 import engine.commands.Command;
 import engine.commands.base.types.*;
+import engine.commands.synthetic.SyntheticCommand;
 import engine.commands.synthetic.types.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -19,13 +20,14 @@ public class Engine implements S_Emulator {
     public static Set<Varible> varibles;
     private int cycleSum;
     private Stats stats;
+    private List<Command> expandedCommands;
+    public static String labels;
 
 
     public Engine() {
         this.commands = new ArrayList<>();
         varibles = new LinkedHashSet<>();
         this.stats = new Stats();
-
     }
 
     public String getCurrentProgramName() {
@@ -57,6 +59,12 @@ public class Engine implements S_Emulator {
             }
             else if (Objects.equals(instruction.getType(), "synthetic")){
                 this.commands.add(createSyntheticCommandFromInstruction(instruction));
+            }
+        }
+        labels = getLabels();
+        for(Command cmd : this.commands) {
+            if(cmd instanceof SyntheticCommand) {
+                ((SyntheticCommand) cmd).initializeExpandedCommands();
             }
         }
     }
@@ -191,6 +199,24 @@ public class Engine implements S_Emulator {
     @Override
     public Stats getExecutionHistory() {
         return stats;
+    }
+
+    @Override
+    public List<Command> getCommandsAtDesiredLevel(int expansionLevel) {
+        List<Command> expandedCommands = new ArrayList<>();
+        for(int i = 0 ; i < expansionLevel ; i++) {
+            for (Command command : commands) {
+                if(command instanceof SyntheticCommand) {
+                    for(Command expandedCommand : ((SyntheticCommand) command).getExpandedCommands()) {
+                        expandedCommands.add(expandedCommand);
+                    }
+                }
+                else {
+                    expandedCommands.add(command);
+                }
+            }
+        }
+        return expandedCommands;
     }
 
 

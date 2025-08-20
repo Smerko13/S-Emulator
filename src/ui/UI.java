@@ -33,6 +33,11 @@ public class UI {
                     }
                     break;
                 case 3:
+                    if (readFile) {
+                        menu.showExpandedProgram(engine);
+                    } else {
+                        menu.displayFailedToLoadMessage();
+                    }
                     break;
                 case 4:
                     if(readFile) {
