@@ -17,6 +17,14 @@ public class GotoLabel extends SyntheticCommand {
         this.levelOfExpansion = 1;
         gototLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
     }
+    
+    public GotoLabel(String gototLabel) {
+        super(null,"   ");
+        this.commandName = "GOTO_LABEL";
+        this.cycles = 1;
+        this.levelOfExpansion = 1;
+        this.gototLabel = gototLabel;
+    }
 
     @Override
     public void initializeExpandedCommands() {

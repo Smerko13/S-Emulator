@@ -1,6 +1,7 @@
 package engine.commands.synthetic.types;
 
 import engine.Engine;
+import engine.arguments.Varible;
 import engine.commands.base.types.Decrease;
 import engine.commands.base.types.JumpNotZero;
 import engine.commands.synthetic.SyntheticCommand;
@@ -17,20 +18,16 @@ public class ZeroVariable extends SyntheticCommand {
         this.levelOfExpansion = 1;
     }
 
+    public ZeroVariable(Varible varible, String label) {
+        super(varible, label);
+        this.commandName = "ZERO_VARIABLE";
+        this.cycles = 1;
+        this.levelOfExpansion = 1;
+    }
+
     public void initializeExpandedCommands() {
         if(this.label == null || this.label.equals("   ")) {
-            String allLabels = Engine.labels;
-            String newLabel = "L";
-            int labelIndex = 1;
-            boolean labelExists = true;
-            while (labelExists) {
-                labelExists = allLabels.contains(newLabel + labelIndex);
-                if (labelExists) {
-                    labelIndex++;
-                } else {
-                    newLabel += labelIndex;
-                }
-            }
+            String newLabel = this.generateNewLabel();
             this.ExpandedCommands.add(new Decrease(this.varible,newLabel));
             this.ExpandedCommands.add(new JumpNotZero(this.varible, newLabel));
         } else {

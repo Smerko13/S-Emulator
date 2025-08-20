@@ -33,8 +33,11 @@ public abstract class Command {
             label = label + " "; // Ensure label has at least 3 characters
         }
         this.label = label;
-        String var = varible.getName();
-        this.varible = extractVariables(var);
+        if(varible != null) {
+            this.varible = extractVariables(varible.getName());
+        } else {
+            this.varible = null; // Handle case where varible is null
+        }
     }
 
     public Command(Varible varible) {
