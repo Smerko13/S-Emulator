@@ -2,6 +2,8 @@ package engine.commands.synthetic.types;
 import engine.Engine;
 import engine.arguments.Varible;
 import engine.arguments.types.WorkVarible;
+import engine.commands.base.types.Increase;
+import engine.commands.base.types.JumpNotZero;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
@@ -18,6 +20,8 @@ public class GotoLabel extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
+        this.ExpandedCommands.add(new Increase(this.varible,this.label));
+        this.ExpandedCommands.add(new JumpNotZero(this.varible,this.gototLabel));
     }
 
     @Override
