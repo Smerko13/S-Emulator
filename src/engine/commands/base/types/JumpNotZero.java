@@ -15,11 +15,11 @@ public class JumpNotZero extends BaseCommand {
         this.targetLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
     }
 
-    public JumpNotZero(Varible varible, String label) {
-        super(varible);
+    public JumpNotZero(Varible varible, String targetLabel, String label) {
+        super(varible, label);
         this.commandName = "JUMP_NOT_ZERO";
         this.cycles = 2;
-        this.targetLabel = label;
+        this.targetLabel = targetLabel;
     }
 
     @Override

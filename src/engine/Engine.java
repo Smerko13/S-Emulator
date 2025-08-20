@@ -2,6 +2,7 @@ package engine;
 
 import engine.arguments.Varible;
 import engine.arguments.types.InputVarible;
+import engine.arguments.types.OutputVarible;
 import engine.commands.Command;
 import engine.commands.base.types.*;
 import engine.commands.synthetic.SyntheticCommand;
@@ -62,6 +63,7 @@ public class Engine implements S_Emulator {
             }
         }
         labels = getLabels();
+        varibles.add(new OutputVarible());
         for(Command cmd : this.commands) {
             if(cmd instanceof SyntheticCommand) {
                 ((SyntheticCommand) cmd).initializeExpandedCommands();

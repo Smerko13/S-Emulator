@@ -27,16 +27,16 @@ public class Assignment extends SyntheticCommand {
         String newLabel2 = generateNewLabel();
         String newLabel3 = generateNewLabel();
         this.ExpandedCommands.add(new ZeroVariable(varible,"   "));
-        this.ExpandedCommands.add(new JumpNotZero(assignedVarible, newLabel1));
+        this.ExpandedCommands.add(new JumpNotZero(assignedVarible, newLabel1,"   "));
         this.ExpandedCommands.add(new GotoLabel(newLabel3));
         this.ExpandedCommands.add(new Decrease(assignedVarible,newLabel1));
         WorkVarible newWorkVarible = new WorkVarible(generateNewWorkVaribleName());
         this.ExpandedCommands.add(new Increase(newWorkVarible,"   "));
-        this.ExpandedCommands.add(new JumpNotZero(assignedVarible, newLabel1));
+        this.ExpandedCommands.add(new JumpNotZero(assignedVarible, newLabel1, "   "));
         this.ExpandedCommands.add(new Decrease(newWorkVarible,newLabel2));
         this.ExpandedCommands.add(new Increase(varible,"   "));
         this.ExpandedCommands.add(new Increase(assignedVarible,"   "));
-        this.ExpandedCommands.add(new JumpNotZero(newWorkVarible, newLabel2));
+        this.ExpandedCommands.add(new JumpNotZero(newWorkVarible, newLabel2, "   "));
         this.ExpandedCommands.add(new Neutral(varible,newLabel3));
     }
 

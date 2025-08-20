@@ -1,5 +1,11 @@
 package engine.commands.synthetic.types;
 
+import com.sun.jdi.connect.Connector;
+import engine.Engine;
+import engine.arguments.Varible;
+import engine.arguments.types.OutputVarible;
+import engine.commands.base.types.JumpNotZero;
+import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
@@ -10,13 +16,20 @@ public class JumpZero extends SyntheticCommand {
         super(instruction);
         this.commandName = "JUMP_ZERO";
         this.cycles = 2;
-        this.levelOfExpansion = 1;
+        this.levelOfExpansion = 2;
         JZLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
     }
 
     @Override
     public void initializeExpandedCommands() {
-
+        String newLabel = this.generateNewLabel();
+        this.ExpandedCommands.add(new JumpNotZero(this.varible, newLabel, this.label));
+        this.ExpandedCommands.add(new GotoLabel(this.JZLabel));
+        for(Varible v : Engine.varibles) {
+            if(v instanceof OutputVarible) {
+                this.ExpandedCommands.add(new Neutral(v, newLabel));
+            }
+        }
     }
 
     @Override

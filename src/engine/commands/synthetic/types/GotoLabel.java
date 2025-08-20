@@ -28,8 +28,8 @@ public class GotoLabel extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
-        this.ExpandedCommands.add(new Increase(this.varible,this.label));
-        this.ExpandedCommands.add(new JumpNotZero(this.varible,this.gototLabel));
+        this.ExpandedCommands.add(new Increase(this.varible, this.label));
+        this.ExpandedCommands.add(new JumpNotZero(this.varible,this.gototLabel, "   "));
     }
 
     @Override

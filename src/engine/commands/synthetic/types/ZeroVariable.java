@@ -29,10 +29,10 @@ public class ZeroVariable extends SyntheticCommand {
         if(this.label == null || this.label.equals("   ")) {
             String newLabel = this.generateNewLabel();
             this.ExpandedCommands.add(new Decrease(this.varible,newLabel));
-            this.ExpandedCommands.add(new JumpNotZero(this.varible, newLabel));
+            this.ExpandedCommands.add(new JumpNotZero(this.varible, newLabel, "   "));
         } else {
             this.ExpandedCommands.add(new Decrease(this.varible,this.label));
-            this.ExpandedCommands.add(new JumpNotZero(this.varible, this.label));
+            this.ExpandedCommands.add(new JumpNotZero(this.varible, this.label, "   "));
         }
 
     }
