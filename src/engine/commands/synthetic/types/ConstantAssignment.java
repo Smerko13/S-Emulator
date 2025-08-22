@@ -21,6 +21,7 @@ public class ConstantAssignment extends SyntheticCommand {
         for(int i = 0 ; i < this.constantValue ; i++) {
             this.ExpandedCommands.add(new Increase(this.varible, "   "));
         }
+        expandFurther();
     }
 
     @Override

@@ -39,6 +39,7 @@ public class JumpZero extends SyntheticCommand {
                 this.ExpandedCommands.add(new Neutral(v, newLabel));
             }
         }
+        expandFurther();
     }
 
     @Override

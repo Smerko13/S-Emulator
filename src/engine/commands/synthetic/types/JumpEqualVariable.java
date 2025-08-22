@@ -5,6 +5,7 @@ import engine.arguments.Varible;
 import engine.arguments.types.InputVarible;
 import engine.arguments.types.OutputVarible;
 import engine.arguments.types.WorkVarible;
+import engine.commands.Command;
 import engine.commands.base.types.Decrease;
 import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
@@ -39,12 +40,7 @@ public class JumpEqualVariable extends SyntheticCommand {
         Engine.varibles.add(newWorkVarible1);
         WorkVarible newWorkVarible2 = new WorkVarible(generateNewWorkVaribleName());
         Engine.varibles.add(newWorkVarible2);
-        if(this.label.equals("   ")) {
-            this.ExpandedCommands.add(new Assignment(newWorkVarible1, "   ", this.varible));
-        } else {
-            this.ExpandedCommands.add(new Assignment(newWorkVarible1, this.label, this.varible));
-        }
-
+        this.ExpandedCommands.add(new Assignment(newWorkVarible1, this.label, this.varible));
         for(Varible v : Engine.varibles) {
             if(v.getName().equals(this.variableName)) {
                 this.ExpandedCommands.add(new Assignment(newWorkVarible2, "   ", v));
@@ -68,6 +64,7 @@ public class JumpEqualVariable extends SyntheticCommand {
                 this.ExpandedCommands.add(new Neutral(v,newLabel1));
             }
         }
+        expandFurther();
     }
 
     @Override

@@ -52,4 +52,12 @@ public abstract class SyntheticCommand extends Command {
         }
         return "z" + workArgIndex;
     }
+
+    protected void expandFurther() {
+        for(Command cmd : this.ExpandedCommands) {
+            if(cmd instanceof SyntheticCommand) {
+                ((SyntheticCommand) cmd).initializeExpandedCommands();
+            }
+        }
+    }
 }

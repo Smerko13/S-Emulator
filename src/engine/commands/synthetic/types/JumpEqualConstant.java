@@ -4,6 +4,7 @@ import engine.Engine;
 import engine.arguments.Varible;
 import engine.arguments.types.OutputVarible;
 import engine.arguments.types.WorkVarible;
+import engine.commands.Command;
 import engine.commands.base.types.Decrease;
 import engine.commands.base.types.JumpNotZero;
 import engine.commands.base.types.Neutral;
@@ -42,6 +43,8 @@ public class JumpEqualConstant extends SyntheticCommand {
                 var = v;
         }
         this.ExpandedCommands.add(new Neutral(var, newLabel));
+
+        expandFurther();
     }
 
     @Override

@@ -4,10 +4,10 @@ import engine.Engine;
 import engine.arguments.Varible;
 import engine.commands.base.types.Decrease;
 import engine.commands.base.types.JumpNotZero;
+import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-import java.util.ArrayList;
 
 public class ZeroVariable extends SyntheticCommand {
 
@@ -26,15 +26,15 @@ public class ZeroVariable extends SyntheticCommand {
     }
 
     public void initializeExpandedCommands() {
-        if(this.label == null || this.label.equals("   ")) {
-            String newLabel = this.generateNewLabel();
+        String newLabel = generateNewLabel();
+        Engine.labels.add(newLabel);
+        if(this.label.equals("   ")) {
             this.ExpandedCommands.add(new Decrease(this.varible,newLabel));
-            this.ExpandedCommands.add(new JumpNotZero(this.varible, newLabel, "   "));
         } else {
-            this.ExpandedCommands.add(new Decrease(this.varible,this.label));
-            this.ExpandedCommands.add(new JumpNotZero(this.varible, this.label, "   "));
+            this.ExpandedCommands.add(new Neutral(this.varible,this.label));
+            this.ExpandedCommands.add(new Decrease(this.varible,newLabel));
         }
-
+        this.ExpandedCommands.add(new JumpNotZero(this.varible,newLabel,"   "));
     }
 
     @Override

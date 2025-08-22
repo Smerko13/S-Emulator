@@ -34,7 +34,7 @@ public class Assignment extends SyntheticCommand {
         String newLabel1 = generateNewLabel();
         String newLabel2 = generateNewLabel();
         String newLabel3 = generateNewLabel();
-        this.ExpandedCommands.add(new ZeroVariable(varible,"   "));
+        this.ExpandedCommands.add(new ZeroVariable(varible,this.label));
         this.ExpandedCommands.add(new JumpNotZero(assignedVarible, newLabel1,"   "));
         this.ExpandedCommands.add(new GotoLabel(newLabel3));
         this.ExpandedCommands.add(new Decrease(assignedVarible,newLabel1));
@@ -46,6 +46,8 @@ public class Assignment extends SyntheticCommand {
         this.ExpandedCommands.add(new Increase(assignedVarible,"   "));
         this.ExpandedCommands.add(new JumpNotZero(newWorkVarible, newLabel2, "   "));
         this.ExpandedCommands.add(new Neutral(varible,newLabel3));
+
+        expandFurther();
     }
 
     @Override
