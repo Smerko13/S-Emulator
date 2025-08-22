@@ -40,11 +40,6 @@ public abstract class Command {
         }
     }
 
-    public Command(Varible varible) {
-        String var = varible.getName();
-        this.varible = extractVariables(var);
-    }
-
     protected static Varible extractVariables(String var) {
         //need to check if the variable already exists in the global scope
         Varible varible = null;

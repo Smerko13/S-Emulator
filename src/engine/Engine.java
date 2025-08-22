@@ -21,7 +21,6 @@ public class Engine implements S_Emulator {
     public static Set<Varible> varibles;
     private int cycleSum;
     private Stats stats;
-    private List<Command> expandedCommands;
     public static Set<String> labels;
 
 
@@ -197,21 +196,17 @@ public class Engine implements S_Emulator {
 
     @Override
     public List<Command> getCommandsAtDesiredLevel(int expansionLevel) {
-        List<Command> expandedCommands = new ArrayList<>();
-        for(int i = 0 ; i < expansionLevel ; i++) {
-            for (Command command : commands) {
-                if(command instanceof SyntheticCommand) {
-                    for(Command expandedCommand : ((SyntheticCommand) command).getExpandedCommands()) {
-                        expandedCommands.add(expandedCommand);
-                    }
-                }
-                else {
-                    expandedCommands.add(command);
-                }
-            }
-        }
-        return expandedCommands;
+       List<Command> commandsAtLevel = new ArrayList<>(this.commands);
+       for(int i = 0 ; i < expansionLevel ; i++) {
+           for(int j = 0 ; j < commandsAtLevel.size() ; j++) {
+               Command cmd = commandsAtLevel.get(j);
+               if(cmd instanceof SyntheticCommand) {
+                   commandsAtLevel.remove(j);
+                   commandsAtLevel.addAll(j, ((SyntheticCommand) cmd).getExpandedCommands());
+                     j += ((SyntheticCommand) cmd).getExpandedCommands().size() - 1;
+               }
+           }
+       }
+       return commandsAtLevel;
     }
-
-
 }

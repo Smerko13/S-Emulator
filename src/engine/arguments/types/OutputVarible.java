@@ -3,8 +3,6 @@ package engine.arguments.types;
 import engine.arguments.Varible;
 
 public class OutputVarible extends Varible {
-
-
     public OutputVarible() {
         this.type = 'y'; // 'O' for Output
         this.name = "y";

@@ -18,12 +18,5 @@ public abstract class BaseCommand extends Command {
         this.levelOfExpansion = 0;
     }
 
-    public BaseCommand(Varible varible) {
-        super(varible);
-        this.isExpandable = false; // BaseCommand is not expandable
-        this.commandType = 'B'; // BaseCommand type
-        this.levelOfExpansion = 0;
-    }
-
     public abstract String execute(int expansionLevel);
 }
