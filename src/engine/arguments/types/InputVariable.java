@@ -10,12 +10,18 @@ public class InputVariable extends Variable {
         this.name = name;
     }
 
-    public InputVariable(String name, int value) {
+    public InputVariable(String name, int value, boolean isOriginal) {
         this.id = name.charAt(1) - '0'; // Extracting ID from the name
         this.type = 'x'; // 'I' for Input
         this.name = name;
         this.value = value; // Setting the initial value
+        this.isOriginal = isOriginal;
     }
+
+    public boolean isOriginal() {
+        return this.isOriginal;
+    }
+
 
     public InputVariable(InputVariable variable) {
         super(variable);

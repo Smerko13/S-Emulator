@@ -39,7 +39,7 @@ public class ZeroVariable extends SyntheticCommand {
     }
 
     @Override
-    public String execute(int expansionLevel) {
+    public String execute() {
         this.variable.setValue(0);
         return null;
     }

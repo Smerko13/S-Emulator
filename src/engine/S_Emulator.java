@@ -31,4 +31,6 @@ public interface S_Emulator {
     List<Command> getCommandsAtDesiredLevel(int expansionLevel);
 
     void arrangeIDs(int expansionLevel);
+
+    void reset();
 }

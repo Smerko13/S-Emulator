@@ -18,5 +18,5 @@ public abstract class BaseCommand extends Command {
         this.levelOfExpansion = 0;
     }
 
-    public abstract String execute(int expansionLevel);
+    public abstract String execute();
 }

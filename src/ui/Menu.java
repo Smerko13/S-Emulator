@@ -62,6 +62,7 @@ public class Menu {
             }
             System.out.println("        " + command.getCommandRepresentation());
         }
+        System.out.println();
     }
 
     public String getFilePath() {
@@ -113,6 +114,9 @@ public class Menu {
         System.out.println("*****Please enter values for the input variables:*****");
         System.out.println("[A list of numbers separated by the character (,) eg: 1,2,3]");
         String input = scanner.next();
+        if(input.isEmpty()) {
+            return;
+        }
         String[] values = input.split(",");
         engine.SetInputVariablesValues(values);
     }

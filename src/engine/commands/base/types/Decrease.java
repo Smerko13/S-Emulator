@@ -24,7 +24,7 @@ public class Decrease extends BaseCommand {
     }
 
     @Override
-    public String execute(int expansionLevel) {
+    public String execute() {
         // Decrease the variable's value by 1
         int currentValue = variable.getValue();
         variable.setValue(currentValue - 1);

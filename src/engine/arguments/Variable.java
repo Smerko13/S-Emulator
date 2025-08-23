@@ -5,6 +5,7 @@ public abstract class Variable {
     protected int value = 0;
     protected int id;
     protected String name;
+    protected boolean isOriginal = true;
 
     public String getName() {
         return name;
@@ -27,5 +28,9 @@ public abstract class Variable {
         this.value = variable.value;
         this.id = variable.id;
         this.name = variable.name;
+    }
+
+    public void resetValue() {
+        this.value = 0;
     }
 }

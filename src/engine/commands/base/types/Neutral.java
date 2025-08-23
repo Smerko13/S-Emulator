@@ -19,7 +19,7 @@ public class Neutral extends BaseCommand {
     }
 
     @Override
-    public String execute(int expansionLevel) {
+    public String execute() {
         // Neutral command does not change the variable's value
         return null;
     }

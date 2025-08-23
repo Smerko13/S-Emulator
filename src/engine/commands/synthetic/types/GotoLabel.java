@@ -35,7 +35,7 @@ public class GotoLabel extends SyntheticCommand {
     }
 
     @Override
-    public String execute(int expansionLevel) {
+    public String execute() {
         int workArgIndex = 1;
         for(Variable variable : Engine.variables) {
             if(variable instanceof WorkVariable ){

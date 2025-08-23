@@ -3,6 +3,7 @@ package engine;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.types.*;
 import engine.commands.synthetic.SyntheticCommand;
@@ -39,6 +40,8 @@ public class Engine implements S_Emulator {
             id++;
         }
     }
+
+
 
     public String getCurrentProgramName() {
         return currentProgramName;
@@ -107,7 +110,7 @@ public class Engine implements S_Emulator {
         StringBuilder sb = new StringBuilder();
         for (Variable variable : variables) {
             if (variable instanceof InputVariable) {
-                sb.append(variable.getName()).append(" ");
+                sb.append(variable.getName()).append(" = ").append(variable.getValue());
             }
         }
         return sb.toString().trim();
@@ -115,7 +118,14 @@ public class Engine implements S_Emulator {
 
     @Override
     public Set<String> getLabels() {
-        return Engine.labels;
+        Set<String> labels = new LinkedHashSet<>();
+        for(Command command : commands) {
+            String label = command.getLabel();
+            if(!label.equals("   ")) {
+                labels.add(label);
+            }
+        }
+        return labels;
     }
 
     @Override
@@ -147,7 +157,7 @@ public class Engine implements S_Emulator {
         }
         if(index < values.length) {
             while(index < values.length) {
-                variables.add(new InputVariable("x" + (index+1), Integer.parseInt(values[index])));
+                variables.add(new InputVariable("x" + (index+1), Integer.parseInt(values[index]), false));
                 index++;
             }
         }
@@ -163,7 +173,7 @@ public class Engine implements S_Emulator {
         this.cycleSum = 0;
         Command currentCommand = this.commands.get(index);
         while (currentCommand != null) {
-            String executionLabel = currentCommand.execute(expansionLevel);
+            String executionLabel = currentCommand.execute();
             this.cycleSum += currentCommand.getCycles();
             if(executionLabel != null) {
                 if (executionLabel.length() == 2) {
@@ -191,6 +201,24 @@ public class Engine implements S_Emulator {
             }
         }
         this.stats.updateStatEntry(expansionLevel, variables, cycleSum);
+    }
+
+    public void reset() {
+        List<Variable> varsToRemove = new ArrayList<>();
+        for(Variable variable : variables) {
+            if(variable instanceof OutputVariable) {
+                variable.setValue(0);
+            } else if (variable instanceof InputVariable) {
+                if(!((InputVariable) variable).isOriginal()) {
+                    varsToRemove.add(variable);
+                } else {
+                    variable.setValue(0);
+                }
+            } else if (variable instanceof WorkVariable) {
+                varsToRemove.add(variable);
+            }
+        }
+        varsToRemove.forEach(variables::remove);
     }
 
     @Override

@@ -64,6 +64,7 @@ public class UI {
             menu.showOutputVariable(engine);
             menu.displayVariables(engine);
             menu.displayCycleSum(engine);
+            engine.reset();
         }
         else {
             menu.displayFailedToLoadMessage();

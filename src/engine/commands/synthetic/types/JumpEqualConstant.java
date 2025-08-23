@@ -49,7 +49,7 @@ public class JumpEqualConstant extends SyntheticCommand {
     }
 
     @Override
-    public String execute(int expansionLevel) {
+    public String execute() {
         // Check if the variable's value equals the constant value
         if (variable.getValue() == constantValue) {
             // If equal, return the label for jumping

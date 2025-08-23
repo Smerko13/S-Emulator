@@ -68,7 +68,7 @@ public class JumpEqualVariable extends SyntheticCommand {
     }
 
     @Override
-    public String execute(int expansionLevel) {
+    public String execute() {
         int varValue = this.variable.getValue();
         int checkedValue;
         for(Variable var : Engine.variables)

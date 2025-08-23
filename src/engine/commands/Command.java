@@ -86,11 +86,11 @@ public abstract class Command {
         return levelOfExpansion;
     }
 
-    public Object getVariable() {
+    public Variable getVariable() {
         return variable;
     }
 
-    public abstract String execute(int expansionLevel);
+    public abstract String execute();
 
     public int getCycles() {
         return cycles;
