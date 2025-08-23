@@ -1,6 +1,7 @@
 package engine.commands.base.types;
 
 import engine.arguments.Varible;
+import engine.commands.Command;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
 
@@ -11,8 +12,8 @@ public class Decrease extends BaseCommand {
         this.cycles = 1;
     }
 
-    public Decrease(Varible varible, String label) {
-        super(varible, label);
+    public Decrease(Varible varible, String label, Command parentCommand) {
+        super(varible, label, parentCommand);
         this.commandName = "DECREASE";
         this.cycles = 1;
     }

@@ -17,9 +17,9 @@ public class ConstantAssignment extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
-        this.ExpandedCommands.add(new ZeroVariable(this.varible,this.label));
+        this.ExpandedCommands.add(new ZeroVariable(this.varible,this.label,this));
         for(int i = 0 ; i < this.constantValue ; i++) {
-            this.ExpandedCommands.add(new Increase(this.varible, "   "));
+            this.ExpandedCommands.add(new Increase(this.varible, "   ",this));
         }
         expandFurther();
     }

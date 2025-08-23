@@ -56,10 +56,10 @@ public class Menu {
         System.out.println("    Labels: " + engine.getLabels());
         System.out.println("    Commands: ");
         for (Command command : engine.getCommands()) {
-            if( command == null) {
+            if (command == null) {
                 continue; // Skip null commands
             }
-            System.out.println("        " + command.getCommandRepresentation(engine.getCommands().indexOf(command)+1));
+            System.out.println("        " + command.getCommandRepresentation(engine.getCommands().indexOf(command) + 1));
         }
     }
 
@@ -75,6 +75,7 @@ public class Menu {
             displayFailedToLoadMessage();
         }
     }
+
     public void displayFailedToLoadMessage() {
         System.out.println("Failed to load the program. Please check the file path and format.");
     }
@@ -164,17 +165,28 @@ public class Menu {
     }
 
     public void showExpandedProgram(S_Emulator engine) {
-        int i = 1;
         int expansionLevel = getExpansionLevel(engine);
         System.out.println("Expanded Program at level " + expansionLevel + ":");
-        List<Command> commands = engine.getCommandsAtDesiredLevel(expansionLevel);
-        for (Command command : commands) {
-            if (command == null) {
-                continue; // Skip null commands
-            } else {
-                System.out.println("    " + command.getCommandRepresentation(i++));
-            }
+        List<Command> commandsAtLevel = engine.getCommandsAtDesiredLevel(expansionLevel);
 
+        for (Command command : commandsAtLevel) {
+            recursivePrint(command);
+        }
+
+    }
+
+    private void recursivePrint(Command command) {
+        if (command == null) {
+            return; // Skip null commands
+        }
+        System.out.print(command.getCommandRepresentation(-1));
+        if(command.getParentCommand() != null) {
+            System.out.print(" <<< ");
+            recursivePrint(command.getParentCommand());
+        } else {
+            System.out.println();
         }
     }
+
+
 }

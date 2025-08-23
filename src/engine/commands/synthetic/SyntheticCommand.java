@@ -18,8 +18,8 @@ public abstract class SyntheticCommand extends Command {
         this.ExpandedCommands = new java.util.ArrayList<>();
     }
 
-    public SyntheticCommand(Varible varible, String label) {
-        super(varible, label);
+    public SyntheticCommand(Varible varible, String label, Command parentCommand) {
+        super(varible, label, parentCommand);
         this.commandType = 'S'; // SyntheticCommand type
         this.isExpandable = true; // SyntheticCommand is expandable
         this.ExpandedCommands = new java.util.ArrayList<>();
@@ -59,5 +59,8 @@ public abstract class SyntheticCommand extends Command {
                 ((SyntheticCommand) cmd).initializeExpandedCommands();
             }
         }
+    }
+    public List <Command> getCommands() {
+        return this.ExpandedCommands;
     }
 }

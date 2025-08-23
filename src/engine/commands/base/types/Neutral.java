@@ -1,6 +1,7 @@
 package engine.commands.base.types;
 
 import engine.arguments.Varible;
+import engine.commands.Command;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
 
@@ -11,8 +12,8 @@ public class Neutral extends BaseCommand {
         this.cycles = 0;
     }
 
-    public Neutral(Varible varible, String newLabel3) {
-        super(varible, newLabel3);
+    public Neutral(Varible varible, String newLabel3, Command parentCommand) {
+        super(varible, newLabel3, parentCommand);
         this.commandName = "NEUTRAL";
         this.cycles = 0;
     }

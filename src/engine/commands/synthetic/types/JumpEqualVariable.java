@@ -40,10 +40,10 @@ public class JumpEqualVariable extends SyntheticCommand {
         Engine.varibles.add(newWorkVarible1);
         WorkVarible newWorkVarible2 = new WorkVarible(generateNewWorkVaribleName());
         Engine.varibles.add(newWorkVarible2);
-        this.ExpandedCommands.add(new Assignment(newWorkVarible1, this.label, this.varible));
+        this.ExpandedCommands.add(new Assignment(newWorkVarible1, this.label, this.varible, this));
         for(Varible v : Engine.varibles) {
             if(v.getName().equals(this.variableName)) {
-                this.ExpandedCommands.add(new Assignment(newWorkVarible2, "   ", v));
+                this.ExpandedCommands.add(new Assignment(newWorkVarible2, "   ", v, this));
                 break;
             }
         }
@@ -53,15 +53,15 @@ public class JumpEqualVariable extends SyntheticCommand {
         Engine.labels.add(newLabel2);
         String newLabel3 = generateNewLabel();
         Engine.labels.add(newLabel3);
-        this.ExpandedCommands.add(new JumpZero(newWorkVarible1,newLabel3,newLabel2));
-        this.ExpandedCommands.add(new JumpZero(newWorkVarible2,newLabel1,"   "));
-        this.ExpandedCommands.add(new Decrease(newWorkVarible1,"   "));
-        this.ExpandedCommands.add(new Decrease(newWorkVarible2,"   "));
-        this.ExpandedCommands.add(new GotoLabel(newLabel2));
-        this.ExpandedCommands.add(new JumpZero(newWorkVarible2,this.JEVariableLabel,newLabel3));
+        this.ExpandedCommands.add(new JumpZero(newWorkVarible1,newLabel3,newLabel2,this));
+        this.ExpandedCommands.add(new JumpZero(newWorkVarible2,newLabel1,"   ",this));
+        this.ExpandedCommands.add(new Decrease(newWorkVarible1,"   ",this));
+        this.ExpandedCommands.add(new Decrease(newWorkVarible2,"   ",this));
+        this.ExpandedCommands.add(new GotoLabel(newLabel2,this));
+        this.ExpandedCommands.add(new JumpZero(newWorkVarible2,this.JEVariableLabel,newLabel3,this));
         for(Varible v : Engine.varibles) {
             if(v instanceof OutputVarible){
-                this.ExpandedCommands.add(new Neutral(v,newLabel1));
+                this.ExpandedCommands.add(new Neutral(v,newLabel1,this));
             }
         }
         expandFurther();

@@ -2,6 +2,7 @@ package engine.commands.synthetic.types;
 import engine.Engine;
 import engine.arguments.Varible;
 import engine.arguments.types.WorkVarible;
+import engine.commands.Command;
 import engine.commands.base.types.Increase;
 import engine.commands.base.types.JumpNotZero;
 import engine.commands.synthetic.SyntheticCommand;
@@ -18,8 +19,8 @@ public class GotoLabel extends SyntheticCommand {
         gototLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
     }
     
-    public GotoLabel(String gototLabel) {
-        super(null,"   ");
+    public GotoLabel(String gototLabel, Command parentCommand) {
+        super(null,"   ", parentCommand);
         this.commandName = "GOTO_LABEL";
         this.cycles = 1;
         this.levelOfExpansion = 1;
@@ -28,8 +29,8 @@ public class GotoLabel extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
-        this.ExpandedCommands.add(new Increase(this.varible, this.label));
-        this.ExpandedCommands.add(new JumpNotZero(this.varible,this.gototLabel, "   "));
+        this.ExpandedCommands.add(new Increase(this.varible, this.label,this));
+        this.ExpandedCommands.add(new JumpNotZero(this.varible,this.gototLabel, "   ",this));
     }
 
     @Override

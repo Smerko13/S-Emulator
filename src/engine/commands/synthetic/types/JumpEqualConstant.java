@@ -29,20 +29,22 @@ public class JumpEqualConstant extends SyntheticCommand {
     @Override
     public void initializeExpandedCommands() {
         String newLabel = generateNewLabel();
+        Engine.labels.add(newLabel);
         WorkVarible newWorkVarible = new WorkVarible(generateNewWorkVaribleName());
-        this.ExpandedCommands.add(new Assignment(newWorkVarible,this.label, this.varible));
+        Engine.varibles.add(newWorkVarible);
+        this.ExpandedCommands.add(new Assignment(newWorkVarible,this.label, this.varible, this));
         for(int i = 0 ; i < this.constantValue;i++) {
-            this.ExpandedCommands.add(new JumpZero(newWorkVarible, newLabel, "   "));
-            this.ExpandedCommands.add(new Decrease(newWorkVarible, "   "));
+            this.ExpandedCommands.add(new JumpZero(newWorkVarible, newLabel, "   ", this));
+            this.ExpandedCommands.add(new Decrease(newWorkVarible, "   ", this));
         }
-        this.ExpandedCommands.add(new JumpNotZero(newWorkVarible,newLabel, "   "));
-        this.ExpandedCommands.add(new GotoLabel(this.JEConstantLabel));
+        this.ExpandedCommands.add(new JumpNotZero(newWorkVarible,newLabel, "   ", this));
+        this.ExpandedCommands.add(new GotoLabel(this.JEConstantLabel, this));
         Varible var = null;
         for(Varible v : Engine.varibles){
             if( v instanceof OutputVarible)
                 var = v;
         }
-        this.ExpandedCommands.add(new Neutral(var, newLabel));
+        this.ExpandedCommands.add(new Neutral(var, newLabel, this));
 
         expandFurther();
     }

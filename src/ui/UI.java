@@ -1,8 +1,6 @@
 package ui;
 
-import engine.Engine;
 import engine.S_Emulator;
-import engine.commands.Command;
 
 public class UI {
     Menu menu;

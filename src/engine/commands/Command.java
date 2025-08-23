@@ -15,6 +15,7 @@ public abstract class Command {
     protected String commandName;
     protected int levelOfExpansion;
     protected Varible varible;
+    protected Command parentCommand = null;
 
     public Command(SInstruction instruction) {
         if (instruction.getSLabel() != null) {
@@ -28,7 +29,8 @@ public abstract class Command {
         this.varible = extractVariables(var);
     }
 
-    public Command(Varible varible, String label) {
+    public Command(Varible varible, String label, Command parentCommand) {
+        this.parentCommand = parentCommand;
         if(label.length() == 2) {
             label = label + " "; // Ensure label has at least 3 characters
         }
@@ -95,5 +97,9 @@ public abstract class Command {
 
     public boolean isExpandable() {
         return isExpandable;
+    }
+
+    public Command getParentCommand() {
+        return parentCommand;
     }
 }

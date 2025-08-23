@@ -5,6 +5,7 @@ import engine.Engine;
 import engine.arguments.Varible;
 import engine.arguments.types.OutputVarible;
 import engine.arguments.types.WorkVarible;
+import engine.commands.Command;
 import engine.commands.base.types.JumpNotZero;
 import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
@@ -21,8 +22,8 @@ public class JumpZero extends SyntheticCommand {
         JZLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
     }
 
-    public JumpZero(WorkVarible newWorkVarible, String jeConstantLabel, String spaces) {
-        super(newWorkVarible,spaces);
+    public JumpZero(WorkVarible newWorkVarible, String jeConstantLabel, String spaces, Command parentCommand) {
+        super(newWorkVarible,spaces, parentCommand);
         this.commandName = "JUMP_ZERO";
         this.cycles = 2;
         this.levelOfExpansion = 2;
@@ -32,11 +33,11 @@ public class JumpZero extends SyntheticCommand {
     @Override
     public void initializeExpandedCommands() {
         String newLabel = this.generateNewLabel();
-        this.ExpandedCommands.add(new JumpNotZero(this.varible, newLabel, this.label));
-        this.ExpandedCommands.add(new GotoLabel(this.JZLabel));
+        this.ExpandedCommands.add(new JumpNotZero(this.varible, newLabel, this.label, this));
+        this.ExpandedCommands.add(new GotoLabel(this.JZLabel, this));
         for(Varible v : Engine.varibles) {
             if(v instanceof OutputVarible) {
-                this.ExpandedCommands.add(new Neutral(v, newLabel));
+                this.ExpandedCommands.add(new Neutral(v, newLabel, this));
             }
         }
         expandFurther();
