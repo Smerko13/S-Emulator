@@ -56,11 +56,11 @@ public class UI {
     private void executeProgram(boolean readFile) {
         if(readFile) {
             int expansionLevel = menu.getExpansionLevel(engine);
-            menu.showInputVariables(engine);
+            menu.showInputVariables(engine, expansionLevel);
             menu.getInputVariablesValues(engine);
             engine.executeProgram(expansionLevel);
             System.out.println("*****The program that was executed:*****");
-            menu.showProgram(engine);
+            menu.showProgram(engine, expansionLevel);
             menu.showOutputVariable(engine);
             menu.displayVariables(engine);
             menu.displayCycleSum(engine);
@@ -81,7 +81,7 @@ public class UI {
 
     private void displayProgram(boolean readFile) {
         if (readFile) {
-            menu.showProgram(engine);
+            menu.showProgram(engine, 0);
         } else {
             menu.displayFailedToLoadMessage();
         }

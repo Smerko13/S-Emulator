@@ -76,7 +76,7 @@ public class Engine implements S_Emulator {
                 this.commands.add(createSyntheticCommandFromInstruction(instruction));
             }
         }
-        labels = getLabels();
+        //labels = getLabels(0);
         variables.add(new OutputVariable());
         for(Command cmd : this.commands) {
             if(cmd instanceof SyntheticCommand) {
@@ -108,26 +108,28 @@ public class Engine implements S_Emulator {
         };
     }
 
-    public String getListOfInputParameters() {
+    public String getListOfInputParameters(int expansionLevel) {
         StringBuilder sb = new StringBuilder();
-        for (Variable variable : variables) {
-            if (variable instanceof InputVariable) {
-                sb.append(variable.getName()).append(" = ").append(((InputVariable) variable).getOriginalValue()).append(" ");
+        for(Variable variable : variables) {
+            if(variable instanceof InputVariable) {
+                sb.append(variable.getName()).append(" ");
             }
         }
+
         return sb.toString().trim();
     }
 
     @Override
-    public Set<String> getLabels() {
-        Set<String> labels = new LinkedHashSet<>();
-        for(Command command : commands) {
+    public Set<String> getLabels(int expansionLevel) {
+        StringBuilder sb = new StringBuilder();
+        for(Command command : getCommandsAtDesiredLevel(expansionLevel)) {
             String label = command.getLabel();
-            if(!label.equals("   ")) {
-                labels.add(label);
+            if(!label.equals("   ") && !label.equals("  ") && !label.equals(" ")) {
+                sb.append(label).append(" ");
             }
         }
-        return labels;
+        String[] labelsArray = sb.toString().trim().split(" ");
+        return new LinkedHashSet<>(Arrays.asList(labelsArray));
     }
 
     @Override
@@ -177,7 +179,8 @@ public class Engine implements S_Emulator {
     public void executeProgram(int expansionLevel) {
         int index = 0;
         this.cycleSum = 0;
-        Command currentCommand = this.commands.get(index);
+        List<Command> commands = getCommandsAtDesiredLevel(expansionLevel);
+        Command currentCommand = commands.get(index);
         while (currentCommand != null) {
             String executionLabel = currentCommand.execute();
             this.cycleSum += currentCommand.getCycles();

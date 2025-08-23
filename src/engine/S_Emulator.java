@@ -10,9 +10,9 @@ public interface S_Emulator {
 
     Boolean readProgramFromXml(String filePath);
 
-    String getListOfInputParameters();
+    String getListOfInputParameters(int expansionLevel);
 
-    Set<String> getLabels();
+    Set<String> getLabels(int expansionLevel);
 
     List<Command> getCommands();
 

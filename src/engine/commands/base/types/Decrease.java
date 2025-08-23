@@ -27,7 +27,9 @@ public class Decrease extends BaseCommand {
     public String execute() {
         // Decrease the variable's value by 1
         int currentValue = variable.getValue();
-        variable.setValue(currentValue - 1);
+        if(currentValue > 0) {
+            variable.setValue(currentValue - 1);
+        }
         return null;
     }
 }

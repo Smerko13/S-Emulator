@@ -49,14 +49,14 @@ public class Menu {
         System.out.println("Exiting the program. Goodbye!");
     }
 
-    public void showProgram(S_Emulator engine) {
+    public void showProgram(S_Emulator engine, int expansionLevel) {
         System.out.println("Program details:");
         System.out.println("    Program Name: " + engine.getCurrentProgramName());
-        System.out.println("    Input parameters: " + engine.getListOfInputParameters());
-        System.out.println("    Labels: " + engine.getLabels());
+        System.out.println("    Input parameters: " + engine.getListOfInputParameters(expansionLevel));
+        System.out.println("    Labels: " + engine.getLabels(expansionLevel));
         System.out.println("    Commands: ");
-        engine.arrangeIDs(0);
-        for (Command command : engine.getCommands()) {
+        engine.arrangeIDs(expansionLevel);
+        for (Command command : engine.getCommandsAtDesiredLevel(expansionLevel)) {
             if (command == null) {
                 continue; // Skip null commands
             }
@@ -100,8 +100,8 @@ public class Menu {
         return expansionLevel;
     }
 
-    public void showInputVariables(S_Emulator engine) {
-        String inputVariables = engine.getListOfInputParameters();
+    public void showInputVariables(S_Emulator engine, int expansionLevel) {
+        String inputVariables = engine.getListOfInputParameters(expansionLevel);
         System.out.println("*****Input Variables:*****");
         if (inputVariables.isEmpty()) {
             System.out.println("No input variables found.");
