@@ -1,16 +1,16 @@
 package engine.arguments.types;
 
-import engine.arguments.Varible;
+import engine.arguments.Variable;
 
-public class OutputVarible extends Varible {
-    public OutputVarible() {
+public class OutputVariable extends Variable {
+    public OutputVariable() {
         this.type = 'y'; // 'O' for Output
         this.name = "y";
     }
 
-    public OutputVarible(OutputVarible varible) {
-        super(varible);
-        new OutputVarible();
+    public OutputVariable(OutputVariable variable) {
+        super(variable);
+        new OutputVariable();
     }
 
     @Override

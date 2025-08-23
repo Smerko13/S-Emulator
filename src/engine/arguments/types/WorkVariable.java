@@ -1,11 +1,11 @@
 package engine.arguments.types;
 
-import engine.arguments.Varible;
+import engine.arguments.Variable;
 
-public class WorkVarible extends Varible {
+public class WorkVariable extends Variable {
     boolean isForGotoLabel = false; // Flag to indicate if this variable is used for GOTO label
 
-    public WorkVarible(String name) {
+    public WorkVariable(String name) {
         this.id = name.charAt(1) - '0'; // Extracting ID from the name
         this.type = 'z';
         this.name = name;

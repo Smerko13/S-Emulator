@@ -1,8 +1,8 @@
 package engine;
 
-import engine.arguments.Varible;
-import engine.arguments.types.InputVarible;
-import engine.arguments.types.OutputVarible;
+import engine.arguments.Variable;
+import engine.arguments.types.InputVariable;
+import engine.arguments.types.OutputVariable;
 import engine.commands.Command;
 import engine.commands.base.types.*;
 import engine.commands.synthetic.SyntheticCommand;
@@ -18,7 +18,7 @@ import java.util.*;
 public class Engine implements S_Emulator {
     private List<Command> commands;
     private String currentProgramName;
-    public static Set<Varible> varibles;
+    public static Set<Variable> variables;
     private int cycleSum;
     private Stats stats;
     public static Set<String> labels;
@@ -26,7 +26,7 @@ public class Engine implements S_Emulator {
 
     public Engine() {
         this.commands = new ArrayList<>();
-        varibles = new LinkedHashSet<>();
+        variables = new LinkedHashSet<>();
         this.stats = new Stats();
         labels = new LinkedHashSet<>();
     }
@@ -72,7 +72,7 @@ public class Engine implements S_Emulator {
             }
         }
         labels = getLabels();
-        varibles.add(new OutputVarible());
+        variables.add(new OutputVariable());
         for(Command cmd : this.commands) {
             if(cmd instanceof SyntheticCommand) {
                 ((SyntheticCommand) cmd).initializeExpandedCommands();
@@ -105,9 +105,9 @@ public class Engine implements S_Emulator {
 
     public String getListOfInputParameters() {
         StringBuilder sb = new StringBuilder();
-        for (Varible varible : varibles) {
-            if (varible instanceof InputVarible) {
-                sb.append(varible.getName()).append(" ");
+        for (Variable variable : variables) {
+            if (variable instanceof InputVariable) {
+                sb.append(variable.getName()).append(" ");
             }
         }
         return sb.toString().trim();
@@ -137,24 +137,24 @@ public class Engine implements S_Emulator {
     @Override
     public void SetInputVariablesValues(String[] values) {
         int index = 0;
-        for( Varible varible : varibles) {
-            if (varible instanceof InputVarible && varible.getName().charAt(1) == (index+1)+ '0') {
+        for( Variable variable : variables) {
+            if (variable instanceof InputVariable && variable.getName().charAt(1) == (index+1)+ '0') {
                 if (index < values.length) {
-                    varible.setValue(Integer.parseInt(values[index]));
+                    variable.setValue(Integer.parseInt(values[index]));
                 }
                 index++;
             }
         }
         if(index < values.length) {
             while(index < values.length) {
-                varibles.add(new InputVarible("x" + (index+1), Integer.parseInt(values[index])));
+                variables.add(new InputVariable("x" + (index+1), Integer.parseInt(values[index])));
                 index++;
             }
         }
     }
 
-    public Set<Varible> getVariables() {
-        return varibles;
+    public Set<Variable> getVariables() {
+        return variables;
     }
 
     @Override
@@ -190,7 +190,7 @@ public class Engine implements S_Emulator {
                 }
             }
         }
-        this.stats.updateStatEntry(expansionLevel, varibles, cycleSum);
+        this.stats.updateStatEntry(expansionLevel, variables, cycleSum);
     }
 
     @Override

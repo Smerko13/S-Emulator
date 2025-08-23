@@ -1,8 +1,8 @@
 package engine.commands.synthetic;
 
 import engine.Engine;
-import engine.arguments.Varible;
-import engine.arguments.types.WorkVarible;
+import engine.arguments.Variable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import schema.SInstruction;
 
@@ -18,8 +18,8 @@ public abstract class SyntheticCommand extends Command {
         this.ExpandedCommands = new java.util.ArrayList<>();
     }
 
-    public SyntheticCommand(Varible varible, String label, Command parentCommand) {
-        super(varible, label, parentCommand);
+    public SyntheticCommand(Variable variable, String label, Command parentCommand) {
+        super(variable, label, parentCommand);
         this.commandType = 'S'; // SyntheticCommand type
         this.isExpandable = true; // SyntheticCommand is expandable
         this.ExpandedCommands = new java.util.ArrayList<>();
@@ -43,10 +43,10 @@ public abstract class SyntheticCommand extends Command {
         return "L" + labelIndex;
     }
 
-    public String generateNewWorkVaribleName() {
+    public String generateNewWorkVariableName() {
         int workArgIndex = 1;
-        for (Varible variable : Engine.varibles) {
-            if (variable instanceof WorkVarible && variable.getName().charAt(1) == workArgIndex + '0') {
+        for (Variable variable : Engine.variables) {
+            if (variable instanceof WorkVariable && variable.getName().charAt(1) == workArgIndex + '0') {
                 workArgIndex++;
             }
         }

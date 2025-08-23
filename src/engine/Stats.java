@@ -1,8 +1,8 @@
 package engine;
 
-import engine.arguments.Varible;
-import engine.arguments.types.InputVarible;
-import engine.arguments.types.OutputVarible;
+import engine.arguments.Variable;
+import engine.arguments.types.InputVariable;
+import engine.arguments.types.OutputVariable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,14 +11,14 @@ import java.util.Set;
 public class Stats {
     List<Execution> executionHistory;
 
-    public void updateStatEntry(int expansionLevel, Set<Varible> varibles, int cycleSum) {
+    public void updateStatEntry(int expansionLevel, Set<Variable> variables, int cycleSum) {
         Execution execution = new Execution();
         execution.expansionLevel = expansionLevel;
-        for (Varible varible : varibles) {
-            if (varible instanceof InputVarible) {
-                execution.inputVariables.add(new InputVarible((InputVarible) varible));
-            } else if (varible instanceof OutputVarible) {
-                execution.outputVariable = new OutputVarible((OutputVarible) varible);
+        for (Variable variable : variables) {
+            if (variable instanceof InputVariable) {
+                execution.inputVariables.add(new InputVariable((InputVariable) variable));
+            } else if (variable instanceof OutputVariable) {
+                execution.outputVariable = new OutputVariable((OutputVariable) variable);
             }
         }
         execution.cycleCount = cycleSum;
@@ -30,9 +30,9 @@ public class Stats {
         private static int id = 0;
         private final int currentId;
         private int expansionLevel;
-        private List<Varible> inputVariables;
+        private List<Variable> inputVariables;
         private int cycleCount;
-        private OutputVarible outputVariable;
+        private OutputVariable outputVariable;
 
         public Execution() {
             this.inputVariables = new ArrayList<>();
@@ -46,7 +46,7 @@ public class Stats {
             sb.append("Execution #").append(currentId).append("\n");
             sb.append("    Expansion Level: ").append(expansionLevel).append("\n");
             sb.append("    Input Variables: ");
-            for (Varible var : inputVariables) {
+            for (Variable var : inputVariables) {
                 sb.append(var.getName()).append(" = ").append(var.getValue()).append(", ");
             }
             if (outputVariable != null) {

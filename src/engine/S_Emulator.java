@@ -1,6 +1,6 @@
 package engine;
 
-import engine.arguments.Varible;
+import engine.arguments.Variable;
 import engine.commands.Command;
 import java.util.List;
 import java.util.Set;
@@ -20,7 +20,7 @@ public interface S_Emulator {
 
     void SetInputVariablesValues(String[] values);
 
-    Set<Varible> getVariables();
+    Set<Variable> getVariables();
 
     void executeProgram(int expansionLevel);
 

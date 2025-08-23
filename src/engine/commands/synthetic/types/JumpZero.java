@@ -2,9 +2,9 @@ package engine.commands.synthetic.types;
 
 import com.sun.jdi.connect.Connector;
 import engine.Engine;
-import engine.arguments.Varible;
-import engine.arguments.types.OutputVarible;
-import engine.arguments.types.WorkVarible;
+import engine.arguments.Variable;
+import engine.arguments.types.OutputVariable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.types.JumpNotZero;
 import engine.commands.base.types.Neutral;
@@ -12,7 +12,7 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 public class JumpZero extends SyntheticCommand {
-    private String JZLabel;
+    private final String JZLabel;
 
     public JumpZero(SInstruction instruction) {
         super(instruction);
@@ -22,8 +22,8 @@ public class JumpZero extends SyntheticCommand {
         JZLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
     }
 
-    public JumpZero(WorkVarible newWorkVarible, String jeConstantLabel, String spaces, Command parentCommand) {
-        super(newWorkVarible,spaces, parentCommand);
+    public JumpZero(WorkVariable newWorkVariable, String jeConstantLabel, String spaces, Command parentCommand) {
+        super(newWorkVariable,spaces, parentCommand);
         this.commandName = "JUMP_ZERO";
         this.cycles = 2;
         this.levelOfExpansion = 2;
@@ -33,10 +33,10 @@ public class JumpZero extends SyntheticCommand {
     @Override
     public void initializeExpandedCommands() {
         String newLabel = this.generateNewLabel();
-        this.ExpandedCommands.add(new JumpNotZero(this.varible, newLabel, this.label, this));
+        this.ExpandedCommands.add(new JumpNotZero(this.variable, newLabel, this.label, this));
         this.ExpandedCommands.add(new GotoLabel(this.JZLabel, this));
-        for(Varible v : Engine.varibles) {
-            if(v instanceof OutputVarible) {
+        for(Variable v : Engine.variables) {
+            if(v instanceof OutputVariable) {
                 this.ExpandedCommands.add(new Neutral(v, newLabel, this));
             }
         }
@@ -46,7 +46,7 @@ public class JumpZero extends SyntheticCommand {
     @Override
     public String execute(int expansionLevel) {
         // Check if the variable is zero
-        if (varible.getValue() == 0) {
+        if (variable.getValue() == 0) {
             // If zero, return the label for jumping
             return JZLabel;
         }
@@ -56,6 +56,6 @@ public class JumpZero extends SyntheticCommand {
 
     @Override
     public String toString() {
-        return "IF " + varible.getName() + " = 0 GOTO " + JZLabel;
+        return "IF " + variable.getName() + " = 0 GOTO " + JZLabel;
     }
 }

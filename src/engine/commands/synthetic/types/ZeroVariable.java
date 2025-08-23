@@ -1,7 +1,7 @@
 package engine.commands.synthetic.types;
 
 import engine.Engine;
-import engine.arguments.Varible;
+import engine.arguments.Variable;
 import engine.commands.Command;
 import engine.commands.base.types.Decrease;
 import engine.commands.base.types.JumpNotZero;
@@ -19,7 +19,7 @@ public class ZeroVariable extends SyntheticCommand {
         this.levelOfExpansion = 1;
     }
 
-    public ZeroVariable(Varible varible, String label, Command parentCommand) {
+    public ZeroVariable(Variable varible, String label, Command parentCommand) {
         super(varible, label, parentCommand);
         this.commandName = "ZERO_VARIABLE";
         this.cycles = 1;
@@ -30,22 +30,22 @@ public class ZeroVariable extends SyntheticCommand {
         String newLabel = generateNewLabel();
         Engine.labels.add(newLabel);
         if(this.label.equals("   ")) {
-            this.ExpandedCommands.add(new Decrease(this.varible,newLabel, this));
+            this.ExpandedCommands.add(new Decrease(this.variable,newLabel, this));
         } else {
-            this.ExpandedCommands.add(new Neutral(this.varible,this.label, this));
-            this.ExpandedCommands.add(new Decrease(this.varible,newLabel, this));
+            this.ExpandedCommands.add(new Neutral(this.variable,this.label, this));
+            this.ExpandedCommands.add(new Decrease(this.variable,newLabel, this));
         }
-        this.ExpandedCommands.add(new JumpNotZero(this.varible,newLabel,"   ", this));
+        this.ExpandedCommands.add(new JumpNotZero(this.variable,newLabel,"   ", this));
     }
 
     @Override
     public String execute(int expansionLevel) {
-        this.varible.setValue(0);
+        this.variable.setValue(0);
         return null;
     }
 
     @Override
     public String toString() {
-        return varible.getName() + " <- 0";
+        return variable.getName() + " <- 0";
     }
 }

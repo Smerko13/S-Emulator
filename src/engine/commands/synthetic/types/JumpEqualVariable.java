@@ -1,10 +1,10 @@
 package engine.commands.synthetic.types;
 
 import engine.Engine;
-import engine.arguments.Varible;
-import engine.arguments.types.InputVarible;
-import engine.arguments.types.OutputVarible;
-import engine.arguments.types.WorkVarible;
+import engine.arguments.Variable;
+import engine.arguments.types.InputVariable;
+import engine.arguments.types.OutputVariable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.types.Decrease;
 import engine.commands.base.types.Neutral;
@@ -23,11 +23,11 @@ public class JumpEqualVariable extends SyntheticCommand {
         this.JEVariableLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.variableName = instruction.getSInstructionArguments().getSInstructionArgument().getLast().getValue();
         if(this.variableName.charAt(0)=='z'){
-            WorkVarible workVarible = new WorkVarible(this.variableName);
-            Engine.varibles.add(workVarible);
+            WorkVariable workVariable = new WorkVariable(this.variableName);
+            Engine.variables.add(workVariable);
         } else if(this.variableName.charAt(0)=='x'){
-            InputVarible inputVarible = new InputVarible(this.variableName);
-            Engine.varibles.add(inputVarible);
+            InputVariable inputVariable = new InputVariable(this.variableName);
+            Engine.variables.add(inputVariable);
         }
         else {
             throw new IllegalArgumentException("Invalid variable type for comparison. Only 'x' (input) and 'z' (work) variables are allowed.");
@@ -36,14 +36,14 @@ public class JumpEqualVariable extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
-        WorkVarible newWorkVarible1 = new WorkVarible(generateNewWorkVaribleName());
-        Engine.varibles.add(newWorkVarible1);
-        WorkVarible newWorkVarible2 = new WorkVarible(generateNewWorkVaribleName());
-        Engine.varibles.add(newWorkVarible2);
-        this.ExpandedCommands.add(new Assignment(newWorkVarible1, this.label, this.varible, this));
-        for(Varible v : Engine.varibles) {
+        WorkVariable newWorkVariable1 = new WorkVariable(generateNewWorkVariableName());
+        Engine.variables.add(newWorkVariable1);
+        WorkVariable newWorkVariable2 = new WorkVariable(generateNewWorkVariableName());
+        Engine.variables.add(newWorkVariable2);
+        this.ExpandedCommands.add(new Assignment(newWorkVariable1, this.label, this.variable, this));
+        for(Variable v : Engine.variables) {
             if(v.getName().equals(this.variableName)) {
-                this.ExpandedCommands.add(new Assignment(newWorkVarible2, "   ", v, this));
+                this.ExpandedCommands.add(new Assignment(newWorkVariable2, "   ", v, this));
                 break;
             }
         }
@@ -53,14 +53,14 @@ public class JumpEqualVariable extends SyntheticCommand {
         Engine.labels.add(newLabel2);
         String newLabel3 = generateNewLabel();
         Engine.labels.add(newLabel3);
-        this.ExpandedCommands.add(new JumpZero(newWorkVarible1,newLabel3,newLabel2,this));
-        this.ExpandedCommands.add(new JumpZero(newWorkVarible2,newLabel1,"   ",this));
-        this.ExpandedCommands.add(new Decrease(newWorkVarible1,"   ",this));
-        this.ExpandedCommands.add(new Decrease(newWorkVarible2,"   ",this));
+        this.ExpandedCommands.add(new JumpZero(newWorkVariable1,newLabel3,newLabel2,this));
+        this.ExpandedCommands.add(new JumpZero(newWorkVariable2,newLabel1,"   ",this));
+        this.ExpandedCommands.add(new Decrease(newWorkVariable1,"   ",this));
+        this.ExpandedCommands.add(new Decrease(newWorkVariable2,"   ",this));
         this.ExpandedCommands.add(new GotoLabel(newLabel2,this));
-        this.ExpandedCommands.add(new JumpZero(newWorkVarible2,this.JEVariableLabel,newLabel3,this));
-        for(Varible v : Engine.varibles) {
-            if(v instanceof OutputVarible){
+        this.ExpandedCommands.add(new JumpZero(newWorkVariable2,this.JEVariableLabel,newLabel3,this));
+        for(Variable v : Engine.variables) {
+            if(v instanceof OutputVariable){
                 this.ExpandedCommands.add(new Neutral(v,newLabel1,this));
             }
         }
@@ -69,9 +69,9 @@ public class JumpEqualVariable extends SyntheticCommand {
 
     @Override
     public String execute(int expansionLevel) {
-        int varValue = this.varible.getValue();
+        int varValue = this.variable.getValue();
         int checkedValue;
-        for(Varible var : Engine.varibles)
+        for(Variable var : Engine.variables)
         {
             if(var.getName().equals(this.variableName)) {
                 checkedValue = var.getValue();
@@ -86,8 +86,8 @@ public class JumpEqualVariable extends SyntheticCommand {
         }
         // If the variable with the specified name is not found, create it with a value of 0
         String newVarName = this.variableName;
-        Varible newVar = extractVariables(newVarName);
-        Engine.varibles.add(newVar);
+        Variable newVar = extractVariables(newVarName);
+        Engine.variables.add(newVar);
         if(newVar.getValue() == varValue) {
             // If the newly created variable's value equals the original variable's value, return the label for jumping
             return this.JEVariableLabel;
@@ -99,6 +99,6 @@ public class JumpEqualVariable extends SyntheticCommand {
 
     @Override
     public String toString() {
-        return "IF " + this.varible.getName() + " = " + this.variableName + " THEN JUMP TO " + JEVariableLabel;
+        return "IF " + this.variable.getName() + " = " + this.variableName + " THEN JUMP TO " + JEVariableLabel;
     }
 }

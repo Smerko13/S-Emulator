@@ -1,10 +1,9 @@
 package engine.commands.synthetic.types;
 
 import engine.Engine;
-import engine.arguments.Varible;
-import engine.arguments.types.OutputVarible;
-import engine.arguments.types.WorkVarible;
-import engine.commands.Command;
+import engine.arguments.Variable;
+import engine.arguments.types.OutputVariable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.base.types.Decrease;
 import engine.commands.base.types.JumpNotZero;
 import engine.commands.base.types.Neutral;
@@ -12,8 +11,8 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 public class JumpEqualConstant extends SyntheticCommand {
-    private String JEConstantLabel; // Label for the jump if condition is met
-    private int constantValue; // Assuming a constant value for comparison
+    private final String JEConstantLabel; // Label for the jump if condition is met
+    private final int constantValue; // Assuming a constant value for comparison
 
 
     public JumpEqualConstant(SInstruction instruction) {
@@ -30,18 +29,18 @@ public class JumpEqualConstant extends SyntheticCommand {
     public void initializeExpandedCommands() {
         String newLabel = generateNewLabel();
         Engine.labels.add(newLabel);
-        WorkVarible newWorkVarible = new WorkVarible(generateNewWorkVaribleName());
-        Engine.varibles.add(newWorkVarible);
-        this.ExpandedCommands.add(new Assignment(newWorkVarible,this.label, this.varible, this));
+        WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
+        Engine.variables.add(newWorkVariable);
+        this.ExpandedCommands.add(new Assignment(newWorkVariable,this.label, this.variable, this));
         for(int i = 0 ; i < this.constantValue;i++) {
-            this.ExpandedCommands.add(new JumpZero(newWorkVarible, newLabel, "   ", this));
-            this.ExpandedCommands.add(new Decrease(newWorkVarible, "   ", this));
+            this.ExpandedCommands.add(new JumpZero(newWorkVariable, newLabel, "   ", this));
+            this.ExpandedCommands.add(new Decrease(newWorkVariable, "   ", this));
         }
-        this.ExpandedCommands.add(new JumpNotZero(newWorkVarible,newLabel, "   ", this));
+        this.ExpandedCommands.add(new JumpNotZero(newWorkVariable,newLabel, "   ", this));
         this.ExpandedCommands.add(new GotoLabel(this.JEConstantLabel, this));
-        Varible var = null;
-        for(Varible v : Engine.varibles){
-            if( v instanceof OutputVarible)
+        Variable var = null;
+        for(Variable v : Engine.variables){
+            if( v instanceof OutputVariable)
                 var = v;
         }
         this.ExpandedCommands.add(new Neutral(var, newLabel, this));
@@ -52,7 +51,7 @@ public class JumpEqualConstant extends SyntheticCommand {
     @Override
     public String execute(int expansionLevel) {
         // Check if the variable's value equals the constant value
-        if (varible.getValue() == constantValue) {
+        if (variable.getValue() == constantValue) {
             // If equal, return the label for jumping
             return JEConstantLabel;
         }
@@ -62,6 +61,6 @@ public class JumpEqualConstant extends SyntheticCommand {
 
     @Override
     public String toString() {
-        return "IF " + varible.getName() + " = " + constantValue + " GOTO " + JEConstantLabel;
+        return "IF " + variable.getName() + " = " + constantValue + " GOTO " + JEConstantLabel;
     }
 }

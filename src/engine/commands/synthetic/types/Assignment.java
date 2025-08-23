@@ -1,8 +1,8 @@
 package engine.commands.synthetic.types;
 
 import engine.Engine;
-import engine.arguments.Varible;
-import engine.arguments.types.WorkVarible;
+import engine.arguments.Variable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.types.Decrease;
 import engine.commands.base.types.Increase;
@@ -12,7 +12,7 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 public class Assignment extends SyntheticCommand {
-    protected Varible assignedVarible;
+    protected Variable assignedVariable;
 
     public Assignment(SInstruction instruction) {
         super(instruction);
@@ -20,15 +20,15 @@ public class Assignment extends SyntheticCommand {
         this.cycles = 4;
         this.levelOfExpansion = 2;
         String assignedVar = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
-        this.assignedVarible = extractVariables(assignedVar);
+        this.assignedVariable = extractVariables(assignedVar);
     }
 
-    public Assignment(WorkVarible newWorkVarible, String label, Varible assignedVarible, Command parentCommand) {
-        super(newWorkVarible, label, parentCommand);
+    public Assignment(WorkVariable newWorkVariable, String label, Variable assignedVarible, Command parentCommand) {
+        super(newWorkVariable, label, parentCommand);
         this.commandName = "ASSIGNMENT";
         this.cycles = 4;
         this.levelOfExpansion = 2;
-        this.assignedVarible = assignedVarible;
+        this.assignedVariable = assignedVarible;
     }
 
     @Override
@@ -39,19 +39,19 @@ public class Assignment extends SyntheticCommand {
         Engine.labels.add(newLabel2);
         String newLabel3 = generateNewLabel();
         Engine.labels.add(newLabel3);
-        this.ExpandedCommands.add(new ZeroVariable(varible,this.label,this));
-        this.ExpandedCommands.add(new JumpNotZero(assignedVarible, newLabel1,"   ", this));
+        this.ExpandedCommands.add(new ZeroVariable(variable,this.label,this));
+        this.ExpandedCommands.add(new JumpNotZero(assignedVariable, newLabel1,"   ", this));
         this.ExpandedCommands.add(new GotoLabel(newLabel3,this));
-        this.ExpandedCommands.add(new Decrease(assignedVarible,newLabel1, this));
-        WorkVarible newWorkVarible = new WorkVarible(generateNewWorkVaribleName());
-        Engine.varibles.add(newWorkVarible);
-        this.ExpandedCommands.add(new Increase(newWorkVarible,"   ",this));
-        this.ExpandedCommands.add(new JumpNotZero(assignedVarible, newLabel1, "   ", this));
-        this.ExpandedCommands.add(new Decrease(newWorkVarible,newLabel2, this));
-        this.ExpandedCommands.add(new Increase(varible,"   ", this));
-        this.ExpandedCommands.add(new Increase(assignedVarible,"   ", this));
-        this.ExpandedCommands.add(new JumpNotZero(newWorkVarible, newLabel2, "   ", this));
-        this.ExpandedCommands.add(new Neutral(varible,newLabel3, this));
+        this.ExpandedCommands.add(new Decrease(assignedVariable,newLabel1, this));
+        WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
+        Engine.variables.add(newWorkVariable);
+        this.ExpandedCommands.add(new Increase(newWorkVariable,"   ",this));
+        this.ExpandedCommands.add(new JumpNotZero(assignedVariable, newLabel1, "   ", this));
+        this.ExpandedCommands.add(new Decrease(newWorkVariable,newLabel2, this));
+        this.ExpandedCommands.add(new Increase(variable,"   ", this));
+        this.ExpandedCommands.add(new Increase(assignedVariable,"   ", this));
+        this.ExpandedCommands.add(new JumpNotZero(newWorkVariable, newLabel2, "   ", this));
+        this.ExpandedCommands.add(new Neutral(variable,newLabel3, this));
 
         expandFurther();
     }
@@ -59,14 +59,14 @@ public class Assignment extends SyntheticCommand {
     @Override
     public String execute(int expansionLevel) {
         // Assign the value of the assigned variable to the variable
-        if (assignedVarible != null) {
-            varible.setValue(assignedVarible.getValue());
+        if (assignedVariable != null) {
+            variable.setValue(assignedVariable.getValue());
         }
         return null;
     }
 
     @Override
     public String toString() {
-        return varible.getName() + " <- " + assignedVarible.getName();
+        return variable.getName() + " <- " + assignedVariable.getName();
     }
 }

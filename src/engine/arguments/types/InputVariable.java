@@ -1,23 +1,23 @@
 package engine.arguments.types;
 
-import engine.arguments.Varible;
+import engine.arguments.Variable;
 
-public class InputVarible extends Varible {
+public class InputVariable extends Variable {
 
-    public InputVarible(String name) {
+    public InputVariable(String name) {
         this.id = name.charAt(1) - '0'; // Extracting ID from the name
         this.type = 'x'; // 'I' for Input
         this.name = name;
     }
 
-    public InputVarible(String name, int value) {
+    public InputVariable(String name, int value) {
         this.id = name.charAt(1) - '0'; // Extracting ID from the name
         this.type = 'x'; // 'I' for Input
         this.name = name;
         this.value = value; // Setting the initial value
     }
 
-    public InputVarible(InputVarible varible) {
-        super(varible);
+    public InputVariable(InputVariable variable) {
+        super(variable);
     }
 }

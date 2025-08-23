@@ -1,6 +1,6 @@
 package engine.commands.base;
 
-import engine.arguments.Varible;
+import engine.arguments.Variable;
 import engine.commands.Command;
 import schema.SInstruction;
 
@@ -11,8 +11,8 @@ public abstract class BaseCommand extends Command {
         this.commandType = 'B'; // BaseCommand type
         this.levelOfExpansion = 0;
     }
-    public BaseCommand(Varible varible, String label, Command parentCommand) {
-        super(varible, label, parentCommand);
+    public BaseCommand(Variable variable, String label, Command parentCommand) {
+        super(variable, label, parentCommand);
         this.isExpandable = false; // BaseCommand is not expandable
         this.commandType = 'B'; // BaseCommand type
         this.levelOfExpansion = 0;

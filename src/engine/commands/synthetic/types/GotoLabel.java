@@ -1,7 +1,8 @@
 package engine.commands.synthetic.types;
+
 import engine.Engine;
-import engine.arguments.Varible;
-import engine.arguments.types.WorkVarible;
+import engine.arguments.Variable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.types.Increase;
 import engine.commands.base.types.JumpNotZero;
@@ -9,7 +10,7 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 public class GotoLabel extends SyntheticCommand {
-    private String gototLabel;
+    private final String gototLabel;
 
     public GotoLabel(SInstruction instruction) {
         super(instruction);
@@ -29,31 +30,31 @@ public class GotoLabel extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
-        this.ExpandedCommands.add(new Increase(this.varible, this.label,this));
-        this.ExpandedCommands.add(new JumpNotZero(this.varible,this.gototLabel, "   ",this));
+        this.ExpandedCommands.add(new Increase(this.variable, this.label,this));
+        this.ExpandedCommands.add(new JumpNotZero(this.variable,this.gototLabel, "   ",this));
     }
 
     @Override
     public String execute(int expansionLevel) {
         int workArgIndex = 1;
-        for(Varible variable : Engine.varibles) {
-            if(variable instanceof WorkVarible ){
-                if(((WorkVarible) variable).isForGotoLabel())
+        for(Variable variable : Engine.variables) {
+            if(variable instanceof WorkVariable ){
+                if(((WorkVariable) variable).isForGotoLabel())
                 {
                     variable.setValue(variable.getValue()+1);
-                    ((WorkVarible) variable).setForGotoLabel(true);
+                    ((WorkVariable) variable).setForGotoLabel(true);
                     return gototLabel;
                 }
             }
-            if(variable instanceof WorkVarible && variable.getName().charAt(1) == workArgIndex + '0'){
+            if(variable instanceof WorkVariable && variable.getName().charAt(1) == workArgIndex + '0'){
                 workArgIndex++;
             }
         }
         // If no work variable found, create a new one
-        WorkVarible newWorkVar = new WorkVarible("z" + workArgIndex);
+        WorkVariable newWorkVar = new WorkVariable("z" + workArgIndex);
         newWorkVar.setValue(1);
         newWorkVar.setForGotoLabel(true);
-        Engine.varibles.add(newWorkVar);
+        Engine.variables.add(newWorkVar);
 
         return gototLabel;
     }

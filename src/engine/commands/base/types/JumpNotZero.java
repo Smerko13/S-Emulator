@@ -1,11 +1,9 @@
 package engine.commands.base.types;
 
-import engine.arguments.Varible;
+import engine.arguments.Variable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
-import schema.SInstructionArgument;
-
 public class JumpNotZero extends BaseCommand {
     String targetLabel;
 
@@ -16,8 +14,8 @@ public class JumpNotZero extends BaseCommand {
         this.targetLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
     }
 
-    public JumpNotZero(Varible varible, String targetLabel, String label, Command parentCommand) {
-        super(varible, label, parentCommand);
+    public JumpNotZero(Variable variable, String targetLabel, String label, Command parentCommand) {
+        super(variable, label, parentCommand);
         this.commandName = "JUMP_NOT_ZERO";
         this.cycles = 2;
         this.targetLabel = targetLabel;
@@ -26,7 +24,7 @@ public class JumpNotZero extends BaseCommand {
     @Override
     public String execute(int expansionLevel) {
         // Check if the variable is not zero
-        if (varible.getValue() != 0) {
+        if (variable.getValue() != 0) {
             // If not zero, return the target label for jumping
             return targetLabel;
         }
@@ -36,6 +34,6 @@ public class JumpNotZero extends BaseCommand {
 
     @Override
     public String toString() {
-        return "IF " + varible.getName() + " != 0 THEN JUMP TO " + targetLabel;
+        return "IF " + variable.getName() + " != 0 THEN JUMP TO " + targetLabel;
     }
 }

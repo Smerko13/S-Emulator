@@ -1,10 +1,10 @@
 package engine.commands;
 
 import engine.Engine;
-import engine.arguments.Varible;
-import engine.arguments.types.InputVarible;
-import engine.arguments.types.OutputVarible;
-import engine.arguments.types.WorkVarible;
+import engine.arguments.Variable;
+import engine.arguments.types.InputVariable;
+import engine.arguments.types.OutputVariable;
+import engine.arguments.types.WorkVariable;
 import schema.SInstruction;
 
 public abstract class Command {
@@ -14,7 +14,7 @@ public abstract class Command {
     protected Boolean isExpandable;
     protected String commandName;
     protected int levelOfExpansion;
-    protected Varible varible;
+    protected Variable variable;
     protected Command parentCommand = null;
     protected int id;
 
@@ -27,45 +27,45 @@ public abstract class Command {
             this.label = label;
         }
         String var = instruction.getSVariable();
-        this.varible = extractVariables(var);
+        this.variable = extractVariables(var);
     }
 
-    public Command(Varible varible, String label, Command parentCommand) {
+    public Command(Variable variable, String label, Command parentCommand) {
         this.parentCommand = parentCommand;
         if(label.length() == 2) {
             label = label + " "; // Ensure label has at least 3 characters
         }
         this.label = label;
-        if(varible != null) {
-            this.varible = extractVariables(varible.getName());
+        if(variable != null) {
+            this.variable = extractVariables(variable.getName());
         } else {
-            this.varible = null; // Handle case where varible is null
+            this.variable = null; // Handle case where varible is null
         }
     }
 
-    protected static Varible extractVariables(String var) {
+    protected static Variable extractVariables(String var) {
         //need to check if the variable already exists in the global scope
-        Varible varible = null;
+        Variable variable = null;
         if(var.charAt(0) == 'x') {
-            varible = new InputVarible(var);
+            variable = new InputVariable(var);
         }
         else if(var.charAt(0) == 'z') {
-            varible = new WorkVarible(var);
+            variable = new WorkVariable(var);
         }
         else if (var.charAt(0) == 'y') {
-            varible = new OutputVarible();
+            variable = new OutputVariable();
         }
-        return canonicalInGlobalScope(varible);
+        return canonicalInGlobalScope(variable);
     }
 
-    private static Varible canonicalInGlobalScope(Varible varible) {
-        for(Varible existingVar : Engine.varibles) {
-            if (existingVar.getName().equals(varible.getName())) {
+    private static Variable canonicalInGlobalScope(Variable variable) {
+        for(Variable existingVar : Engine.variables) {
+            if (existingVar.getName().equals(variable.getName())) {
                 return existingVar; // Return the existing variable if found
             }
         }
-        Engine.varibles.add(varible); // Add the new variable to the global scope
-        return varible;
+        Engine.variables.add(variable); // Add the new variable to the global scope
+        return variable;
     }
 
     public String getLabel() {
@@ -86,18 +86,14 @@ public abstract class Command {
         return levelOfExpansion;
     }
 
-    public Object getVarible() {
-        return varible;
+    public Object getVariable() {
+        return variable;
     }
 
     public abstract String execute(int expansionLevel);
 
     public int getCycles() {
         return cycles;
-    }
-
-    public boolean isExpandable() {
-        return isExpandable;
     }
 
     public Command getParentCommand() {

@@ -1,6 +1,6 @@
 package engine.commands.base.types;
 
-import engine.arguments.Varible;
+import engine.arguments.Variable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
@@ -12,8 +12,8 @@ public class Increase extends BaseCommand {
         this.cycles = 1;
     }
 
-    public Increase(Varible varible, String label, Command parentCommand) {
-        super(varible, label, parentCommand);
+    public Increase(Variable variable, String label, Command parentCommand) {
+        super(variable, label, parentCommand);
         this.commandName = "INCREASE";
         this.cycles = 1;
     }
@@ -21,13 +21,13 @@ public class Increase extends BaseCommand {
     @Override
     public String execute(int expansionLevel) {
         // Increase the variable's value by 1
-        int currentValue = varible.getValue();
-        varible.setValue(currentValue + 1);
+        int currentValue = variable.getValue();
+        variable.setValue(currentValue + 1);
         return null;
     }
 
     @Override
     public String toString() {
-        return varible.getName() + " <- " + varible.getName() + " + 1";
+        return variable.getName() + " <- " + variable.getName() + " + 1";
     }
 }

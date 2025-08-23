@@ -1,12 +1,11 @@
 package ui;
 
-import engine.Engine;
 import engine.S_Emulator;
 import engine.Stats;
-import engine.arguments.Varible;
-import engine.arguments.types.InputVarible;
-import engine.arguments.types.OutputVarible;
-import engine.arguments.types.WorkVarible;
+import engine.arguments.Variable;
+import engine.arguments.types.InputVariable;
+import engine.arguments.types.OutputVariable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 
 import java.util.Comparator;
@@ -14,14 +13,14 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Menu {
-    private Scanner scanner;
+    private final Scanner scanner;
 
     public Menu() {
         this.scanner = new Scanner(System.in);
     }
 
     public int displayMenu() {
-        int choice = 0;
+        int choice;
         do {
             System.out.println("Please select an option: [Type the number and press Enter]");
             System.out.println("--------------------------------------------------");
@@ -88,7 +87,7 @@ public class Menu {
 
     public int getExpansionLevel(S_Emulator engine) {
         int maxExpansionLevel = engine.getMaxExpansionDepth();
-        int expansionLevel = 0;
+        int expansionLevel;
         System.out.println("Maximum expansion level for this program is: " + maxExpansionLevel);
         do {
             System.out.print("Enter the desired expansion level (0 to " + maxExpansionLevel + "): ");
@@ -120,29 +119,29 @@ public class Menu {
 
     public void displayVariables(S_Emulator engine) {
         System.out.println("*****Other variables(After program execution):*****");
-        List<Varible> inputVariables = new java.util.ArrayList<>(engine.getVariables().stream()
-                .filter(varible -> varible instanceof InputVarible)
+        List<Variable> inputVariables = new java.util.ArrayList<>(engine.getVariables().stream()
+                .filter(variable -> variable instanceof InputVariable)
                 .toList());
-        List<Varible> workVariables = new java.util.ArrayList<>(engine.getVariables().stream()
-                .filter(varible -> varible instanceof WorkVarible)
+        List<Variable> workVariables = new java.util.ArrayList<>(engine.getVariables().stream()
+                .filter(variable -> variable instanceof WorkVariable)
                 .toList());
-        inputVariables.sort(Comparator.comparingInt(Varible::getValue));
-        workVariables.sort(Comparator.comparingInt(Varible::getValue));
+        inputVariables.sort(Comparator.comparingInt(Variable::getValue));
+        workVariables.sort(Comparator.comparingInt(Variable::getValue));
 
-        for (Varible varible : inputVariables) {
-            System.out.println("    " + varible.getName() + " = " + varible.getValue());
+        for (Variable variable : inputVariables) {
+            System.out.println("    " + variable.getName() + " = " + variable.getValue());
         }
-        for (Varible varible : workVariables) {
-            System.out.println("    " + varible.getName() + " = " + varible.getValue());
+        for (Variable variable : workVariables) {
+            System.out.println("    " + variable.getName() + " = " + variable.getValue());
         }
     }
 
     public void showOutputVariable(S_Emulator engine) {
         System.out.println("*****Output Variable(After program execution):*****");
-        OutputVarible outputVarible = null;
-        for (Varible varible : engine.getVariables()) {
-            if (varible instanceof OutputVarible) {
-                outputVarible = (OutputVarible) varible;
+        OutputVariable outputVarible = null;
+        for (Variable variable : engine.getVariables()) {
+            if (variable instanceof OutputVariable) {
+                outputVarible = (OutputVariable) variable;
                 break;
             }
         }

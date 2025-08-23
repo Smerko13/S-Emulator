@@ -5,7 +5,7 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 public class ConstantAssignment extends SyntheticCommand {
-    private int constantValue;
+    private final int constantValue;
 
     public ConstantAssignment(SInstruction instruction) {
         super(instruction);
@@ -17,9 +17,9 @@ public class ConstantAssignment extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
-        this.ExpandedCommands.add(new ZeroVariable(this.varible,this.label,this));
+        this.ExpandedCommands.add(new ZeroVariable(this.variable,this.label,this));
         for(int i = 0 ; i < this.constantValue ; i++) {
-            this.ExpandedCommands.add(new Increase(this.varible, "   ",this));
+            this.ExpandedCommands.add(new Increase(this.variable, "   ",this));
         }
         expandFurther();
     }
@@ -27,12 +27,12 @@ public class ConstantAssignment extends SyntheticCommand {
     @Override
     public String execute(int expansionLevel) {
         // Assign the constant value to the variable
-        varible.setValue(constantValue);
+        variable.setValue(constantValue);
         return null; // No further action needed, just assignment
     }
 
     @Override
     public String toString() {
-        return varible.getName() + " <- " + constantValue; // Assigning a constant value to the variable
+        return variable.getName() + " <- " + constantValue; // Assigning a constant value to the variable
     }
 }

@@ -1,6 +1,6 @@
 package engine.commands.base.types;
 
-import engine.arguments.Varible;
+import engine.arguments.Variable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
@@ -12,8 +12,8 @@ public class Neutral extends BaseCommand {
         this.cycles = 0;
     }
 
-    public Neutral(Varible varible, String newLabel3, Command parentCommand) {
-        super(varible, newLabel3, parentCommand);
+    public Neutral(Variable variable, String newLabel3, Command parentCommand) {
+        super(variable, newLabel3, parentCommand);
         this.commandName = "NEUTRAL";
         this.cycles = 0;
     }
@@ -26,6 +26,6 @@ public class Neutral extends BaseCommand {
 
     @Override
     public String toString() {
-        return varible.getName() + " <- " + varible.getName();
+        return variable.getName() + " <- " + variable.getName();
     }
 }
