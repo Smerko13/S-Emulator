@@ -18,6 +18,7 @@ public class GotoLabel extends SyntheticCommand {
         this.cycles = 1;
         this.levelOfExpansion = 1;
         gototLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
+        this.variable = createNewWorkVariable();
     }
     
     public GotoLabel(String gototLabel, Command parentCommand) {
@@ -26,6 +27,15 @@ public class GotoLabel extends SyntheticCommand {
         this.cycles = 1;
         this.levelOfExpansion = 1;
         this.gototLabel = gototLabel;
+        this.variable = createNewWorkVariable();
+    }
+
+    private Variable createNewWorkVariable() {
+        String workVarName = generateNewWorkVariableName();
+        WorkVariable workVariable = new WorkVariable(workVarName);
+        Engine.variables.add(workVariable);
+        workVariable.setForGotoLabel(true);
+        return workVariable;
     }
 
     @Override
@@ -36,26 +46,7 @@ public class GotoLabel extends SyntheticCommand {
 
     @Override
     public String execute() {
-        int workArgIndex = 1;
-        for(Variable variable : Engine.variables) {
-            if(variable instanceof WorkVariable ){
-                if(((WorkVariable) variable).isForGotoLabel())
-                {
-                    variable.setValue(variable.getValue()+1);
-                    ((WorkVariable) variable).setForGotoLabel(true);
-                    return gototLabel;
-                }
-            }
-            if(variable instanceof WorkVariable && variable.getName().charAt(1) == workArgIndex + '0'){
-                workArgIndex++;
-            }
-        }
-        // If no work variable found, create a new one
-        WorkVariable newWorkVar = new WorkVariable("z" + workArgIndex);
-        newWorkVar.setValue(1);
-        newWorkVar.setForGotoLabel(true);
-        Engine.variables.add(newWorkVar);
-
+        this.variable.setValue(this.variable.getValue() + 1);
         return gototLabel;
     }
 

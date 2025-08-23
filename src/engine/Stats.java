@@ -47,7 +47,7 @@ public class Stats {
             sb.append("    Expansion Level: ").append(expansionLevel).append("\n");
             sb.append("    Input Variables: ");
             for (Variable var : inputVariables) {
-                sb.append(var.getName()).append(" = ").append(var.getValue()).append(", ");
+                sb.append(var.getName()).append(" = ").append(((InputVariable)var).getOriginalValue()).append(", ");
             }
             if (outputVariable != null) {
                 sb.append("Output Variable: ").append(outputVariable.getName())

@@ -29,8 +29,4 @@ public abstract class Variable {
         this.id = variable.id;
         this.name = variable.name;
     }
-
-    public void resetValue() {
-        this.value = 0;
-    }
 }

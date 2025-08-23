@@ -88,9 +88,15 @@ public class UI {
     }
 
     private boolean loadProgram() {
+        try{
         String filePath = menu.getFilePath();
         boolean readFile = menu.validatePath(filePath) && engine.readProgramFromXml(filePath);
         menu.displayLoadStatus(readFile);
         return readFile;
+        } catch(Exception e){
+            menu.displayFailedToLoadMessage();
+            return false;
+        }
+
     }
 }

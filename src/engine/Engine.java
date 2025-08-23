@@ -59,7 +59,9 @@ public class Engine implements S_Emulator {
                 parseObjectToLocalVariables(program);
                 this.stats.reset();
             }
-        } catch (JAXBException ignored) {}
+        } catch (JAXBException e) {
+            return false;
+        }
         return found;
     }
 
@@ -110,7 +112,7 @@ public class Engine implements S_Emulator {
         StringBuilder sb = new StringBuilder();
         for (Variable variable : variables) {
             if (variable instanceof InputVariable) {
-                sb.append(variable.getName()).append(" = ").append(variable.getValue());
+                sb.append(variable.getName()).append(" = ").append(((InputVariable) variable).getOriginalValue()).append(" ");
             }
         }
         return sb.toString().trim();
@@ -151,13 +153,17 @@ public class Engine implements S_Emulator {
             if (variable instanceof InputVariable && variable.getName().charAt(1) == (index+1)+ '0') {
                 if (index < values.length) {
                     variable.setValue(Integer.parseInt(values[index]));
+                    ((InputVariable) variable).setOriginalValue(Integer.parseInt(values[index]));
                 }
                 index++;
             }
         }
         if(index < values.length) {
             while(index < values.length) {
-                variables.add(new InputVariable("x" + (index+1), Integer.parseInt(values[index]), false));
+                InputVariable newInputVar = new InputVariable("x" + (index+1), Integer.parseInt(values[index]), false);
+                newInputVar.setOriginalValue(Integer.parseInt(values[index]));
+                newInputVar.setValue(Integer.parseInt(values[index]));
+                variables.add(newInputVar);
                 index++;
             }
         }

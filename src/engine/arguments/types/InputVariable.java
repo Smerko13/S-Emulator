@@ -3,6 +3,7 @@ package engine.arguments.types;
 import engine.arguments.Variable;
 
 public class InputVariable extends Variable {
+    private int originalValue; // Default original value
 
     public InputVariable(String name) {
         this.id = name.charAt(1) - '0'; // Extracting ID from the name
@@ -25,5 +26,14 @@ public class InputVariable extends Variable {
 
     public InputVariable(InputVariable variable) {
         super(variable);
+        this.originalValue = variable.originalValue;
+    }
+
+    public int getOriginalValue() {
+        return originalValue;
+    }
+
+    public void setOriginalValue(int originalValue) {
+        this.originalValue = originalValue;
     }
 }
