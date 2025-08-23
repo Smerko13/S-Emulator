@@ -1,5 +1,6 @@
 package ui;
 
+import engine.Engine;
 import engine.S_Emulator;
 import engine.Stats;
 import engine.arguments.Varible;
@@ -55,11 +56,12 @@ public class Menu {
         System.out.println("    Input parameters: " + engine.getListOfInputParameters());
         System.out.println("    Labels: " + engine.getLabels());
         System.out.println("    Commands: ");
+        engine.arrangeIDs(0);
         for (Command command : engine.getCommands()) {
             if (command == null) {
                 continue; // Skip null commands
             }
-            System.out.println("        " + command.getCommandRepresentation(engine.getCommands().indexOf(command) + 1));
+            System.out.println("        " + command.getCommandRepresentation());
         }
     }
 
@@ -166,27 +168,57 @@ public class Menu {
 
     public void showExpandedProgram(S_Emulator engine) {
         int expansionLevel = getExpansionLevel(engine);
-        System.out.println("Expanded Program at level " + expansionLevel + ":");
         List<Command> commandsAtLevel = engine.getCommandsAtDesiredLevel(expansionLevel);
-
-        for (Command command : commandsAtLevel) {
-            recursivePrint(command);
+        int maxCommandLength = findMaxCommandLength(engine, expansionLevel);
+        String header = "Commands at level: " + expansionLevel;
+        System.out.print(header);
+        String indentation = " ".repeat((maxCommandLength - header.length()+1));
+        if(expansionLevel !=0) {
+            System.out.println(indentation + "| Chain of Expansion");
         }
+        else {
+            System.out.println();
+        }
+        System.out.println("-".repeat(maxCommandLength) + "-------------------");
+        for (Command command : commandsAtLevel) {
+            recursivePrint(command, maxCommandLength, expansionLevel,engine);
+        }
+        System.out.println();
 
     }
 
-    private void recursivePrint(Command command) {
+    private void recursivePrint(Command command, int maxCommandLength, int expansionLevel,S_Emulator engine) {
         if (command == null) {
             return; // Skip null commands
         }
-        System.out.print(command.getCommandRepresentation(-1));
+        engine.arrangeIDs(expansionLevel);
+        System.out.print(command.getCommandRepresentation());
         if(command.getParentCommand() != null) {
+            int currentLength = command.getCommandRepresentation().length();
+            for (int i = 0; i < maxCommandLength - currentLength + 1; i++) {
+                System.out.print(" ");
+            }
             System.out.print(" <<< ");
-            recursivePrint(command.getParentCommand());
+            recursivePrint(command.getParentCommand(), maxCommandLength, expansionLevel - 1,engine);
         } else {
             System.out.println();
         }
     }
 
-
+    private int findMaxCommandLength(S_Emulator engine, int expansionLevel) {
+        List<List<Command>> allCommands = new java.util.ArrayList<>();
+        for(int i = 0 ; i <= expansionLevel ; i++) {
+            allCommands.add(engine.getCommandsAtDesiredLevel(i));
+        }
+        int maxLength = 0;
+        for (List<Command> commands : allCommands) {
+            for (Command command : commands) {
+                int length = command.getCommandRepresentation().length();
+                if (length > maxLength) {
+                    maxLength = length;
+                }
+            }
+        }
+        return maxLength;
+    }
 }

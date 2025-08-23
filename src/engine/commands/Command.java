@@ -16,6 +16,7 @@ public abstract class Command {
     protected int levelOfExpansion;
     protected Varible varible;
     protected Command parentCommand = null;
+    protected int id;
 
     public Command(SInstruction instruction) {
         if (instruction.getSLabel() != null) {
@@ -71,9 +72,9 @@ public abstract class Command {
         return label;
     }
 
-    public String getCommandRepresentation(int i) {
+    public String getCommandRepresentation() {
         return String.format("#%d (%c) [ %s ] %s (%d)",
-                             i,
+                             id,
                              commandType,
                              label,
                              this,
@@ -101,5 +102,9 @@ public abstract class Command {
 
     public Command getParentCommand() {
         return parentCommand;
+    }
+
+    public void setID(int i) {
+        this.id = i;
     }
 }

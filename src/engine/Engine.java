@@ -31,6 +31,15 @@ public class Engine implements S_Emulator {
         labels = new LinkedHashSet<>();
     }
 
+    public void arrangeIDs(int expansionLevel) {
+        List<Command> commands = getCommandsAtDesiredLevel(expansionLevel);
+        int id = 1;
+        for(Command cmd : commands) {
+            cmd.setID(id);
+            id++;
+        }
+    }
+
     public String getCurrentProgramName() {
         return currentProgramName;
     }
@@ -207,6 +216,7 @@ public class Engine implements S_Emulator {
                }
            }
        }
+
        return commandsAtLevel;
     }
 }

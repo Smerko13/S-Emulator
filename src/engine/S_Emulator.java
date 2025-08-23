@@ -29,4 +29,6 @@ public interface S_Emulator {
     Stats getExecutionHistory();
 
     List<Command> getCommandsAtDesiredLevel(int expansionLevel);
+
+    void arrangeIDs(int expansionLevel);
 }
