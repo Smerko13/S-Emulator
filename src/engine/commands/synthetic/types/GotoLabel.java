@@ -18,6 +18,7 @@ public class GotoLabel extends SyntheticCommand {
         this.cycles = 1;
         this.levelOfExpansion = 1;
         gototLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
+        this.associatedLabels.add(gototLabel);
         this.variable = createNewWorkVariable();
     }
     
@@ -27,6 +28,7 @@ public class GotoLabel extends SyntheticCommand {
         this.cycles = 1;
         this.levelOfExpansion = 1;
         this.gototLabel = gototLabel;
+        this.associatedLabels.add(gototLabel);
         this.variable = createNewWorkVariable();
     }
 

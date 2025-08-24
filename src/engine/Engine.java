@@ -15,6 +15,7 @@ import schema.*;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Engine implements S_Emulator {
     private List<Command> commands;
@@ -121,15 +122,21 @@ public class Engine implements S_Emulator {
 
     @Override
     public Set<String> getLabels(int expansionLevel) {
-        StringBuilder sb = new StringBuilder();
-        for(Command command : getCommandsAtDesiredLevel(expansionLevel)) {
-            String label = command.getLabel();
-            if(!label.equals("   ") && !label.equals("  ") && !label.equals(" ")) {
-                sb.append(label).append(" ");
+        Set<String> labels = new LinkedHashSet<>();
+        List<Command> commandsAtLevel = getCommandsAtDesiredLevel(expansionLevel);
+        for(Command command : commandsAtLevel) {
+            if(command.getLabels() != null && !command.getLabels().isBlank()) {
+                labels.add(command.getLabel());
             }
         }
-        String[] labelsArray = sb.toString().trim().split(" ");
-        return new LinkedHashSet<>(Arrays.asList(labelsArray));
+        if(labels.contains("   ")) {
+            labels.remove("   ");
+        }
+
+        List<String> sortedLabels = labels.stream().sorted().toList();
+        labels = new LinkedHashSet<>(sortedLabels);
+
+        return labels;
     }
 
     @Override

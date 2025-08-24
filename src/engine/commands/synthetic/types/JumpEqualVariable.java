@@ -12,8 +12,8 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 public class JumpEqualVariable extends SyntheticCommand {
-    private String JEVariableLabel;
-    private String variableName;
+    private final String JEVariableLabel;
+    private final String variableName;
 
     public JumpEqualVariable(SInstruction instruction) {
         super(instruction);
@@ -21,6 +21,7 @@ public class JumpEqualVariable extends SyntheticCommand {
         this.cycles = 2;
         this.levelOfExpansion = 3;
         this.JEVariableLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
+        this.associatedLabels.add(JEVariableLabel);
         this.variableName = instruction.getSInstructionArguments().getSInstructionArgument().getLast().getValue();
         if(this.variableName.charAt(0)=='z'){
             WorkVariable workVariable = new WorkVariable(this.variableName);

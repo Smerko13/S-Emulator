@@ -19,8 +19,8 @@ public class ZeroVariable extends SyntheticCommand {
         this.levelOfExpansion = 1;
     }
 
-    public ZeroVariable(Variable varible, String label, Command parentCommand) {
-        super(varible, label, parentCommand);
+    public ZeroVariable(Variable variable, String label, Command parentCommand) {
+        super(variable, label, parentCommand);
         this.commandName = "ZERO_VARIABLE";
         this.cycles = 1;
         this.levelOfExpansion = 1;

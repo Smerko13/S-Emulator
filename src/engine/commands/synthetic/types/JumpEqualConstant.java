@@ -23,6 +23,7 @@ public class JumpEqualConstant extends SyntheticCommand {
         this.constantValue = Integer.parseInt(instruction.getSInstructionArguments().getSInstructionArgument().getLast().getValue());
         this.JEConstantLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         Engine.labels.add(JEConstantLabel);
+        this.associatedLabels.add(JEConstantLabel);
     }
 
     @Override

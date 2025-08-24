@@ -20,6 +20,7 @@ public class JumpZero extends SyntheticCommand {
         this.cycles = 2;
         this.levelOfExpansion = 2;
         JZLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
+        this.associatedLabels.add(JZLabel);
     }
 
     public JumpZero(WorkVariable newWorkVariable, String jeConstantLabel, String spaces, Command parentCommand) {
@@ -28,6 +29,7 @@ public class JumpZero extends SyntheticCommand {
         this.cycles = 2;
         this.levelOfExpansion = 2;
         JZLabel = jeConstantLabel;
+        this.associatedLabels.add(JZLabel);
     }
 
     @Override

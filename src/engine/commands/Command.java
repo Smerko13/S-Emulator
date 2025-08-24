@@ -7,6 +7,11 @@ import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
 import schema.SInstruction;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 public abstract class Command {
     protected String label = "   "; // Default label
     protected int cycles;
@@ -17,14 +22,17 @@ public abstract class Command {
     protected Variable variable;
     protected Command parentCommand = null;
     protected int id;
+    protected Set<String> associatedLabels;
 
     public Command(SInstruction instruction) {
+        this.associatedLabels = new LinkedHashSet<>();
         if (instruction.getSLabel() != null) {
             String label = instruction.getSLabel();
             if(label.length() == 2) {
                 label = label + " "; // Ensure label has at least 3 characters
             }
             this.label = label;
+            this.associatedLabels.add(label);
         }
         String var = instruction.getSVariable();
         this.variable = extractVariables(var);
@@ -36,10 +44,12 @@ public abstract class Command {
             label = label + " "; // Ensure label has at least 3 characters
         }
         this.label = label;
+        this.associatedLabels = new LinkedHashSet<>();
+        this.associatedLabels.add(label);
         if(variable != null) {
             this.variable = extractVariables(variable.getName());
         } else {
-            this.variable = null; // Handle case where varible is null
+            this.variable = null; // Handle case where variable is null
         }
     }
 
@@ -102,5 +112,13 @@ public abstract class Command {
 
     public void setID(int i) {
         this.id = i;
+    }
+
+    public String getLabels() {
+        StringBuilder labels = new StringBuilder();
+        for(String label : associatedLabels) {
+            labels.append(label).append(" ");
+        }
+        return labels.toString().trim();
     }
 }
