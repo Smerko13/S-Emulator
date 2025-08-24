@@ -7,9 +7,7 @@ import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
 import schema.SInstruction;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 public abstract class Command {

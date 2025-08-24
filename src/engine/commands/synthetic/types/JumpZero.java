@@ -1,6 +1,5 @@
 package engine.commands.synthetic.types;
 
-import com.sun.jdi.connect.Connector;
 import engine.Engine;
 import engine.arguments.Variable;
 import engine.arguments.types.OutputVariable;

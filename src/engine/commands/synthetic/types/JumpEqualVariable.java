@@ -5,7 +5,6 @@ import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
-import engine.commands.Command;
 import engine.commands.base.types.Decrease;
 import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;

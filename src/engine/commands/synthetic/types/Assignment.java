@@ -23,12 +23,12 @@ public class Assignment extends SyntheticCommand {
         this.assignedVariable = extractVariables(assignedVar);
     }
 
-    public Assignment(WorkVariable newWorkVariable, String label, Variable assignedVarible, Command parentCommand) {
+    public Assignment(WorkVariable newWorkVariable, String label, Variable assignedVariable, Command parentCommand) {
         super(newWorkVariable, label, parentCommand);
         this.commandName = "ASSIGNMENT";
         this.cycles = 4;
         this.levelOfExpansion = 2;
-        this.assignedVariable = assignedVarible;
+        this.assignedVariable = assignedVariable;
     }
 
     @Override

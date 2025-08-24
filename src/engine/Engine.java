@@ -78,7 +78,6 @@ public class Engine implements S_Emulator {
             }
         }
         //labels = getLabels(0);
-        variables.add(new OutputVariable());
         for(Command cmd : this.commands) {
             if(cmd instanceof SyntheticCommand) {
                 ((SyntheticCommand) cmd).initializeExpandedCommands();
