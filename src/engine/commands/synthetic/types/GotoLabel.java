@@ -20,16 +20,18 @@ public class GotoLabel extends SyntheticCommand {
         gototLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(gototLabel);
         this.variable = createNewWorkVariable();
+        this.associatedVariables.add(variable);
     }
     
-    public GotoLabel(String gototLabel, Command parentCommand) {
+    public GotoLabel(String gotoLabel, Command parentCommand) {
         super(null,"   ", parentCommand);
         this.commandName = "GOTO_LABEL";
         this.cycles = 1;
         this.levelOfExpansion = 1;
-        this.gototLabel = gototLabel;
+        this.gototLabel = gotoLabel;
         this.associatedLabels.add(gototLabel);
         this.variable = createNewWorkVariable();
+        this.associatedVariables.add(variable);
     }
 
     private Variable createNewWorkVariable() {

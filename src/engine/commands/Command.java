@@ -21,6 +21,7 @@ public abstract class Command {
     protected Command parentCommand = null;
     protected int id;
     protected Set<String> associatedLabels;
+    protected Set<Variable> associatedVariables;
 
     public Command(SInstruction instruction) {
         this.associatedLabels = new LinkedHashSet<>();
@@ -34,6 +35,8 @@ public abstract class Command {
         }
         String var = instruction.getSVariable();
         this.variable = extractVariables(var);
+        this.associatedVariables = new LinkedHashSet<>();
+        this.associatedVariables.add(this.variable);
     }
 
     public Command(Variable variable, String label, Command parentCommand) {
@@ -44,11 +47,13 @@ public abstract class Command {
         this.label = label;
         this.associatedLabels = new LinkedHashSet<>();
         this.associatedLabels.add(label);
+        this.associatedVariables = new LinkedHashSet<>();
         if(variable != null) {
             this.variable = extractVariables(variable.getName());
         } else {
             this.variable = null; // Handle case where variable is null
         }
+        this.associatedVariables.add(this.variable);
     }
 
     protected static Variable extractVariables(String var) {
@@ -118,5 +123,9 @@ public abstract class Command {
             labels.append(label).append(" ");
         }
         return labels.toString().trim();
+    }
+
+    public Variable[] getAssociatedVariables() {
+        return associatedVariables.toArray(new Variable[0]);
     }
 }

@@ -21,6 +21,7 @@ public class Assignment extends SyntheticCommand {
         this.levelOfExpansion = 2;
         String assignedVar = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.assignedVariable = extractVariables(assignedVar);
+        this.associatedVariables.add(assignedVariable);
     }
 
     public Assignment(WorkVariable newWorkVariable, String label, Variable assignedVariable, Command parentCommand) {
@@ -29,6 +30,7 @@ public class Assignment extends SyntheticCommand {
         this.cycles = 4;
         this.levelOfExpansion = 2;
         this.assignedVariable = assignedVariable;
+        this.associatedVariables.add(assignedVariable);
     }
 
     @Override

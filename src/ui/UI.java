@@ -62,7 +62,7 @@ public class UI {
             System.out.println("*****The program that was executed:*****");
             menu.showProgram(engine, expansionLevel);
             menu.showOutputVariable(engine);
-            menu.displayVariables(engine);
+            menu.displayVariables(engine,expansionLevel);
             menu.displayCycleSum(engine);
             engine.reset();
         }

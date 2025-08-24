@@ -8,9 +8,7 @@ import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Menu {
     private final Scanner scanner;
@@ -121,16 +119,24 @@ public class Menu {
         engine.SetInputVariablesValues(values);
     }
 
-    public void displayVariables(S_Emulator engine) {
+    public void displayVariables(S_Emulator engine,int expansionLevel) {
         System.out.println("*****Other variables(After program execution):*****");
-        List<Variable> inputVariables = new java.util.ArrayList<>(engine.getVariables().stream()
-                .filter(variable -> variable instanceof InputVariable)
-                .toList());
-        List<Variable> workVariables = new java.util.ArrayList<>(engine.getVariables().stream()
-                .filter(variable -> variable instanceof WorkVariable)
-                .toList());
-        inputVariables.sort(Comparator.comparingInt(Variable::getValue));
-        workVariables.sort(Comparator.comparingInt(Variable::getValue));
+        Set<Variable> inputVariables = new LinkedHashSet<>();
+        Set<Variable> workVariables = new LinkedHashSet<>();
+        for(Command command : engine.getCommandsAtDesiredLevel(expansionLevel)) {
+            if(command == null) {
+                continue; // Skip null commands
+            }
+            for(Variable variable : command.getAssociatedVariables()) {
+                if(variable instanceof InputVariable) {
+                    inputVariables.add(variable);
+                } else if(variable instanceof WorkVariable) {
+                    workVariables.add(variable);
+                } else {
+                    continue;
+                }
+            }
+        }
 
         for (Variable variable : inputVariables) {
             System.out.println("    " + variable.getName() + " = " + variable.getValue());

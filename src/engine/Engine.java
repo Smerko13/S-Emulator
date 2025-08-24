@@ -234,6 +234,7 @@ public class Engine implements S_Emulator {
             }
         }
         varsToRemove.forEach(variables::remove);
+
     }
 
     @Override
