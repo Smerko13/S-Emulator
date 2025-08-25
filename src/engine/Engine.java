@@ -21,6 +21,7 @@ public class Engine implements S_Emulator {
     private List<Command> commands;
     private String currentProgramName;
     public static Set<Variable> variables;
+    public static Set<Variable> extraInputVariables;
     private int cycleSum;
     private Stats stats;
     public static Set<String> labels;
@@ -29,6 +30,7 @@ public class Engine implements S_Emulator {
     public Engine() {
         this.commands = new ArrayList<>();
         variables = new LinkedHashSet<>();
+        extraInputVariables = new LinkedHashSet<>();
         this.stats = new Stats();
         labels = new LinkedHashSet<>();
     }
@@ -171,7 +173,8 @@ public class Engine implements S_Emulator {
                 InputVariable newInputVar = new InputVariable("x" + (index+1), Integer.parseInt(values[index]), false);
                 newInputVar.setOriginalValue(Integer.parseInt(values[index]));
                 newInputVar.setValue(Integer.parseInt(values[index]));
-                variables.add(newInputVar);
+                //variables.add(newInputVar);
+                extraInputVariables.add(newInputVar);
                 index++;
             }
         }
@@ -234,7 +237,7 @@ public class Engine implements S_Emulator {
             }
         }
         varsToRemove.forEach(variables::remove);
-
+        extraInputVariables.clear();
     }
 
     @Override
