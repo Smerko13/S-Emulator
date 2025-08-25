@@ -138,6 +138,16 @@ public class Menu {
             }
         }
 
+        for(Variable variable : engine.getVariables()) {
+            if(variable instanceof InputVariable) {
+                inputVariables.add(variable);
+            } else if(variable instanceof WorkVariable) {
+                workVariables.add(variable);
+            } else {
+                continue;
+            }
+        }
+
         for (Variable variable : inputVariables) {
             System.out.println("    " + variable.getName() + " = " + variable.getValue());
         }
