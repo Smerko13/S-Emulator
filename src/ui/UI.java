@@ -90,7 +90,11 @@ public class UI {
     private boolean loadProgram() {
         try{
         String filePath = menu.getFilePath();
-        boolean readFile = menu.validatePath(filePath) && engine.readProgramFromXml(filePath);
+        boolean readFile = menu.validatePath(filePath);
+        if(readFile) {
+            engine = new engine.Engine();
+            readFile = engine.readProgramFromXml(filePath);
+        }
         menu.displayLoadStatus(readFile);
         return readFile;
         } catch(Exception e){
