@@ -11,7 +11,7 @@ import java.util.Set;
 public class Stats {
     List<Execution> executionHistory;
 
-    public void updateStatEntry(int expansionLevel, Set<Variable> variables, int cycleSum) {
+    public void updateStatEntry(int expansionLevel, Set<Variable> variables, Set<Variable> extraInputVariables, int cycleSum) {
         Execution execution = new Execution();
         execution.expansionLevel = expansionLevel;
         for (Variable variable : variables) {
@@ -20,6 +20,11 @@ public class Stats {
             } else if (variable instanceof OutputVariable) {
                 execution.outputVariable = new OutputVariable((OutputVariable) variable);
             }
+        }
+        for (Variable variable : extraInputVariables) {
+
+            execution.inputVariables.add(new InputVariable((InputVariable) variable));
+
         }
         execution.cycleCount = cycleSum;
 

@@ -218,7 +218,7 @@ public class Engine implements S_Emulator {
                 }
             }
         }
-        this.stats.updateStatEntry(expansionLevel, variables, cycleSum);
+        this.stats.updateStatEntry(expansionLevel, variables,extraInputVariables , cycleSum);
     }
 
     public void reset() {

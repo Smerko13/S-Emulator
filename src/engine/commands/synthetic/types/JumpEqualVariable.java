@@ -27,13 +27,35 @@ public class JumpEqualVariable extends SyntheticCommand {
             Engine.variables.add(workVariable);
             this.associatedVariables.add(workVariable);
         } else if(this.variableName.charAt(0)=='x'){
-            InputVariable inputVariable = new InputVariable(this.variableName);
-            Engine.variables.add(inputVariable);
-            this.associatedVariables.add(inputVariable);
+            if(checkIfVariableExists(this.variableName)) {
+                this.associatedVariables.add(getExistingVariableByName(this.variableName));
+            } else {
+                InputVariable inputVariable = new InputVariable(this.variableName);
+                Engine.variables.add(inputVariable);
+                this.associatedVariables.add(inputVariable);
+            }
         }
         else {
             throw new IllegalArgumentException("Invalid variable type for comparison. Only 'x' (input) and 'z' (work) variables are allowed.");
         }
+    }
+
+    private Variable getExistingVariableByName(String variableName) {
+        for (Variable var : Engine.variables) {
+            if (var.getName().equals(variableName)) {
+                return var;
+            }
+        }
+        return null; // This line should never be reached if the method is used correctly
+    }
+
+    private boolean checkIfVariableExists(String variableName) {
+        for (Variable var : Engine.variables) {
+            if (var.getName().equals(variableName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

@@ -139,14 +139,20 @@ public class Menu {
             }
         }
 
-        for (Variable variable : inputVariables) {
-            System.out.println("    " + variable.getName() + " = " + variable.getValue());
-        }
-        for (Variable variable : Engine.extraInputVariables) {
-            System.out.println("    " + variable.getName() + " = " + variable.getValue());
-        }
+        List<Variable> sortedInputVars = new ArrayList<>(inputVariables);
+        sortedInputVars.addAll(Engine.extraInputVariables);
+        sortedInputVars.sort(Comparator.comparing(Variable::getValue));
 
-        for (Variable variable : workVariables) {
+        List<Variable> sortedWorkVars = new ArrayList<>(workVariables);
+        sortedWorkVars.sort(Comparator.comparing(Variable::getValue));
+
+        for (Variable variable : sortedInputVars) {
+            System.out.println("    " + variable.getName() + " = " + variable.getValue());
+        }
+//        for (Variable variable : Engine.extraInputVariables) {
+//            System.out.println("    " + variable.getName() + " = " + variable.getValue());
+//        }
+        for (Variable variable : sortedWorkVars) {
             System.out.println("    " + variable.getName() + " = " + variable.getValue());
         }
     }
