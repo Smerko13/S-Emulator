@@ -31,9 +31,13 @@ public class Menu {
             System.out.println("    6. Exit");
             System.out.println("--------------------------------------------------");
             System.out.print("Enter your choice here: ");
-            choice = scanner.nextInt();
+            try {
+                choice = Integer.parseInt(scanner.next());
+            } catch (NumberFormatException e) {
+                choice = -1; // Invalid input
+            }
             if (choice < 1 || choice > 6) {
-                System.out.println("Invalid choice. Please try again.");
+                System.out.println("You have entered an invalid option. Please try again and enter a valid option (1-6)");
             }
         } while (choice < 1 || choice > 6);
         return choice;
@@ -91,7 +95,11 @@ public class Menu {
         System.out.println("Maximum expansion level for this program is: " + maxExpansionLevel);
         do {
             System.out.print("Enter the desired expansion level (0 to " + maxExpansionLevel + "): ");
-            expansionLevel = scanner.nextInt();
+            try{
+                expansionLevel = Integer.parseInt(scanner.next());
+            } catch (NumberFormatException e) {
+                expansionLevel = -1; // Invalid input
+            }
             if (expansionLevel < 0 || expansionLevel > maxExpansionLevel) {
                 System.out.println("Invalid expansion level. Please try again.");
             }
@@ -110,14 +118,35 @@ public class Menu {
     }
 
     public void getInputVariablesValues(S_Emulator engine) {
+        String input = "";
+        boolean isValid = false;
         System.out.println("*****Please enter values for the input variables:*****");
         System.out.println("[A list of numbers separated by the character (,) eg: 1,2,3]");
-        String input = scanner.next();
-        if(input.isEmpty()) {
-            return;
+        while(!isValid) {
+            try {
+                input = scanner.next();
+                if(validateInput(input)) {
+                    isValid = true;
+                }
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please try again and enter a list of numbers separated by commas.");
+            }
         }
         String[] values = input.split(",");
         engine.SetInputVariablesValues(values);
+    }
+
+    private boolean validateInput(String input) {
+        String[] parts = input.split(",");
+        for (String part : parts) {
+            try {
+                Integer.parseInt(part.trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please try again and enter a list of numbers separated by commas.");
+                return false;
+            }
+        }
+        return true;
     }
 
     public void displayVariables(S_Emulator engine,int expansionLevel) {
@@ -226,7 +255,7 @@ public class Menu {
     }
 
     private int findMaxCommandLength(S_Emulator engine, int expansionLevel) {
-        List<List<Command>> allCommands = new java.util.ArrayList<>();
+        List<List<Command>> allCommands = new ArrayList<>();
         for(int i = 0 ; i <= expansionLevel ; i++) {
             allCommands.add(engine.getCommandsAtDesiredLevel(i));
         }
