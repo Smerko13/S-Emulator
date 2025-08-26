@@ -20,6 +20,7 @@ public class JumpZero extends SyntheticCommand {
         this.levelOfExpansion = 2;
         JZLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(JZLabel);
+        this.isJumpCommand = true;
     }
 
     public JumpZero(WorkVariable newWorkVariable, String jeConstantLabel, String spaces, Command parentCommand) {
@@ -29,6 +30,7 @@ public class JumpZero extends SyntheticCommand {
         this.levelOfExpansion = 2;
         JZLabel = jeConstantLabel;
         this.associatedLabels.add(JZLabel);
+        this.isJumpCommand = true;
     }
 
     @Override
@@ -53,6 +55,16 @@ public class JumpZero extends SyntheticCommand {
         }
         // If not zero, do nothing and continue execution
         return null;
+    }
+
+    @Override
+    public boolean isValid() {
+        return variable != null;
+    }
+
+    @Override
+    public String getTargetLabel() {
+        return JZLabel;
     }
 
     @Override

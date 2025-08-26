@@ -45,6 +45,16 @@ public class ZeroVariable extends SyntheticCommand {
     }
 
     @Override
+    public boolean isValid() {
+        return variable != null;
+    }
+
+    @Override
+    public String getTargetLabel() {
+        return null;
+    }
+
+    @Override
     public String toString() {
         return variable.getName() + " <- 0";
     }

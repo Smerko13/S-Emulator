@@ -68,6 +68,18 @@ public class Assignment extends SyntheticCommand {
     }
 
     @Override
+    public boolean isValid() {
+        if( assignedVariable == null || variable == null) {
+            return false;
+        } else return assignedVariable.getValue() >= 0 && variable.getValue() >= 0;
+    }
+
+    @Override
+    public String getTargetLabel() {
+        return null;
+    }
+
+    @Override
     public String toString() {
         return variable.getName() + " <- " + assignedVariable.getName();
     }

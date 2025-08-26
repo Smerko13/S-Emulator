@@ -22,6 +22,7 @@ public abstract class Command {
     protected int id;
     protected Set<String> associatedLabels;
     protected Set<Variable> associatedVariables;
+    protected boolean isJumpCommand = false;
 
     public Command(SInstruction instruction) {
         this.associatedLabels = new LinkedHashSet<>();
@@ -128,4 +129,12 @@ public abstract class Command {
     public Variable[] getAssociatedVariables() {
         return associatedVariables.toArray(new Variable[0]);
     }
+
+    public abstract boolean isValid();
+
+    public boolean isJumpCommand() {
+        return isJumpCommand;
+    }
+
+    public abstract String getTargetLabel();
 }

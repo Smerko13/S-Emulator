@@ -24,6 +24,7 @@ public class JumpEqualConstant extends SyntheticCommand {
         this.JEConstantLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         Engine.labels.add(JEConstantLabel);
         this.associatedLabels.add(JEConstantLabel);
+        this.isJumpCommand = true;
     }
 
     @Override
@@ -58,6 +59,19 @@ public class JumpEqualConstant extends SyntheticCommand {
         }
         // If not equal, do nothing and continue execution
         return null;
+    }
+
+    @Override
+    public boolean isValid() {
+        if(variable == null) {
+            return false;
+        }
+        return constantValue >= 0 && variable.getValue() >= 0;
+    }
+
+    @Override
+    public String getTargetLabel() {
+        return JEConstantLabel;
     }
 
     @Override

@@ -32,4 +32,17 @@ public class Decrease extends BaseCommand {
         }
         return null;
     }
+
+    @Override
+    public boolean isValid() {
+        if(variable == null) {
+            return false;
+        }
+        return variable.getValue() >= 0;
+    }
+
+    @Override
+    public String getTargetLabel() {
+        return null;
+    }
 }

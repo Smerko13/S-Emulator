@@ -32,6 +32,19 @@ public class ConstantAssignment extends SyntheticCommand {
     }
 
     @Override
+    public boolean isValid() {
+        if(variable == null) {
+            return false;
+        }
+        return constantValue >= 0 && variable.getValue() >= 0;
+    }
+
+    @Override
+    public String getTargetLabel() {
+        return null;
+    }
+
+    @Override
     public String toString() {
         return variable.getName() + " <- " + constantValue; // Assigning a constant value to the variable
     }

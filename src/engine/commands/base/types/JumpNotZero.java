@@ -4,6 +4,9 @@ import engine.arguments.Variable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
+
+import java.util.Objects;
+
 public class JumpNotZero extends BaseCommand {
     String targetLabel;
 
@@ -12,6 +15,7 @@ public class JumpNotZero extends BaseCommand {
         this.commandName = "JUMP_NOT_ZERO";
         this.cycles = 2;
         this.targetLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
+        this.isJumpCommand = true;
     }
 
     public JumpNotZero(Variable variable, String targetLabel, String label, Command parentCommand) {
@@ -19,6 +23,7 @@ public class JumpNotZero extends BaseCommand {
         this.commandName = "JUMP_NOT_ZERO";
         this.cycles = 2;
         this.targetLabel = targetLabel;
+        this.isJumpCommand = true;
     }
 
     @Override
@@ -30,6 +35,22 @@ public class JumpNotZero extends BaseCommand {
         }
         // If zero, do nothing and continue execution
         return null;
+    }
+
+    @Override
+    public boolean isValid() {
+        if(variable == null) {
+            return false;
+        }
+        if(Objects.equals(this.label, targetLabel)) {
+            return false;
+        }
+        return variable.getValue() >= 0;
+    }
+
+    @Override
+    public String getTargetLabel() {
+        return targetLabel;
     }
 
     @Override

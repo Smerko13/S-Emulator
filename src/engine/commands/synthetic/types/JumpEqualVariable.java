@@ -38,6 +38,7 @@ public class JumpEqualVariable extends SyntheticCommand {
         else {
             throw new IllegalArgumentException("Invalid variable type for comparison. Only 'x' (input) and 'z' (work) variables are allowed.");
         }
+        this.isJumpCommand = true;
     }
 
     private Variable getExistingVariableByName(String variableName) {
@@ -119,6 +120,28 @@ public class JumpEqualVariable extends SyntheticCommand {
             // If not equal, continue execution without jumping
             return null;
         }
+    }
+
+    @Override
+    public boolean isValid() {
+        if(variable == null || this.variableName == null) {
+            return false;
+        }
+        if(associatedVariables.isEmpty()) {
+            return false;
+        } else {
+            for (Variable var : associatedVariables) {
+                if(var.getValue() < 0) {
+                    return false;
+                }
+            }
+        }
+        return variable.getValue() >= 0;
+    }
+
+    @Override
+    public String getTargetLabel() {
+        return JEVariableLabel;
     }
 
     @Override

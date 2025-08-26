@@ -63,4 +63,10 @@ public abstract class SyntheticCommand extends Command {
     public List <Command> getCommands() {
         return this.ExpandedCommands;
     }
+
+    @Override
+    public abstract boolean isValid();
+
+    @Override
+    public abstract String getTargetLabel();
 }

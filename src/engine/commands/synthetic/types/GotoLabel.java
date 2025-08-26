@@ -21,6 +21,7 @@ public class GotoLabel extends SyntheticCommand {
         this.associatedLabels.add(gototLabel);
         this.variable = createNewWorkVariable();
         this.associatedVariables.add(variable);
+        this.isJumpCommand = true;
     }
     
     public GotoLabel(String gotoLabel, Command parentCommand) {
@@ -32,6 +33,7 @@ public class GotoLabel extends SyntheticCommand {
         this.associatedLabels.add(gototLabel);
         this.variable = createNewWorkVariable();
         this.associatedVariables.add(variable);
+        this.isJumpCommand = true;
     }
 
     private Variable createNewWorkVariable() {
@@ -51,6 +53,16 @@ public class GotoLabel extends SyntheticCommand {
     @Override
     public String execute() {
         this.variable.setValue(this.variable.getValue() + 1);
+        return gototLabel;
+    }
+
+    @Override
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
+    public String getTargetLabel() {
         return gototLabel;
     }
 

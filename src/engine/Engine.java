@@ -60,12 +60,65 @@ public class Engine implements S_Emulator {
                 Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
                 SProgram program = (SProgram) jaxbUnmarshaller.unmarshal(xmlFile);
                 parseObjectToLocalVariables(program);
+                if(!checkIfProgramIsValid()) {
+                    return false;
+                }
                 this.stats.reset();
             }
         } catch (JAXBException e) {
             return false;
         }
         return found;
+    }
+
+    private boolean checkIfProgramIsValid() {
+        for (Command command : this.commands) {
+            if (!command.isValid()) {
+                throw new IllegalArgumentException("[ERROR] Invalid command found in the program.");
+            }
+        }
+        if(!checkLabelsValidity()) {
+            throw new IllegalArgumentException("[ERROR] Found a target label in one of your commands with no existing target .");
+        }
+        if(checkForDuplicateLabels()) {
+            throw new IllegalArgumentException("[ERROR] Found a label pointing to multiple commands.");
+        }
+        return true;
+    }
+
+    private boolean checkForDuplicateLabels() {
+        List<String> labelsList = new ArrayList<>();
+        for(Command command : this.commands) {
+            if(command.getLabel() != null && !command.getLabel().isBlank()) {
+                if(labelsList.contains(command.getLabel().trim())) {
+                    return true;
+                }
+                labelsList.add(command.getLabel().trim());
+            }
+        }
+        return  false;
+    }
+
+    private boolean checkLabelsValidity() {
+        List<String> labelsList = new ArrayList<>();
+        labelsList.add("EXIT");
+        for(Command command : this.commands) {
+            if(command.getLabel() != null && !command.getLabel().isBlank()) {
+                labelsList.add(command.getLabel().trim());
+            }
+        }
+        List<String> targetLabels = new ArrayList<>();
+        for(Command command : this.commands) {
+            if(command.isJumpCommand()) {
+                targetLabels.add(command.getTargetLabel().trim());
+            }
+        }
+        for(String label : targetLabels) {
+            if(!labelsList.contains(label)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void parseObjectToLocalVariables(SProgram program) {
@@ -96,7 +149,7 @@ public class Engine implements S_Emulator {
             case "JUMP_ZERO" -> new JumpZero(instruction);
             case "JUMP_EQUAL_CONSTANT" -> new JumpEqualConstant(instruction);
             case "JUMP_EQUAL_VARIABLE" -> new JumpEqualVariable(instruction);
-            default -> null;
+            default -> throw new IllegalArgumentException("Unknown command in file: " + instruction.getName());
         };
     }
 
@@ -106,7 +159,7 @@ public class Engine implements S_Emulator {
             case "INCREASE" -> new Increase(instruction);
             case "NEUTRAL" -> new Neutral(instruction);
             case "JUMP_NOT_ZERO" -> new JumpNotZero(instruction);
-            default -> null;
+            default -> throw new IllegalArgumentException("Unknown command in file: " + instruction.getName());
         };
     }
 

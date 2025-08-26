@@ -18,5 +18,12 @@ public abstract class BaseCommand extends Command {
         this.levelOfExpansion = 0;
     }
 
+    @Override
     public abstract String execute();
+
+    @Override
+    public abstract boolean isValid();
+
+    @Override
+    public abstract String getTargetLabel();
 }

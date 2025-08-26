@@ -98,7 +98,7 @@ public class UI {
         menu.displayLoadStatus(readFile);
         return readFile;
         } catch(Exception e){
-            menu.displayFailedToLoadMessage();
+            System.out.println(e.getMessage());
             return false;
         }
 
