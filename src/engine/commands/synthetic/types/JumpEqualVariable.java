@@ -21,6 +21,7 @@ public class JumpEqualVariable extends SyntheticCommand {
         this.levelOfExpansion = 3;
         this.JEVariableLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(JEVariableLabel);
+        Engine.labels.add(JEVariableLabel);
         this.variableName = instruction.getSInstructionArguments().getSInstructionArgument().getLast().getValue();
         if(this.variableName.charAt(0)=='z'){
             WorkVariable workVariable = new WorkVariable(this.variableName);
@@ -146,6 +147,6 @@ public class JumpEqualVariable extends SyntheticCommand {
 
     @Override
     public String toString() {
-        return "IF " + this.variable.getName() + " = " + this.variableName + " THEN JUMP TO " + JEVariableLabel;
+        return "IF " + this.variable.getName() + " = " + this.variableName + " GOTO " + JEVariableLabel;
     }
 }

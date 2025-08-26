@@ -15,7 +15,6 @@ import schema.*;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Engine implements S_Emulator {
     private List<Command> commands;
@@ -132,7 +131,6 @@ public class Engine implements S_Emulator {
                 this.commands.add(createSyntheticCommandFromInstruction(instruction));
             }
         }
-        //labels = getLabels(0);
         for(Command cmd : this.commands) {
             if(cmd instanceof SyntheticCommand) {
                 ((SyntheticCommand) cmd).initializeExpandedCommands();

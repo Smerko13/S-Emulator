@@ -32,6 +32,7 @@ public abstract class Command {
                 label = label + " "; // Ensure label has at least 3 characters
             }
             this.label = label;
+            Engine.labels.add(label);
             this.associatedLabels.add(label);
         }
         String var = instruction.getSVariable();
@@ -48,6 +49,7 @@ public abstract class Command {
         this.label = label;
         this.associatedLabels = new LinkedHashSet<>();
         this.associatedLabels.add(label);
+        Engine.labels.add(label);
         this.associatedVariables = new LinkedHashSet<>();
         if(variable != null) {
             this.variable = extractVariables(variable.getName());

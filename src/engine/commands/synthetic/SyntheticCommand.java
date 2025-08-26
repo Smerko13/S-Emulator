@@ -35,8 +35,12 @@ public abstract class SyntheticCommand extends Command {
 
     public String generateNewLabel() {
         int labelIndex = 1;
-        for(String label : Engine.labels) {
-            if (label.charAt(0) == 'L' && label.charAt(1) == labelIndex + '0') {
+        boolean found = false;
+        while (!found) {
+            String currentLabel = "L" + labelIndex;
+            if (!Engine.labels.contains(currentLabel)) {
+                found = true;
+            } else {
                 labelIndex++;
             }
         }
@@ -45,8 +49,12 @@ public abstract class SyntheticCommand extends Command {
 
     public String generateNewWorkVariableName() {
         int workArgIndex = 1;
-        for (Variable variable : Engine.variables) {
-            if (variable instanceof WorkVariable && variable.getName().charAt(1) == workArgIndex + '0') {
+        boolean found = false;
+        while (!found) {
+            String currentWorkVarName = "z" + workArgIndex;
+            if (!Engine.variables.stream().anyMatch(var -> var.getName().equals(currentWorkVarName))) {
+                found = true;
+            } else {
                 workArgIndex++;
             }
         }
