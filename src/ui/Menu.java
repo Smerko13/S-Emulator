@@ -248,6 +248,7 @@ public class Menu {
                 System.out.print(" ");
             }
             System.out.print(" <<< ");
+            maxCommandLength = findMaxCommandLength(engine, expansionLevel);
             recursivePrint(command.getParentCommand(), maxCommandLength, expansionLevel - 1,engine);
         } else {
             System.out.println();
