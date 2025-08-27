@@ -45,6 +45,10 @@ public class Stats {
             this.currentId = id;
         }
 
+        private static void resetId() {
+            id = 0;
+        }
+
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
@@ -71,6 +75,7 @@ public class Stats {
 
     public void reset() {
         this.executionHistory.clear();
+        Execution.resetId();
     }
 
     @Override
