@@ -2,7 +2,9 @@ package engine.arguments.types;
 
 import engine.arguments.Variable;
 
-public class WorkVariable extends Variable {
+import java.io.Serializable;
+
+public class WorkVariable extends Variable implements Serializable {
     boolean isForGotoLabel = false; // Flag to indicate if this variable is used for GOTO label
 
     public WorkVariable(String name) {

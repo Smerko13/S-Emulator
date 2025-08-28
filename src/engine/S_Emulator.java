@@ -2,6 +2,9 @@ package engine;
 
 import engine.arguments.Variable;
 import engine.commands.Command;
+
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
 import java.util.List;
 import java.util.Set;
 
@@ -33,4 +36,14 @@ public interface S_Emulator {
     void arrangeIDs(int expansionLevel);
 
     void reset();
+
+    void saveCurrentProgram(String filePath);
+
+    static Engine loadSavedProgram(String filePath) {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filePath))) {
+            return (Engine) in.readObject();
+        } catch (Exception e) {
+            throw new RuntimeException();
+        }
+    }
 }

@@ -10,7 +10,9 @@ import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-public class JumpEqualConstant extends SyntheticCommand {
+import java.io.Serializable;
+
+public class JumpEqualConstant extends SyntheticCommand implements Serializable {
     private final String JEConstantLabel; // Label for the jump if condition is met
     private final int constantValue; // Assuming a constant value for comparison
 

@@ -5,7 +5,9 @@ import engine.commands.Command;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
 
-public class Decrease extends BaseCommand {
+import java.io.Serializable;
+
+public class Decrease extends BaseCommand implements Serializable {
     public Decrease(SInstruction instruction) {
         super(instruction);
         this.commandName = "DECREASE";

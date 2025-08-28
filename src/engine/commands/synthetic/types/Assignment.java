@@ -11,7 +11,9 @@ import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-public class Assignment extends SyntheticCommand {
+import java.io.Serializable;
+
+public class Assignment extends SyntheticCommand implements Serializable {
     protected Variable assignedVariable;
 
     public Assignment(SInstruction instruction) {

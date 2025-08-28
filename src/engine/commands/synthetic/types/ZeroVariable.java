@@ -9,8 +9,10 @@ import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
+import java.io.Serializable;
 
-public class ZeroVariable extends SyntheticCommand {
+
+public class ZeroVariable extends SyntheticCommand implements Serializable {
 
     public ZeroVariable(SInstruction instruction) {
         super(instruction);

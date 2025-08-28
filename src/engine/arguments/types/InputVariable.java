@@ -2,7 +2,9 @@ package engine.arguments.types;
 
 import engine.arguments.Variable;
 
-public class InputVariable extends Variable {
+import java.io.Serializable;
+
+public class InputVariable extends Variable implements Serializable {
     private int originalValue; // Default original value
 
     public InputVariable(String name) {

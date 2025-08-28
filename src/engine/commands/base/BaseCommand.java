@@ -4,7 +4,9 @@ import engine.arguments.Variable;
 import engine.commands.Command;
 import schema.SInstruction;
 
-public abstract class BaseCommand extends Command {
+import java.io.Serializable;
+
+public abstract class BaseCommand extends Command implements Serializable {
     public BaseCommand(SInstruction instruction) {
         super(instruction);
         this.isExpandable = false; // BaseCommand is not expandable

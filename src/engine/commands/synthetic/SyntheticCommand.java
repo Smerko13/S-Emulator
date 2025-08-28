@@ -6,9 +6,10 @@ import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import schema.SInstruction;
 
+import java.io.Serializable;
 import java.util.List;
 
-public abstract class SyntheticCommand extends Command {
+public abstract class SyntheticCommand extends Command implements Serializable {
     protected List<Command> ExpandedCommands;
 
     public SyntheticCommand(SInstruction instruction) {

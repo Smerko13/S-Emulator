@@ -2,7 +2,9 @@ package engine.arguments.types;
 
 import engine.arguments.Variable;
 
-public class OutputVariable extends Variable {
+import java.io.Serializable;
+
+public class OutputVariable extends Variable implements Serializable {
     public OutputVariable() {
         this.type = 'y'; // 'O' for Output
         this.name = "y";

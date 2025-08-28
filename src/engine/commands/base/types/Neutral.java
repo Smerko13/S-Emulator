@@ -5,7 +5,9 @@ import engine.commands.Command;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
 
-public class Neutral extends BaseCommand {
+import java.io.Serializable;
+
+public class Neutral extends BaseCommand implements Serializable {
     public Neutral(SInstruction instruction) {
         super(instruction);
         this.commandName = "NEUTRAL";

@@ -9,7 +9,9 @@ import engine.commands.base.types.JumpNotZero;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-public class GotoLabel extends SyntheticCommand {
+import java.io.Serializable;
+
+public class GotoLabel extends SyntheticCommand implements Serializable {
     private final String gototLabel;
 
     public GotoLabel(SInstruction instruction) {

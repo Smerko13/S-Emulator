@@ -6,9 +6,10 @@ import engine.commands.Command;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class JumpNotZero extends BaseCommand {
+public class JumpNotZero extends BaseCommand implements Serializable {
     String targetLabel;
 
     public JumpNotZero(SInstruction instruction){

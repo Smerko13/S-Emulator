@@ -10,7 +10,9 @@ import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-public class JumpEqualVariable extends SyntheticCommand {
+import java.io.Serializable;
+
+public class JumpEqualVariable extends SyntheticCommand implements Serializable {
     private final String JEVariableLabel;
     private final String variableName;
 

@@ -10,7 +10,9 @@ import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-public class JumpZero extends SyntheticCommand {
+import java.io.Serializable;
+
+public class JumpZero extends SyntheticCommand implements Serializable {
     private final String JZLabel;
 
     public JumpZero(SInstruction instruction) {

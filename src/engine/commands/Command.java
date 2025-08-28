@@ -7,10 +7,11 @@ import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
 import schema.SInstruction;
 
+import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public abstract class Command {
+public abstract class Command implements Serializable {
     protected String label = "   "; // Default label
     protected int cycles;
     protected char commandType;

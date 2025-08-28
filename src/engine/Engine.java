@@ -13,10 +13,10 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import schema.*;
 
-import java.io.File;
+import java.io.*;
 import java.util.*;
 
-public class Engine implements S_Emulator {
+public class Engine implements S_Emulator , Serializable {
     private List<Command> commands;
     private String currentProgramName;
     public static Set<Variable> variables;
@@ -290,6 +290,16 @@ public class Engine implements S_Emulator {
         varsToRemove.forEach(variables::remove);
         extraInputVariables.clear();
     }
+
+    @Override
+    public void saveCurrentProgram(String filePath) {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filePath + "\\" + this.currentProgramName))) {
+            out.writeObject(this);
+        } catch (Exception e) {
+            throw new RuntimeException("[ERROR] Could not save the program.",e);
+        }
+    }
+
 
     @Override
     public int getCycleSum() {

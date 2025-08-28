@@ -1,6 +1,8 @@
 package engine.arguments;
 
-public abstract class Variable {
+import java.io.Serializable;
+
+public abstract class Variable implements Serializable {
     protected char type;
     protected int value = 0;
     protected int id;

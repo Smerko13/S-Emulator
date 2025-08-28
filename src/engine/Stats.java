@@ -4,11 +4,12 @@ import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class Stats {
+public class Stats implements Serializable {
     List<Execution> executionHistory;
 
     public void updateStatEntry(int expansionLevel, Set<Variable> variables, Set<Variable> extraInputVariables, int cycleSum) {
@@ -31,7 +32,7 @@ public class Stats {
         this.executionHistory.add(execution);
     }
 
-    private class Execution {
+    private class Execution implements Serializable {
         private static int id = 0;
         private final int currentId;
         private int expansionLevel;

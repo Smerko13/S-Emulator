@@ -4,7 +4,9 @@ import engine.commands.base.types.Increase;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-public class ConstantAssignment extends SyntheticCommand {
+import java.io.Serializable;
+
+public class ConstantAssignment extends SyntheticCommand implements Serializable {
     private final int constantValue;
 
     public ConstantAssignment(SInstruction instruction) {

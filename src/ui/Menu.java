@@ -28,7 +28,9 @@ public class Menu {
             System.out.println("    3. Expand Program");
             System.out.println("    4. Run Program");
             System.out.println("    5. Show statistics/history");
-            System.out.println("    6. Exit");
+            System.out.println("    6. Save Current Program");
+            System.out.println("    7. Load Saved Program");
+            System.out.println("    8. Exit");
             System.out.println("--------------------------------------------------");
             System.out.print("Enter your choice here: ");
             try {
@@ -36,10 +38,10 @@ public class Menu {
             } catch (NumberFormatException e) {
                 choice = -1; // Invalid input
             }
-            if (choice < 1 || choice > 6) {
+            if (choice < 1 || choice > 8) {
                 System.out.println("You have entered an invalid option. Please try again and enter a valid option (1-6)");
             }
-        } while (choice < 1 || choice > 6);
+        } while (choice < 1 || choice > 8);
         return choice;
     }
 
