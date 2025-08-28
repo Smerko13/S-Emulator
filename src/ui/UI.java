@@ -1,11 +1,9 @@
 package ui;
 
-import engine.Engine;
 import engine.S_Emulator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.nio.file.Files;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -45,6 +43,7 @@ public class UI {
                 case 6:
                     try {
                         saveCurrentProgram(readFile);
+                        System.out.println("Program saved successfully.");
                     } catch (RuntimeException e) {
                         System.out.println(e.getMessage());
                     }
