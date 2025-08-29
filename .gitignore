@@ -2,6 +2,10 @@
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+.idea/
+.gitignore
+S-Emulator.iml
+src/programs
 
 
 ### Eclipse ###
@@ -28,3 +32,4 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
