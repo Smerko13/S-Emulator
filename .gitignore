@@ -1,34 +1,17 @@
-### IntelliJ IDEA ###
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
+# IntelliJ / JetBrains
 .idea/
-src/programs
-.gitignore
-S-Emulator.iml
+*.iml
 
-### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+# Build outputs
+out/
+build/
+target/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
+# Editors / OS
 .vscode/
-
-### Mac OS ###
 .DS_Store
+
+# Local data
+src/programs/
+
+
