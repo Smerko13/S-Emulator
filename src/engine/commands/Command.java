@@ -86,16 +86,17 @@ public abstract class Command implements Serializable {
     }
 
     public String getLabel() {
-        return label;
+        StringBuilder paddedLabel = new StringBuilder(this.label);
+        paddedLabel = new StringBuilder(paddedLabel.toString().trim());
+        while(paddedLabel.length() < 3) {
+            paddedLabel.append(" ");
+        }
+        return paddedLabel.toString();
     }
 
     public String getCommandRepresentation() {
-        return String.format("#%d (%c) [ %s ] %s (%d)",
-                             id,
-                             commandType,
-                             label,
-                             this,
-                             cycles);
+        return String.format("%s ",
+                             this);
     }
 
 
@@ -140,4 +141,8 @@ public abstract class Command implements Serializable {
     }
 
     public abstract String getTargetLabel();
+
+    public String getType() {
+        return String.valueOf(commandType);
+    }
 }

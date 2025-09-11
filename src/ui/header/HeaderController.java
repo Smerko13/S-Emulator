@@ -31,7 +31,9 @@ public class HeaderController {
         File selectedFile = fileChooser.showOpenDialog(loadFileButton.getScene().getWindow());
         if (selectedFile != null) {
             filePathTextBox.setText(selectedFile.getAbsolutePath());
+            mainController.loadFile(selectedFile);
         }
+
     }
 }
 
