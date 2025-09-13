@@ -8,6 +8,7 @@ import schema.SInstruction;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 public abstract class SyntheticCommand extends Command implements Serializable {
     protected List<Command> ExpandedCommands;
@@ -78,4 +79,6 @@ public abstract class SyntheticCommand extends Command implements Serializable {
 
     @Override
     public abstract String getTargetLabel();
+
+    public abstract Set<Variable> getAllVariables();
 }

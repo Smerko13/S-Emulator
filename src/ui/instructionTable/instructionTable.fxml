@@ -3,7 +3,7 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 
-<TableView fx:id="instructionTableView" editable="true" mouseTransparent="true" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.instructionTable.InstructionTableController">
+<TableView fx:id="instructionTableView" editable="true" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.instructionTable.InstructionTableController">
    <columns>
       <TableColumn fx:id="idColumn" editable="false" maxWidth="100.0" minWidth="-Infinity" prefWidth="50.0" sortable="false" text="#" />
       <TableColumn fx:id="typeColumn" editable="false" maxWidth="100.0" minWidth="-Infinity" prefWidth="50.0" sortable="false" text="B\S" />

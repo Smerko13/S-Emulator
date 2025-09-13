@@ -10,6 +10,9 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class ZeroVariable extends SyntheticCommand implements Serializable {
@@ -54,6 +57,11 @@ public class ZeroVariable extends SyntheticCommand implements Serializable {
     @Override
     public String getTargetLabel() {
         return null;
+    }
+
+    @Override
+    public Set<Variable> getAllVariables() {
+        return Collections.singleton(this.variable);
     }
 
     @Override

@@ -48,9 +48,9 @@ public class InstructionTableController {
                 new ReadOnlyStringWrapper(cd.getValue().getLabel() == null ? "" : cd.getValue().getLabel()));
     }
 
-    /** Call this after loading the program */
     public void displayInstructions(List<Command> commands) {
         this.commands.setAll(commands == null ? List.of() : commands);
-        instructionTableView.refresh(); // optional
+        instructionTableView.refresh();
+        mainController.setMonitors();
     }
 }

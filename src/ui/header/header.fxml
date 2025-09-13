@@ -40,7 +40,7 @@
                   <Insets left="5.0" right="5.0" />
                </HBox.margin>
             </ComboBox>
-            <Button mnemonicParsing="false" text="Collapse">
+            <Button fx:id="CollapseButton" mnemonicParsing="false" onAction="#CollapseProgram" text="Collapse">
                <opaqueInsets>
                   <Insets left="5.0" right="5.0" />
                </opaqueInsets>
@@ -48,17 +48,17 @@
                   <Insets left="5.0" right="5.0" />
                </HBox.margin>
             </Button>
-            <Label text="Current/Maximum Degree">
+            <Label fx:id="DegreeLabel" text="Current/Maximum Degree">
                <HBox.margin>
                   <Insets left="5.0" right="5.0" />
                </HBox.margin>
             </Label>
-            <Button mnemonicParsing="false" text="Expand">
+            <Button fx:id="ExpandButton" mnemonicParsing="false" onAction="#ExpandProgram" text="Expand">
                <HBox.margin>
                   <Insets left="5.0" right="5.0" />
                </HBox.margin>
             </Button>
-            <ComboBox promptText="Highlight Selection ">
+            <ComboBox fx:id="highLightSelector" promptText="Highlight Selection ">
                <HBox.margin>
                   <Insets left="5.0" right="5.0" />
                </HBox.margin>

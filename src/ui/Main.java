@@ -30,7 +30,7 @@ public class Main extends Application {
         fxmlLoader = new FXMLLoader();
         url = getClass().getResource("base/base.fxml");
         fxmlLoader.setLocation(url);
-        AnchorPane root = fxmlLoader.load(url.openStream());
+        Parent root = fxmlLoader.load(url.openStream());
 
         Scene scene = new Scene(root, 800, 500);
         primaryStage.setScene(scene);

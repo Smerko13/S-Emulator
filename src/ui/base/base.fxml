@@ -1,42 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.TitledPane?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="baseController" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.base.BaseController">
+<GridPane alignment="CENTER" prefHeight="374.0" prefWidth="534.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.base.BaseController">
+   <columnConstraints>
+      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints maxHeight="111.33333587646484" minHeight="10.0" prefHeight="85.99999237060547" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="146.00000762939453" minHeight="10.0" prefHeight="146.00000762939453" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="75.66664123535156" minHeight="0.0" prefHeight="33.66666158040363" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="224.66665649414065" minHeight="0.0" prefHeight="52.66667175292969" />
+      <RowConstraints maxHeight="285.3333282470703" minHeight="29.66667683919269" prefHeight="32.33330281575519" />
+   </rowConstraints>
    <children>
-      <TitledPane alignment="CENTER" collapsible="false" contentDisplay="CENTER" text="S-Emulator" textAlignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <ScrollPane fitToHeight="true" fitToWidth="true" GridPane.columnSpan="2147483647" GridPane.valignment="TOP">
          <content>
-            <GridPane alignment="CENTER">
-              <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-              </columnConstraints>
-              <rowConstraints>
-                <RowConstraints maxHeight="111.33333587646484" minHeight="10.0" prefHeight="85.99999237060547" vgrow="SOMETIMES" />
-                <RowConstraints maxHeight="146.00000762939453" minHeight="10.0" prefHeight="146.00000762939453" vgrow="SOMETIMES" />
-                <RowConstraints maxHeight="75.66664123535156" minHeight="5.000020345052093" prefHeight="14.333333333333343" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="224.66665649414065" minHeight="2.6666615804036553" prefHeight="14.333333333333343" />
-                  <RowConstraints maxHeight="285.3333282470703" minHeight="65.33334350585938" prefHeight="105.00001525878909" />
-              </rowConstraints>
-               <children>
-                  <ScrollPane GridPane.columnSpan="2147483647">
-                    <content>
-                        <fx:include source="../header/header.fxml" fx:id="headerComponent" />
-                    </content>
-                  </ScrollPane>
-                   <fx:include source="../instructionTable/instructionTable.fxml" GridPane.columnIndex="0" GridPane.rowIndex="1" fx:id="instructionTableComponent" />
-               </children>
-            </GridPane>
+            <fx:include fx:id="headerComponent" source="../header/header.fxml" />
          </content>
-         <font>
-            <Font name="System Bold" size="14.0" />
-         </font>
-      </TitledPane>
+         <GridPane.margin>
+            <Insets />
+         </GridPane.margin>
+      </ScrollPane>
+      <fx:include fx:id="instructionTableComponent" source="../instructionTable/instructionTable.fxml" GridPane.rowIndex="1" />
    </children>
-</AnchorPane>
+</GridPane>

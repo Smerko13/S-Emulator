@@ -5,6 +5,7 @@ import engine.commands.Command;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.Set;
 
 public abstract class BaseCommand extends Command implements Serializable {
     public BaseCommand(SInstruction instruction) {
@@ -28,4 +29,6 @@ public abstract class BaseCommand extends Command implements Serializable {
 
     @Override
     public abstract String getTargetLabel();
+
+    public abstract Set<Variable> getAllVariables();
 }

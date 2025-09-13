@@ -11,6 +11,7 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.Set;
 
 public class JumpEqualVariable extends SyntheticCommand implements Serializable {
     private final String JEVariableLabel;
@@ -145,6 +146,19 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
     @Override
     public String getTargetLabel() {
         return JEVariableLabel;
+    }
+
+    @Override
+    public Set<Variable> getAllVariables() {
+        Set<Variable> variables = new java.util.HashSet<>();
+        variables.add(variable);
+        for(Variable var : Engine.variables) {
+            if(var.getName().equals(this.variableName)) {
+                variables.add(var);
+                break;
+            }
+        }
+        return variables;
     }
 
     @Override

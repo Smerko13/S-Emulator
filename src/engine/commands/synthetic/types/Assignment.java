@@ -12,6 +12,8 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Assignment extends SyntheticCommand implements Serializable {
     protected Variable assignedVariable;
@@ -79,6 +81,14 @@ public class Assignment extends SyntheticCommand implements Serializable {
     @Override
     public String getTargetLabel() {
         return null;
+    }
+
+    @Override
+    public Set<Variable> getAllVariables() {
+        Set<Variable> vars = new HashSet<>();
+        vars.add(assignedVariable);
+        vars.add(this.variable);
+        return vars;
     }
 
     @Override

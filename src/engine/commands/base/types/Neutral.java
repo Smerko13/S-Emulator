@@ -6,6 +6,9 @@ import engine.commands.base.BaseCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Neutral extends BaseCommand implements Serializable {
     public Neutral(SInstruction instruction) {
@@ -42,5 +45,10 @@ public class Neutral extends BaseCommand implements Serializable {
     @Override
     public String getTargetLabel() {
         return null;
+    }
+
+    @Override
+    public Set<Variable> getAllVariables() {
+        return Collections.singleton(this.variable);
     }
 }

@@ -104,9 +104,6 @@ public abstract class Command implements Serializable {
         return levelOfExpansion;
     }
 
-    public Variable getVariable() {
-        return variable;
-    }
 
     public abstract String execute();
 
@@ -145,4 +142,7 @@ public abstract class Command implements Serializable {
     public String getType() {
         return String.valueOf(commandType);
     }
+
+    public abstract Set<Variable> getAllVariables();
+
 }

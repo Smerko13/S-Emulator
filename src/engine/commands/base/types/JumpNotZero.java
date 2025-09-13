@@ -7,7 +7,10 @@ import engine.commands.base.BaseCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class JumpNotZero extends BaseCommand implements Serializable {
     String targetLabel;
@@ -60,5 +63,10 @@ public class JumpNotZero extends BaseCommand implements Serializable {
     @Override
     public String toString() {
         return "IF " + variable.getName() + " != 0 THEN JUMP TO " + targetLabel;
+    }
+
+    @Override
+    public Set<Variable> getAllVariables() {
+        return Collections.singleton(this.variable);
     }
 }

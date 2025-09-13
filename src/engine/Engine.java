@@ -24,6 +24,7 @@ public class Engine implements S_Emulator , Serializable {
     private int cycleSum;
     private Stats stats;
     public static Set<String> labels;
+    private int curretDegree = 0;
 
 
     public Engine() {
@@ -298,6 +299,30 @@ public class Engine implements S_Emulator , Serializable {
         } catch (Exception e) {
             throw new RuntimeException("[ERROR] Could not save the program.",e);
         }
+    }
+
+    @Override
+    public int getCurrentDegree() {
+        return curretDegree;
+    }
+
+    @Override
+    public void increaseDegree() {
+        if (this.curretDegree < getMaxExpansionDepth()) {
+            this.curretDegree++;
+        }
+    }
+
+    @Override
+    public void decreaseDegree() {
+        if (this.curretDegree > 0) {
+            this.curretDegree--;
+        }
+    }
+
+    @Override
+    public Set<Variable> getExtraInputVariables() {
+        return extraInputVariables;
     }
 
 

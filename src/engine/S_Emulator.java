@@ -46,4 +46,12 @@ public interface S_Emulator {
             throw new RuntimeException();
         }
     }
+
+    int getCurrentDegree();
+
+    void increaseDegree();
+
+    void decreaseDegree();
+
+    Set<Variable> getExtraInputVariables();
 }

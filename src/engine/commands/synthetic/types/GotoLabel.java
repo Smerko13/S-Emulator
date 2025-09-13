@@ -10,6 +10,7 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.Set;
 
 public class GotoLabel extends SyntheticCommand implements Serializable {
     private final String gototLabel;
@@ -68,6 +69,11 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
     @Override
     public String getTargetLabel() {
         return gototLabel;
+    }
+
+    @Override
+    public Set<Variable> getAllVariables() {
+        return null;
     }
 
     @Override

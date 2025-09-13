@@ -11,6 +11,9 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class JumpZero extends SyntheticCommand implements Serializable {
     private final String JZLabel;
@@ -69,6 +72,11 @@ public class JumpZero extends SyntheticCommand implements Serializable {
     @Override
     public String getTargetLabel() {
         return JZLabel;
+    }
+
+    @Override
+    public Set<Variable> getAllVariables() {
+        return Collections.singleton(this.variable);
     }
 
     @Override
