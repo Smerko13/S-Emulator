@@ -27,6 +27,11 @@ public class HeaderController {
 
     public void setMainController(BaseController mainController) {
         this.mainController = mainController;
+        highLightSelector.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (mainController != null) {
+                mainController.onHighlightSelectionChanged(newVal);
+            }
+        });
     }
 
     public void loadFileButtonPressed(ActionEvent actionEvent) {
@@ -70,6 +75,8 @@ public class HeaderController {
         highLightSelector.getSelectionModel().selectFirst();
 
     }
+
+
 }
 
 

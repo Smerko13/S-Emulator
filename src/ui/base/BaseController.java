@@ -110,14 +110,17 @@ public class BaseController {
                     i++; j++;
                 }
             }
-            // one ended: shorter remainder first
             if (i != n1 || j != n2) return Integer.compare(n1 - i, n2 - j);
 
-            // absolute tie → lexicographic as final tie-break
             return s1.compareTo(s2);
         });
 
         labels.addAll(s_emulator.getLabels(s_emulator.getCurrentDegree()));
         return labels;
     }
+
+    public void onHighlightSelectionChanged(Object selected) {
+        instructionTableComponentController.setHighlight(selected);
+    }
+
 }
