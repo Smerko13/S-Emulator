@@ -1,32 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<GridPane alignment="CENTER" prefHeight="374.0" prefWidth="534.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.base.BaseController">
+<GridPane hgap="10.0" vgap="10.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.base.BaseController">
    <columnConstraints>
-      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+      <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" percentWidth="65.0" prefWidth="100.0" />
+      <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" percentWidth="35.0" prefWidth="100.0" />
    </columnConstraints>
    <rowConstraints>
-      <RowConstraints maxHeight="111.33333587646484" minHeight="10.0" prefHeight="85.99999237060547" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="146.00000762939453" minHeight="10.0" prefHeight="146.00000762939453" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="75.66664123535156" minHeight="0.0" prefHeight="33.66666158040363" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="224.66665649414065" minHeight="0.0" prefHeight="52.66667175292969" />
-      <RowConstraints maxHeight="285.3333282470703" minHeight="29.66667683919269" prefHeight="32.33330281575519" />
+      <RowConstraints maxHeight="111.33333587646484" minHeight="10.0" prefHeight="60.0" vgrow="NEVER" />
+      <RowConstraints vgrow="ALWAYS" />
    </rowConstraints>
    <children>
-      <ScrollPane fitToHeight="true" fitToWidth="true" GridPane.columnSpan="2147483647" GridPane.valignment="TOP">
-         <content>
-            <fx:include fx:id="headerComponent" source="../header/header.fxml" />
-         </content>
-         <GridPane.margin>
-            <Insets />
-         </GridPane.margin>
-      </ScrollPane>
-      <fx:include fx:id="instructionTableComponent" source="../instructionTable/instructionTable.fxml" GridPane.rowIndex="1" />
+      <fx:include fx:id="headerComponent" source="../header/header.fxml" GridPane.columnSpan="2" />
+      <SplitPane dividerPositions="0.66" prefHeight="160.0" prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
+        <items>
+            <fx:include fx:id="instructionTableComponent" minWidth="0.0" source="../instructionTable/instructionTable.fxml" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" />
+              <fx:include fx:id="executionPanelComponent" minWidth="0.0" source="../executionPanelController/executionPanelController.fxml" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" />
+        </items>
+      </SplitPane>
    </children>
+   <opaqueInsets>
+      <Insets />
+   </opaqueInsets>
+   <padding>
+      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+   </padding>
 </GridPane>

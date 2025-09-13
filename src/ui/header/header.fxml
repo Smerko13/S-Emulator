@@ -8,68 +8,67 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="headerComponent" alignment="CENTER" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.header.HeaderController">
-   <children>
-      <HBox alignment="CENTER" VBox.vgrow="ALWAYS">
-         <children>
-            <Button fx:id="loadFileButton" mnemonicParsing="false" onAction="#loadFileButtonPressed" text="Load File" HBox.hgrow="ALWAYS">
-               <HBox.margin>
-                  <Insets left="5.0" right="5.0" />
-               </HBox.margin>
-            </Button>
-            <TextField fx:id="filePathTextBox" editable="false" promptText="Path to current program" HBox.hgrow="ALWAYS">
-               <HBox.margin>
-                  <Insets left="5.0" right="5.0" />
-               </HBox.margin>
-            </TextField>
-         </children>
-         <opaqueInsets>
-            <Insets />
-         </opaqueInsets>
-         <padding>
-            <Insets bottom="5.0" top="5.0" />
-         </padding>
-      </HBox>
-      <HBox alignment="CENTER_LEFT" VBox.vgrow="ALWAYS">
-         <children>
-            <ComboBox promptText="Progran/Function Selector">
-               <opaqueInsets>
-                  <Insets left="5.0" right="5.0" />
-               </opaqueInsets>
-               <HBox.margin>
-                  <Insets left="5.0" right="5.0" />
-               </HBox.margin>
-            </ComboBox>
-            <Button fx:id="CollapseButton" mnemonicParsing="false" onAction="#CollapseProgram" text="Collapse">
-               <opaqueInsets>
-                  <Insets left="5.0" right="5.0" />
-               </opaqueInsets>
-               <HBox.margin>
-                  <Insets left="5.0" right="5.0" />
-               </HBox.margin>
-            </Button>
-            <Label fx:id="DegreeLabel" text="Current/Maximum Degree">
-               <HBox.margin>
-                  <Insets left="5.0" right="5.0" />
-               </HBox.margin>
-            </Label>
-            <Button fx:id="ExpandButton" mnemonicParsing="false" onAction="#ExpandProgram" text="Expand">
-               <HBox.margin>
-                  <Insets left="5.0" right="5.0" />
-               </HBox.margin>
-            </Button>
-            <ComboBox fx:id="highLightSelector" promptText="Highlight Selection ">
-               <HBox.margin>
-                  <Insets left="5.0" right="5.0" />
-               </HBox.margin>
-            </ComboBox>
-         </children>
-         <padding>
-            <Insets bottom="5.0" top="5.0" />
-         </padding>
-      </HBox>
-   </children>
-   <padding>
-      <Insets bottom="5.0" top="5.0" />
-   </padding>
+<VBox fx:id="headerComponent" alignment="CENTER" xmlns="http://javafx.com/javafx/24.0.1"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.header.HeaderController">
+    <padding>
+        <Insets bottom="5.0" top="5.0"/>
+    </padding>
+    <HBox alignment="CENTER" VBox.vgrow="ALWAYS">
+        <opaqueInsets>
+            <Insets/>
+        </opaqueInsets>
+        <padding>
+            <Insets bottom="5.0" top="5.0"/>
+        </padding>
+        <Button fx:id="loadFileButton" mnemonicParsing="false" onAction="#loadFileButtonPressed" text="Load File"
+                HBox.hgrow="ALWAYS">
+            <HBox.margin>
+                <Insets left="5.0" right="5.0"/>
+            </HBox.margin>
+        </Button>
+        <TextField fx:id="filePathTextBox" editable="false" promptText="Path to current program"
+                   HBox.hgrow="ALWAYS">
+            <HBox.margin>
+                <Insets left="5.0" right="5.0"/>
+            </HBox.margin>
+        </TextField>
+    </HBox>
+    <HBox alignment="CENTER_LEFT" VBox.vgrow="ALWAYS">
+        <children>
+          <ComboBox promptText="Progran/Function Selector">
+              <opaqueInsets>
+                  <Insets left="5.0" right="5.0"/>
+              </opaqueInsets>
+              <HBox.margin>
+                  <Insets left="5.0" right="5.0"/>
+              </HBox.margin>
+          </ComboBox>
+          <Button fx:id="CollapseButton" mnemonicParsing="false" onAction="#CollapseProgram" text="Collapse">
+              <opaqueInsets>
+                  <Insets left="5.0" right="5.0"/>
+              </opaqueInsets>
+              <HBox.margin>
+                  <Insets left="5.0" right="5.0"/>
+              </HBox.margin>
+          </Button>
+          <Label fx:id="DegreeLabel" text="Current/Maximum Degree">
+              <HBox.margin>
+                  <Insets left="5.0" right="5.0"/>
+              </HBox.margin>
+          </Label>
+          <Button fx:id="ExpandButton" mnemonicParsing="false" onAction="#ExpandProgram" text="Expand">
+              <HBox.margin>
+                  <Insets left="5.0" right="5.0"/>
+              </HBox.margin>
+          </Button>
+          <ComboBox fx:id="highLightSelector" promptText="Highlight Selection ">
+              <HBox.margin>
+                  <Insets left="5.0" right="5.0"/>
+              </HBox.margin>
+          </ComboBox>
+        </children>
+        <padding>
+          <Insets bottom="5.0" top="5.0"/>
+        </padding>
+    </HBox>
 </VBox>

@@ -5,6 +5,7 @@ import engine.S_Emulator;
 import engine.arguments.Variable;
 import engine.commands.Command;
 import javafx.fxml.FXML;
+import ui.executionPanelController.ExecutionPanelController;
 import ui.header.HeaderController;
 import ui.instructionTable.InstructionTableController;
 
@@ -14,12 +15,14 @@ import java.util.*;
 public class BaseController {
     @FXML private HeaderController headerComponentController;
     @FXML private InstructionTableController instructionTableComponentController;
+    @FXML private ExecutionPanelController executionPanelComponentController;
     S_Emulator s_emulator;
     List<S_Emulator> programHistory;
 
     @FXML
     public void initialize() {
-        if(headerComponentController != null && instructionTableComponentController != null) {
+        if(headerComponentController != null && instructionTableComponentController != null  && executionPanelComponentController != null) {
+            executionPanelComponentController.setMainController(this);
             headerComponentController.setMainController(this);
             instructionTableComponentController.setMainController(this);
         }
