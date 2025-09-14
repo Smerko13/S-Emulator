@@ -122,6 +122,7 @@ public class UI {
 
     private void executeProgram(boolean readFile) {
         if(readFile) {
+            engine.reset();
             int expansionLevel = menu.getExpansionLevel(engine);
             menu.showInputVariables(engine, expansionLevel);
             menu.getInputVariablesValues(engine);
@@ -131,7 +132,6 @@ public class UI {
             menu.showOutputVariable(engine);
             menu.displayVariables(engine,expansionLevel);
             menu.displayCycleSum(engine);
-            engine.reset();
         }
         else {
             menu.displayFailedToLoadMessage();

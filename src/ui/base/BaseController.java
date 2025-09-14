@@ -3,6 +3,8 @@ package ui.base;
 import engine.Engine;
 import engine.S_Emulator;
 import engine.arguments.Variable;
+import engine.arguments.types.OutputVariable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import javafx.fxml.FXML;
 import ui.executionPanelController.ExecutionPanelController;
@@ -35,8 +37,27 @@ public class BaseController {
         s_emulator = new Engine();
         programHistory.add(s_emulator);
         boolean fileLoadedSuccessfully = s_emulator.readProgramFromXml(selectedFile.toString());
-        if(fileLoadedSuccessfully){
-            instructionTableComponentController.displayInstructions(s_emulator.getCommands());
+        if (fileLoadedSuccessfully) {
+            List<Command> displayedCommands = s_emulator.getCommands();
+            instructionTableComponentController.displayInstructions(displayedCommands);
+
+            Set<Variable> displayedVars = new LinkedHashSet<>();
+            Set<Variable> inputVars = new LinkedHashSet<>();
+            for (Command cmd : displayedCommands) {
+                Set<Variable> cmdVars = cmd.getAllVariables();
+                if (cmdVars != null) {
+                    for (Variable v : cmdVars) {
+                        if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                            displayedVars.add(v);
+                        }
+                        if (v instanceof engine.arguments.types.InputVariable) {
+                            inputVars.add(v);
+                        }
+                    }
+                }
+            }
+            executionPanelComponentController.displayAllVars(displayedVars);
+            executionPanelComponentController.displayInputVars(inputVars);
         } else {
             System.out.println("WRONG FILE");
         }
@@ -53,13 +74,51 @@ public class BaseController {
     public void expandProgram() {
         s_emulator.increaseDegree();
         int currExpansionLvl = s_emulator.getCurrentDegree();
-        instructionTableComponentController.displayInstructions(s_emulator.getCommandsAtDesiredLevel(currExpansionLvl));
+        List<Command> displayedCommands = s_emulator.getCommandsAtDesiredLevel(currExpansionLvl);
+        instructionTableComponentController.displayInstructions(displayedCommands);
+
+        Set<Variable> displayedVars = new LinkedHashSet<>();
+        Set<Variable> inputVars = new LinkedHashSet<>();
+        for (Command cmd : displayedCommands) {
+            Set<Variable> cmdVars = cmd.getAllVariables();
+            if (cmdVars != null) {
+                for (Variable v : cmdVars) {
+                    if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                        displayedVars.add(v);
+                    }
+                    if (v instanceof engine.arguments.types.InputVariable) {
+                        inputVars.add(v);
+                    }
+                }
+            }
+        }
+        executionPanelComponentController.displayAllVars(displayedVars);
+        executionPanelComponentController.displayInputVars(inputVars);
     }
 
     public void collapseProgram() {
         s_emulator.decreaseDegree();
         int currExpansionLvl = s_emulator.getCurrentDegree();
-        instructionTableComponentController.displayInstructions(s_emulator.getCommandsAtDesiredLevel(currExpansionLvl));
+        List<Command> displayedCommands = s_emulator.getCommandsAtDesiredLevel(currExpansionLvl);
+        instructionTableComponentController.displayInstructions(displayedCommands);
+
+        Set<Variable> displayedVars = new LinkedHashSet<>();
+        Set<Variable> inputVars = new LinkedHashSet<>();
+        for (Command cmd : displayedCommands) {
+            Set<Variable> cmdVars = cmd.getAllVariables();
+            if (cmdVars != null) {
+                for (Variable v : cmdVars) {
+                    if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                        displayedVars.add(v);
+                    }
+                    if (v instanceof engine.arguments.types.InputVariable) {
+                        inputVars.add(v);
+                    }
+                }
+            }
+        }
+        executionPanelComponentController.displayAllVars(displayedVars);
+        executionPanelComponentController.displayInputVars(inputVars);
     }
 
     public void setMonitors() {
@@ -126,4 +185,24 @@ public class BaseController {
         instructionTableComponentController.setHighlight(selected);
     }
 
+    public void executeProgram() {
+        // Run the program
+        this.s_emulator.executeProgram(s_emulator.getCurrentDegree());
+
+        // Get all variables from the engine (source of truth)
+        Set<Variable> allVars = s_emulator.getVariables();
+        Set<Variable> displayedVars = new LinkedHashSet<>();
+        Set<Variable> inputVars = new LinkedHashSet<>();
+        for (Variable v : allVars) {
+            if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                displayedVars.add(v);
+            }
+            if (v instanceof engine.arguments.types.InputVariable) {
+                inputVars.add(v);
+            }
+        }
+        // Refresh tables with up-to-date variable instances
+        executionPanelComponentController.displayAllVars(displayedVars);
+        executionPanelComponentController.displayInputVars(inputVars);
+    }
 }
