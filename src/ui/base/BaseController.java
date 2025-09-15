@@ -9,6 +9,7 @@ import engine.commands.Command;
 import javafx.fxml.FXML;
 import ui.executionPanelController.ExecutionPanelController;
 import ui.header.HeaderController;
+import ui.historyPanel.HistoryPanelController;
 import ui.instructionTable.InstructionTableController;
 
 import java.io.File;
@@ -18,15 +19,20 @@ public class BaseController {
     @FXML private HeaderController headerComponentController;
     @FXML private InstructionTableController instructionTableComponentController;
     @FXML private ExecutionPanelController executionPanelComponentController;
+    @FXML private HistoryPanelController historyPanelComponentController;
     S_Emulator s_emulator;
     List<S_Emulator> programHistory;
 
     @FXML
     public void initialize() {
-        if(headerComponentController != null && instructionTableComponentController != null  && executionPanelComponentController != null) {
+        if(headerComponentController != null
+                && instructionTableComponentController != null
+                && executionPanelComponentController != null
+                && historyPanelComponentController != null) {
             executionPanelComponentController.setMainController(this);
             headerComponentController.setMainController(this);
             instructionTableComponentController.setMainController(this);
+            historyPanelComponentController.setMainController(this);
         }
         s_emulator = new Engine();
         programHistory = new ArrayList<>();

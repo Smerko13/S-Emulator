@@ -14,8 +14,6 @@ import java.io.File;
 import java.util.Set;
 
 public class HeaderController {
-
-
     private BaseController mainController;
     @FXML private Button loadFileButton;
     @FXML private TextField filePathTextBox;
