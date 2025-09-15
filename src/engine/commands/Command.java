@@ -8,6 +8,7 @@ import engine.arguments.types.WorkVariable;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -145,4 +146,16 @@ public abstract class Command implements Serializable {
 
     public abstract Set<Variable> getAllVariables();
 
+    // src/engine/commands/Command.java
+
+
+    public Collection<String> getUsedVariableNames() {
+        Set<String> names = new LinkedHashSet<>();
+        for (Variable v : associatedVariables) {
+            if (v != null && v.getName() != null) {
+                names.add(v.getName());
+            }
+        }
+        return names;
+    }
 }

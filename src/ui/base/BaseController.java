@@ -202,7 +202,11 @@ public class BaseController {
             }
         }
         // Refresh tables with up-to-date variable instances
-        executionPanelComponentController.displayAllVars(displayedVars);
+        //executionPanelComponentController.displayAllVars(displayedVars);
+        executionPanelComponentController.displayVarsForCurrentInstructions(
+                s_emulator.getVariables(),
+                s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
+        );
         executionPanelComponentController.displayInputVars(inputVars);
     }
 }

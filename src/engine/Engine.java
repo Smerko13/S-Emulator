@@ -238,6 +238,7 @@ public class Engine implements S_Emulator , Serializable {
 
     @Override
     public void executeProgram(int expansionLevel) {
+        resetWorkAndOutputVariables();
         int index = 0;
         this.cycleSum = 0;
         List<Command> commands = getCommandsAtDesiredLevel(expansionLevel);
@@ -271,6 +272,14 @@ public class Engine implements S_Emulator , Serializable {
             }
         }
         this.stats.updateStatEntry(expansionLevel, variables,extraInputVariables , cycleSum);
+    }
+
+    private void resetWorkAndOutputVariables() {
+        for(Variable variable : variables) {
+            if(variable instanceof WorkVariable || variable instanceof OutputVariable) {
+                variable.setValue(0);
+            }
+        }
     }
 
     public void reset() {

@@ -4,6 +4,7 @@ import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
+import engine.commands.Command;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -17,6 +18,8 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.converter.IntegerStringConverter;
 import ui.base.BaseController;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ExecutionPanelController {
@@ -53,12 +56,11 @@ public class ExecutionPanelController {
         ObservableList<Variable> allVars = FXCollections.observableArrayList();
         for (Variable v : variables) {
             if (v instanceof WorkVariable || v instanceof OutputVariable) {
-                allVars.add(v);
+                allVars.add(v); // Only current values are in the variable objects
             }
         }
         allVarsTable.setItems(allVars);
 
-        // Optional: Set up columns if not already done in FXML/controller
         if (allVarsTable.getColumns().size() == 2) {
             TableColumn<Variable, String> nameCol = (TableColumn<Variable, String>) allVarsTable.getColumns().get(0);
             TableColumn<Variable, Integer> valueCol = (TableColumn<Variable, Integer>) allVarsTable.getColumns().get(1);
@@ -91,6 +93,31 @@ public class ExecutionPanelController {
             });
 
             inputVarsTable.setEditable(true);
+        }
+    }
+
+    // Add this method to filter variables based on commands
+    public void displayVarsForCurrentInstructions(Set<Variable> variables, List<Command> currentCommands) {
+        // Collect variable names used in current commands
+        inputVarsTable.getItems().clear();
+        Set<String> usedVarNames = new HashSet<>();
+        for (Command cmd : currentCommands) {
+            usedVarNames.addAll(cmd.getUsedVariableNames()); // Implement getUsedVariableNames() in Command
+        }
+
+        ObservableList<Variable> filteredVars = FXCollections.observableArrayList();
+        for (Variable v : variables) {
+            if ((v instanceof WorkVariable || v instanceof OutputVariable) && usedVarNames.contains(v.getName())) {
+                filteredVars.add(v);
+            }
+        }
+        allVarsTable.setItems(filteredVars);
+
+        if (allVarsTable.getColumns().size() == 2) {
+            TableColumn<Variable, String> nameCol = (TableColumn<Variable, String>) allVarsTable.getColumns().get(0);
+            TableColumn<Variable, Integer> valueCol = (TableColumn<Variable, Integer>) allVarsTable.getColumns().get(1);
+            nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+            valueCol.setCellValueFactory(new PropertyValueFactory<>("value"));
         }
     }
 }
