@@ -141,13 +141,16 @@ public abstract class Command implements Serializable {
     public abstract String getTargetLabel();
 
     public String getType() {
-        return String.valueOf(commandType);
+        if (commandType == 'B') {
+            return "Basic";
+        } else if (commandType == 'S') {
+            return "Synthetic";
+        } else {
+            return "UNKNOWN";
+        }
     }
 
     public abstract Set<Variable> getAllVariables();
-
-    // src/engine/commands/Command.java
-
 
     public Collection<String> getUsedVariableNames() {
         Set<String> names = new LinkedHashSet<>();
@@ -157,5 +160,9 @@ public abstract class Command implements Serializable {
             }
         }
         return names;
+    }
+
+    public String getCommandName() {
+        return commandName;
     }
 }

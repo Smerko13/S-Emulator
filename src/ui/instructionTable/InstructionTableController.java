@@ -11,33 +11,41 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 
 import javafx.scene.control.TableView;
+import javafx.scene.text.TextFlow;
 import ui.base.BaseController;
 import java.util.List;
 
 
 public class InstructionTableController {
+    @FXML
+    private TextFlow SummaryLineTextBox;
     private BaseController mainController;
     @FXML
     private TableView<Command> instructionTableView;
-    @FXML private TableColumn<Command, Number> idColumn;
-    @FXML private TableColumn<Command, String> typeColumn;
-    @FXML private TableColumn<Command, Number> cyclesColumn;
-    @FXML private TableColumn<Command, String> instructionColumn;
-    @FXML private TableColumn<Command, String> labelColumn;
+    @FXML
+    private TableColumn<Command, Number> idColumn;
+    @FXML
+    private TableColumn<Command, String> typeColumn;
+    @FXML
+    private TableColumn<Command, Number> cyclesColumn;
+    @FXML
+    private TableColumn<Command, String> instructionColumn;
+    @FXML
+    private TableColumn<Command, String> labelColumn;
     private Object currentHighlight = null;
-
     private final ObservableList<Command> commands = FXCollections.observableArrayList();
-
-
+    private Command selectedCommand = null; // 1. Track selected command
 
     public void setMainController(BaseController baseController) {
         this.mainController = baseController;
     }
+
     @FXML
     private void initialize() {
         instructionTableView.setItems(commands);
         idColumn.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(Number n, boolean empty) {
+            @Override
+            protected void updateItem(Number n, boolean empty) {
                 super.updateItem(n, empty);
                 setText(empty ? null : Integer.toString(getIndex() + 1));
             }
@@ -57,29 +65,62 @@ public class InstructionTableController {
             @Override
             protected void updateItem(Command item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null || currentHighlight == null || "None".equals(currentHighlight)) {
+                if (empty || item == null) {
                     setStyle("");
-                } else {
-                    boolean highlight = false;
+                } else if (item == selectedCommand) {
+                    setStyle("-fx-background-color: red;");
+                } else if (currentHighlight != null && !"None".equals(currentHighlight)) {
                     String highlightStr = currentHighlight.toString().trim();
-                    // Highlight if label matches
-                    if (item.getLabel() != null && item.getLabel().trim().equals(highlightStr)) {
+                    boolean highlight = false;
+                    if ((item.getLabel() != null && item.getLabel().trim().equals(highlightStr)) ||
+                            (item.getCommandRepresentation() != null && item.getCommandRepresentation().contains(highlightStr))) {
                         highlight = true;
                     }
-                    // Highlight if instruction contains the label
-                    if (item.getCommandRepresentation() != null &&
-                            item.getCommandRepresentation().contains(highlightStr)) {
-                        highlight = true;
-                    }
-                    // Highlight if variable matches
                     for (var v : item.getAssociatedVariables()) {
                         if (v != null && v.getName().equals(currentHighlight)) {
                             highlight = true;
                         }
                     }
                     setStyle(highlight ? "-fx-background-color: yellow;" : "");
+                } else {
+                    setStyle("");
                 }
             }
+        });
+
+        instructionTableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            selectedCommand = newSel;
+            if (newSel != null) {
+                SummaryLineTextBox.getChildren().clear();
+                SummaryLineTextBox.getChildren().add(
+                        new javafx.scene.text.Text(newSel.getCommandRepresentation() + "\n" +
+                                "Type: " + newSel.getType() + "\n" +
+                                "Cycles: " + newSel.getCycles() + "\n" +
+                                "Label: " + (newSel.getLabel() == null ? "" : newSel.getLabel()))
+                );
+            } else {
+                SummaryLineTextBox.getChildren().clear();
+            }
+            instructionTableView.refresh();
+        });
+
+
+        instructionTableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            selectedCommand = newSel;
+            if (newSel != null) {
+                SummaryLineTextBox.getChildren().clear();
+                SummaryLineTextBox.getChildren().add(
+                        new javafx.scene.text.Text(newSel.getCommandRepresentation() + "\n" +
+                                "Command: " + newSel.getCommandName() + "\n" +
+                                "Type: " + newSel.getType() + "\n" +
+                                "Cycles: " + newSel.getCycles() + "\n" +
+                                "Associated Variables: " + String.join(", ", newSel.getUsedVariableNames()) + "\n" +
+                                "Label: " + (newSel.getLabel() == null ? "" : newSel.getLabel()))
+                );
+            } else {
+                SummaryLineTextBox.getChildren().clear();
+            }
+            instructionTableView.refresh();
         });
     }
 

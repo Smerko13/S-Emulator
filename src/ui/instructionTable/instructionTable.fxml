@@ -1,17 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.text.TextFlow?>
 
-<TableView fx:id="instructionTableView" editable="true" minWidth="0.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.instructionTable.InstructionTableController">
-   <columns>
-      <TableColumn fx:id="idColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="50.0" sortable="false" text="#" />
-      <TableColumn fx:id="typeColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="50.0" sortable="false" text="B\S" />
-      <TableColumn fx:id="cyclesColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="50.0" sortable="false" text="Cycles" />
-       <TableColumn fx:id="labelColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="50.0" sortable="false" text="Label" />
-      <TableColumn fx:id="instructionColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="300.0" sortable="false" text="Instruction" />
-   </columns>
-   <columnResizePolicy>
-      <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-   </columnResizePolicy>
-</TableView>
+
+<SplitPane dividerPositions="0.9" orientation="VERTICAL" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.instructionTable.InstructionTableController">
+   <items>
+      <TableView fx:id="instructionTableView" editable="true" minWidth="0.0">
+         <columns>
+            <TableColumn fx:id="idColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="50.0" sortable="false" text="#" />
+            <TableColumn fx:id="typeColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="50.0" sortable="false" text="B\S" />
+            <TableColumn fx:id="cyclesColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="50.0" sortable="false" text="Cycles" />
+             <TableColumn fx:id="labelColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="50.0" sortable="false" text="Label" />
+            <TableColumn fx:id="instructionColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="300.0" sortable="false" text="Instruction" />
+         </columns>
+         <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+         </columnResizePolicy>
+      </TableView>
+      <TextFlow fx:id="SummaryLineTextBox" prefWidth="500.0" />
+   </items>
+</SplitPane>

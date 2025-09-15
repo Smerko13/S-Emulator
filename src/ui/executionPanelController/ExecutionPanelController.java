@@ -96,13 +96,11 @@ public class ExecutionPanelController {
         }
     }
 
-    // Add this method to filter variables based on commands
     public void displayVarsForCurrentInstructions(Set<Variable> variables, List<Command> currentCommands) {
         // Collect variable names used in current commands
-        inputVarsTable.getItems().clear();
         Set<String> usedVarNames = new HashSet<>();
         for (Command cmd : currentCommands) {
-            usedVarNames.addAll(cmd.getUsedVariableNames()); // Implement getUsedVariableNames() in Command
+            usedVarNames.addAll(cmd.getUsedVariableNames());
         }
 
         ObservableList<Variable> filteredVars = FXCollections.observableArrayList();
@@ -111,6 +109,7 @@ public class ExecutionPanelController {
                 filteredVars.add(v);
             }
         }
+        allVarsTable.getItems().clear();
         allVarsTable.setItems(filteredVars);
 
         if (allVarsTable.getColumns().size() == 2) {
@@ -119,5 +118,9 @@ public class ExecutionPanelController {
             nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
             valueCol.setCellValueFactory(new PropertyValueFactory<>("value"));
         }
+    }
+
+    public void setCyclesLabel(int cycles) {
+        cyclesLabel.setText("Cycles: " + cycles);
     }
 }

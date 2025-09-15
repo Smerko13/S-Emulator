@@ -208,5 +208,6 @@ public class BaseController {
                 s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
         );
         executionPanelComponentController.displayInputVars(inputVars);
+        executionPanelComponentController.setCyclesLabel(s_emulator.getCycleSum());
     }
 }
