@@ -34,7 +34,7 @@ public class InstructionTableController {
     private TableColumn<Command, String> labelColumn;
     private Object currentHighlight = null;
     private final ObservableList<Command> commands = FXCollections.observableArrayList();
-    private Command selectedCommand = null; // 1. Track selected command
+    private Command selectedCommand = null;
 
     public void setMainController(BaseController baseController) {
         this.mainController = baseController;
