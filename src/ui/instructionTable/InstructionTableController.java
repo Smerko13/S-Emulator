@@ -102,6 +102,11 @@ public class InstructionTableController {
                 SummaryLineTextBox.getChildren().clear();
             }
             instructionTableView.refresh();
+
+            // Notify main controller to update history panel
+            if (mainController != null) {
+                mainController.onHighlightSelectionChanged(newSel);
+            }
         });
 
 
@@ -132,7 +137,11 @@ public class InstructionTableController {
 
 
     public void setHighlight(Object highlight) {
-        this.currentHighlight = highlight;
+        if (highlight instanceof engine.commands.Command) {
+            this.currentHighlight = null;
+        } else {
+            this.currentHighlight = highlight;
+        }
         instructionTableView.refresh();
     }
 

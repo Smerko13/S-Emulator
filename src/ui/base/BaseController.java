@@ -189,6 +189,11 @@ public class BaseController {
 
     public void onHighlightSelectionChanged(Object selected) {
         instructionTableComponentController.setHighlight(selected);
+        if (selected instanceof engine.commands.Command) {
+            historyPanelComponentController.displayParentChain((engine.commands.Command) selected);
+        } else {
+            historyPanelComponentController.displayParentChain(null);
+        }
     }
 
     public void executeProgram() {
