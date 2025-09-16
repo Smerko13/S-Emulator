@@ -11,6 +11,7 @@ import ui.executionPanelController.ExecutionPanelController;
 import ui.header.HeaderController;
 import ui.historyPanel.HistoryPanelController;
 import ui.instructionTable.InstructionTableController;
+import ui.statPanel.StatPanelController;
 
 import java.io.File;
 import java.util.*;
@@ -20,6 +21,7 @@ public class BaseController {
     @FXML private InstructionTableController instructionTableComponentController;
     @FXML private ExecutionPanelController executionPanelComponentController;
     @FXML private HistoryPanelController historyPanelComponentController;
+    @FXML private StatPanelController statPanelComponentController;
     S_Emulator s_emulator;
     List<S_Emulator> programHistory;
 
@@ -28,11 +30,13 @@ public class BaseController {
         if(headerComponentController != null
                 && instructionTableComponentController != null
                 && executionPanelComponentController != null
-                && historyPanelComponentController != null) {
+                && historyPanelComponentController != null
+            && statPanelComponentController != null) {
             executionPanelComponentController.setMainController(this);
             headerComponentController.setMainController(this);
             instructionTableComponentController.setMainController(this);
             historyPanelComponentController.setMainController(this);
+            statPanelComponentController.setMainController(this);
         }
         s_emulator = new Engine();
         programHistory = new ArrayList<>();

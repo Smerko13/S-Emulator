@@ -6,6 +6,7 @@ import engine.arguments.types.OutputVariable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -30,6 +31,10 @@ public class Stats implements Serializable {
         execution.cycleCount = cycleSum;
 
         this.executionHistory.add(execution);
+    }
+
+    public List<Execution> getExecutionHistory() {
+        return executionHistory;
     }
 
     private class Execution implements Serializable {
