@@ -32,6 +32,15 @@ public class BaseController {
     @FXML private StatPanelController statPanelComponentController;
     S_Emulator s_emulator;
     List<S_Emulator> programHistory;
+    private boolean isFileLoaded = false;
+    private boolean isDebuggingEnabled = false;
+
+    public boolean isDebuggingEnabled() {
+        return isDebuggingEnabled;
+    }
+    public boolean isFileLoaded() {
+        return isFileLoaded;
+    }
 
     @FXML
     public void initialize() {
@@ -57,6 +66,8 @@ public class BaseController {
             programHistory.add(s_emulator);
             boolean fileLoadedSuccessfully = s_emulator.readProgramFromXml(selectedFile.toString());
             if (fileLoadedSuccessfully) {
+                isFileLoaded = true;
+                isDebuggingEnabled = false;
                 List<Command> displayedCommands = s_emulator.getCommands();
                 instructionTableComponentController.displayInstructions(displayedCommands);
 
@@ -81,6 +92,7 @@ public class BaseController {
                 System.out.println("WRONG FILE");
             }
         }));
+        this.executionPanelComponentController.enableAllButtons();
     }
 
     public String getCurrentDegree() {
@@ -280,9 +292,12 @@ public class BaseController {
     }
 
     public void startDebugging() {
+        if (!isFileLoaded) return;
+        isDebuggingEnabled = true;
         s_emulator.prepareForDebugging();
         Command currentDebugCommand = s_emulator.getCurrentDebugCommand();
         instructionTableComponentController.setDebugHighlight(currentDebugCommand);
+        executionPanelComponentController.updateDebugButtons();
     }
 
     public void stepOver() {
@@ -307,5 +322,52 @@ public class BaseController {
         executionPanelComponentController.displayInputVars(inputVars);
         executionPanelComponentController.setCyclesLabel(s_emulator.getCycleSum());
         statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
+    }
+
+    public void stopDebugging() {
+        // Reset engine state to initial values
+        if (s_emulator instanceof Engine engine) {
+            engine.reset();
+        }
+        // Refresh UI
+        instructionTableComponentController.setDebugHighlight(null);
+        executionPanelComponentController.updateDebugButtons();
+        isDebuggingEnabled = false;
+
+        // Update variable tables and stats
+        Set<Variable> allVars = s_emulator.getVariables();
+        Set<Variable> displayedVars = new LinkedHashSet<>();
+        Set<Variable> inputVars = new LinkedHashSet<>();
+        for (Variable v : allVars) {
+            if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                displayedVars.add(v);
+            }
+            if (v instanceof engine.arguments.types.InputVariable) {
+                inputVars.add(v);
+            }
+        }
+        executionPanelComponentController.displayAllVars(displayedVars);
+        executionPanelComponentController.displayInputVars(inputVars);
+        executionPanelComponentController.setCyclesLabel(0);
+        statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
+    }
+
+    public void continueDebugging() {
+        while (isDebuggingEnabled && s_emulator.getCurrentDebugCommand() != null) {
+            s_emulator.stepOver();
+        }
+        // Clear highlight and update UI
+        instructionTableComponentController.setDebugHighlight(null);
+        executionPanelComponentController.updateDebugButtons();
+        // Update variable tables
+        executionPanelComponentController.displayVarsForCurrentInstructions(
+                s_emulator.getVariables(),
+                s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
+        );
+        executionPanelComponentController.displayInputVars(s_emulator.getVariables());
+        executionPanelComponentController.setCyclesLabel(s_emulator.getCycleSum());
+        statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
+        // Disable debugging
+        isDebuggingEnabled = false;
     }
 }

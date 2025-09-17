@@ -35,6 +35,36 @@ public class ExecutionPanelController {
     @FXML private Label cyclesLabel;
     private BaseController mainController;
 
+    public void initialize() {
+        disableAllButtons();
+    }
+
+    private void disableAllButtons() {
+        stepOverButton.setDisable(true);
+        stepOverButton.setOpacity(0.5); // Dim when disabled
+        continueButton.setDisable(true);
+        continueButton.setOpacity(0.5); // Dim when disabled
+        stopDebugButton.setDisable(true);
+        stopDebugButton.setOpacity(0.5); // Dim when disabled
+        startDebugButton.setDisable(true);
+        startDebugButton.setOpacity(0.5); // Dim when disabled
+        programExecuteButton.setDisable(true);
+        programExecuteButton.setOpacity(0.5); // Dim when disabled
+    }
+
+    public void enableAllButtons() {
+        stepOverButton.setDisable(false);
+        stepOverButton.setOpacity(1.0); // Full opacity when enabled
+        continueButton.setDisable(false);
+        continueButton.setOpacity(1.0); // Full opacity when enabled
+        stopDebugButton.setDisable(false);
+        stopDebugButton.setOpacity(1.0); // Full opacity when enabled
+        startDebugButton.setDisable(false);
+        startDebugButton.setOpacity(1.0); // Full opacity when enabled
+        programExecuteButton.setDisable(false);
+        programExecuteButton.setOpacity(1.0); // Full opacity when enabled
+    }
+
     public void setMainController(BaseController mainController) {
         this.mainController = mainController;
     }
@@ -48,9 +78,11 @@ public class ExecutionPanelController {
     }
 
     public void stopDebugPressed(ActionEvent actionEvent) {
+        this.mainController.stopDebugging();
     }
 
     public void continueButtonPressed(ActionEvent actionEvent) {
+        this.mainController.continueDebugging();
     }
 
     public void displayAllVars(Set<Variable> variables) {
@@ -128,5 +160,15 @@ public class ExecutionPanelController {
 
     public void stepOverPressed(ActionEvent actionEvent) {
         this.mainController.stepOver();
+    }
+
+    public void updateDebugButtons() {
+        boolean enabled = mainController != null && mainController.isDebuggingEnabled();
+        stepOverButton.setDisable(!enabled);
+        stepOverButton.setOpacity(enabled ? 1.0 : 0.5); // Dim when disabled
+        continueButton.setDisable(!enabled);
+        continueButton.setOpacity(enabled ? 1.0 : 0.5); // Dim when disabled
+        stopDebugButton.setDisable(!enabled);
+        stopDebugButton.setOpacity(enabled ? 1.0 : 0.5); // Dim when disabled
     }
 }
