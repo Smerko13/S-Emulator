@@ -2,6 +2,7 @@ package ui.base;
 
 import engine.Engine;
 import engine.S_Emulator;
+import engine.Stats;
 import engine.arguments.Variable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
@@ -224,5 +225,10 @@ public class BaseController {
         );
         executionPanelComponentController.displayInputVars(inputVars);
         executionPanelComponentController.setCyclesLabel(s_emulator.getCycleSum());
+        statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
+    }
+
+    public Stats getStats() {
+        return s_emulator.getExecutionHistory();
     }
 }

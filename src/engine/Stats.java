@@ -37,7 +37,7 @@ public class Stats implements Serializable {
         return executionHistory;
     }
 
-    private class Execution implements Serializable {
+    public class Execution implements Serializable {
         private static int id = 0;
         private final int currentId;
         private int expansionLevel;
