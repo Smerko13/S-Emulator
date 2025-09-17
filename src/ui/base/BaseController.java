@@ -7,7 +7,14 @@ import engine.arguments.Variable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import ui.executionPanelController.ExecutionPanelController;
 import ui.header.HeaderController;
 import ui.historyPanel.HistoryPanelController;
@@ -45,33 +52,35 @@ public class BaseController {
 
 
     public void loadFile(File selectedFile) {
-        s_emulator = new Engine();
-        programHistory.add(s_emulator);
-        boolean fileLoadedSuccessfully = s_emulator.readProgramFromXml(selectedFile.toString());
-        if (fileLoadedSuccessfully) {
-            List<Command> displayedCommands = s_emulator.getCommands();
-            instructionTableComponentController.displayInstructions(displayedCommands);
+        showLoadingProgress(() -> Platform.runLater(() -> {
+            s_emulator = new Engine();
+            programHistory.add(s_emulator);
+            boolean fileLoadedSuccessfully = s_emulator.readProgramFromXml(selectedFile.toString());
+            if (fileLoadedSuccessfully) {
+                List<Command> displayedCommands = s_emulator.getCommands();
+                instructionTableComponentController.displayInstructions(displayedCommands);
 
-            Set<Variable> displayedVars = new LinkedHashSet<>();
-            Set<Variable> inputVars = new LinkedHashSet<>();
-            for (Command cmd : displayedCommands) {
-                Set<Variable> cmdVars = cmd.getAllVariables();
-                if (cmdVars != null) {
-                    for (Variable v : cmdVars) {
-                        if (v instanceof WorkVariable || v instanceof OutputVariable) {
-                            displayedVars.add(v);
-                        }
-                        if (v instanceof engine.arguments.types.InputVariable) {
-                            inputVars.add(v);
+                Set<Variable> displayedVars = new LinkedHashSet<>();
+                Set<Variable> inputVars = new LinkedHashSet<>();
+                for (Command cmd : displayedCommands) {
+                    Set<Variable> cmdVars = cmd.getAllVariables();
+                    if (cmdVars != null) {
+                        for (Variable v : cmdVars) {
+                            if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                                displayedVars.add(v);
+                            }
+                            if (v instanceof engine.arguments.types.InputVariable) {
+                                inputVars.add(v);
+                            }
                         }
                     }
                 }
+                executionPanelComponentController.displayAllVars(displayedVars);
+                executionPanelComponentController.displayInputVars(inputVars);
+            } else {
+                System.out.println("WRONG FILE");
             }
-            executionPanelComponentController.displayAllVars(displayedVars);
-            executionPanelComponentController.displayInputVars(inputVars);
-        } else {
-            System.out.println("WRONG FILE");
-        }
+        }));
     }
 
     public String getCurrentDegree() {
@@ -217,8 +226,6 @@ public class BaseController {
                 inputVars.add(v);
             }
         }
-        // Refresh tables with up-to-date variable instances
-        //executionPanelComponentController.displayAllVars(displayedVars);
         executionPanelComponentController.displayVarsForCurrentInstructions(
                 s_emulator.getVariables(),
                 s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
@@ -230,5 +237,45 @@ public class BaseController {
 
     public Stats getStats() {
         return s_emulator.getExecutionHistory();
+    }
+
+    private void showLoadingProgress(Runnable onLoaded) {
+        Stage progressStage = new Stage();
+        progressStage.initModality(Modality.APPLICATION_MODAL);
+        progressStage.setTitle("Loading...");
+
+        ProgressBar progressBar = new ProgressBar();
+        progressBar.setPrefWidth(300);
+
+        VBox vbox = new VBox(progressBar);
+        vbox.setSpacing(10);
+        vbox.setStyle("-fx-padding: 20;");
+        progressStage.setScene(new Scene(vbox));
+        progressStage.setResizable(false);
+
+        Task<Void> loadTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                // Simulate loading steps
+                for (int i = 1; i <= 3; i++) {
+                    updateProgress(i, 3);
+                    Thread.sleep(700); // Simulate work
+                }
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                progressStage.close();
+                if (onLoaded != null) onLoaded.run();
+            }
+        };
+
+        progressBar.progressProperty().bind(loadTask.progressProperty());
+        progressStage.show();
+
+        Thread t = new Thread(loadTask);
+        t.setDaemon(true);
+        t.start();
     }
 }
