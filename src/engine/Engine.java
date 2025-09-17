@@ -25,6 +25,7 @@ public class Engine implements S_Emulator , Serializable {
     private Stats stats;
     public static Set<String> labels;
     private int curretDegree = 0;
+    private Command currentCommand;
 
 
     public Engine() {
@@ -237,6 +238,51 @@ public class Engine implements S_Emulator , Serializable {
     }
 
     @Override
+    public void prepareForDebugging() {
+        resetWorkAndOutputVariables();
+        this.currentCommand = commands.getFirst();
+    }
+
+    @Override
+    public void stepOver() {
+        if (this.currentCommand != null) {
+            String executionLabel = this.currentCommand.execute();
+            this.cycleSum += this.currentCommand.getCycles();
+            if(executionLabel != null) {
+                if (executionLabel.length() == 2) {
+                    executionLabel = executionLabel + " "; // Ensure label has at least 3 characters
+                }
+                if (executionLabel.equals("EXIT")) {
+                    this.currentCommand = null; // End of program
+                    return;
+                }
+                for (Command command : commands) {
+                    String currentLabel = command.getLabel();
+                    if (currentLabel.equals(executionLabel)) {
+                        this.currentCommand = command;
+                        break;
+                    }
+                }
+            }
+            else {
+                int currentIndex = commands.indexOf(this.currentCommand);
+                currentIndex++;
+                if (currentIndex < commands.size()) {
+                    this.currentCommand = commands.get(currentIndex);
+                } else {
+                    this.currentCommand = null; // No more commands to execute
+                }
+            }
+        }
+    }
+
+    @Override
+    public Command getCurrentDebugCommand() {
+        return this.currentCommand;
+    }
+
+
+    @Override
     public void executeProgram(int expansionLevel) {
         resetWorkAndOutputVariables();
         int index = 0;
@@ -328,12 +374,6 @@ public class Engine implements S_Emulator , Serializable {
             this.curretDegree--;
         }
     }
-
-    @Override
-    public Set<Variable> getExtraInputVariables() {
-        return extraInputVariables;
-    }
-
 
     @Override
     public int getCycleSum() {

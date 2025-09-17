@@ -53,5 +53,9 @@ public interface S_Emulator {
 
     void decreaseDegree();
 
-    Set<Variable> getExtraInputVariables();
+    void prepareForDebugging();
+
+    void stepOver();
+
+    Command getCurrentDebugCommand();
 }

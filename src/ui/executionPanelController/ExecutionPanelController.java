@@ -25,6 +25,7 @@ import java.util.Set;
 public class ExecutionPanelController {
 
 
+    @FXML private Button stepOverButton;
     @FXML private TableView inputVarsTable;
     @FXML private TableView allVarsTable;
     @FXML private Button continueButton;
@@ -43,6 +44,7 @@ public class ExecutionPanelController {
     }
 
     public void debugButtonPressed(ActionEvent actionEvent) {
+        this.mainController.startDebugging();
     }
 
     public void stopDebugPressed(ActionEvent actionEvent) {
@@ -122,5 +124,9 @@ public class ExecutionPanelController {
 
     public void setCyclesLabel(int cycles) {
         cyclesLabel.setText("Cycles: " + cycles);
+    }
+
+    public void stepOverPressed(ActionEvent actionEvent) {
+        this.mainController.stepOver();
     }
 }

@@ -35,6 +35,7 @@ public class InstructionTableController {
     private Object currentHighlight = null;
     private final ObservableList<Command> commands = FXCollections.observableArrayList();
     private Command selectedCommand = null;
+    private Command debugHighlight = null;
 
     public void setMainController(BaseController baseController) {
         this.mainController = baseController;
@@ -67,8 +68,10 @@ public class InstructionTableController {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setStyle("");
+                } else if (item == debugHighlight) {
+                        setStyle("-fx-background-color: red;");
                 } else if (item == selectedCommand) {
-                    setStyle("-fx-background-color: red;");
+                    setStyle("-fx-background-color: lightblue;");
                 } else if (currentHighlight != null && !"None".equals(currentHighlight)) {
                     String highlightStr = currentHighlight.toString().trim();
                     boolean highlight = false;
@@ -145,4 +148,8 @@ public class InstructionTableController {
         instructionTableView.refresh();
     }
 
+    public void setDebugHighlight(Command currentDebugCommand) {
+        this.debugHighlight = currentDebugCommand;
+        instructionTableView.refresh();
+    }
 }

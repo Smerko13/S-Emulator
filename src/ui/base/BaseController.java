@@ -278,4 +278,34 @@ public class BaseController {
         t.setDaemon(true);
         t.start();
     }
+
+    public void startDebugging() {
+        s_emulator.prepareForDebugging();
+        Command currentDebugCommand = s_emulator.getCurrentDebugCommand();
+        instructionTableComponentController.setDebugHighlight(currentDebugCommand);
+    }
+
+    public void stepOver() {
+        s_emulator.stepOver();
+        Command currentDebugCommand = s_emulator.getCurrentDebugCommand(); // You may need to add this getter
+        instructionTableComponentController.setDebugHighlight(currentDebugCommand);
+        Set<Variable> allVars = s_emulator.getVariables();
+        Set<Variable> displayedVars = new LinkedHashSet<>();
+        Set<Variable> inputVars = new LinkedHashSet<>();
+        for (Variable v : allVars) {
+            if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                displayedVars.add(v);
+            }
+            if (v instanceof engine.arguments.types.InputVariable) {
+                inputVars.add(v);
+            }
+        }
+        executionPanelComponentController.displayVarsForCurrentInstructions(
+                s_emulator.getVariables(),
+                s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
+        );
+        executionPanelComponentController.displayInputVars(inputVars);
+        executionPanelComponentController.setCyclesLabel(s_emulator.getCycleSum());
+        statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
+    }
 }
