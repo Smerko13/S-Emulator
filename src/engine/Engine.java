@@ -26,6 +26,7 @@ public class Engine implements S_Emulator , Serializable {
     public static Set<String> labels;
     private int curretDegree = 0;
     private Command currentCommand;
+    private List<Engine> subFunctions;
 
 
     public Engine() {
@@ -34,6 +35,7 @@ public class Engine implements S_Emulator , Serializable {
         extraInputVariables = new LinkedHashSet<>();
         this.stats = new Stats();
         labels = new LinkedHashSet<>();
+        this.subFunctions = new ArrayList<>();
     }
 
     public void arrangeIDs(int expansionLevel) {
@@ -138,6 +140,26 @@ public class Engine implements S_Emulator , Serializable {
                 ((SyntheticCommand) cmd).initializeExpandedCommands();
             }
         }
+        if(program.getSFunctions() != null) {
+            for (SFunction function : program.getSFunctions().getSFunction()) {
+                Engine subEngine = new Engine();
+                subEngine.currentProgramName = function.getName();
+                SInstructions funcInstructions = function.getSInstructions();
+                for (SInstruction instruction : funcInstructions.getSInstruction()) {
+                    if (Objects.equals(instruction.getType(), "basic")) {
+                        subEngine.commands.add(createBaseCommandFromInstruction(instruction));
+                    } else if (Objects.equals(instruction.getType(), "synthetic")) {
+                        subEngine.commands.add(createSyntheticCommandFromInstruction(instruction));
+                    }
+                }
+                for (Command cmd : subEngine.commands) {
+                    if (cmd instanceof SyntheticCommand) {
+                        ((SyntheticCommand) cmd).initializeExpandedCommands();
+                    }
+                }
+                this.subFunctions.add(subEngine);
+            }
+        }
     }
 
     private Command createSyntheticCommandFromInstruction(SInstruction instruction) {
@@ -149,6 +171,8 @@ public class Engine implements S_Emulator , Serializable {
             case "JUMP_ZERO" -> new JumpZero(instruction);
             case "JUMP_EQUAL_CONSTANT" -> new JumpEqualConstant(instruction);
             case "JUMP_EQUAL_VARIABLE" -> new JumpEqualVariable(instruction);
+            case "QUOTE" -> new Quote(instruction);
+            case "JUMP_EQUAL_FUNCTION" -> new JumpEqualFunction(instruction);
             default -> throw new IllegalArgumentException("Unknown command in file: " + instruction.getName());
         };
     }

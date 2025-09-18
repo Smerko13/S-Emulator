@@ -26,8 +26,8 @@ import jakarta.xml.bind.annotation.XmlType;
  *     <restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       <sequence>
  *         <element ref="{}S-Instructions"/>
- *         <element ref="{}S-Functions" minOccurs="0"/>
  *       </sequence>
+ *       <attribute name="user-string" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       <attribute name="name" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     </restriction>
  *   </complexContent>
@@ -38,16 +38,15 @@ import jakarta.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-    "sInstructions",
-    "sFunctions"
+    "sInstructions"
 })
-@XmlRootElement(name = "S-Program")
-public class SProgram {
+@XmlRootElement(name = "S-Function")
+public class SFunction {
 
     @XmlElement(name = "S-Instructions", required = true)
     protected SInstructions sInstructions;
-    @XmlElement(name = "S-Functions")
-    protected SFunctions sFunctions;
+    @XmlAttribute(name = "user-string", required = true)
+    protected String userString;
     @XmlAttribute(name = "name", required = true)
     protected String name;
 
@@ -76,27 +75,27 @@ public class SProgram {
     }
 
     /**
-     * Gets the value of the sFunctions property.
+     * Gets the value of the userString property.
      * 
      * @return
      *     possible object is
-     *     {@link SFunctions }
+     *     {@link String }
      *     
      */
-    public SFunctions getSFunctions() {
-        return sFunctions;
+    public String getUserString() {
+        return userString;
     }
 
     /**
-     * Sets the value of the sFunctions property.
+     * Sets the value of the userString property.
      * 
      * @param value
      *     allowed object is
-     *     {@link SFunctions }
+     *     {@link String }
      *     
      */
-    public void setSFunctions(SFunctions value) {
-        this.sFunctions = value;
+    public void setUserString(String value) {
+        this.userString = value;
     }
 
     /**
