@@ -15,14 +15,14 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class Decrease extends BaseCommand implements Serializable {
-    public Decrease(SInstruction instruction) {
-        super(instruction);
+    public Decrease(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "DECREASE";
         this.cycles = 1;
     }
 
-    public Decrease(Variable variable, String label, Command parentCommand) {
-        super(variable, label, parentCommand);
+    public Decrease(Variable variable, String label, Command parentCommand, Engine engine) {
+        super(variable, label, parentCommand, engine);
         this.commandName = "DECREASE";
         this.cycles = 1;
     }

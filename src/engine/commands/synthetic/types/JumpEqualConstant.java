@@ -22,8 +22,8 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
     private final int constantValue; // Assuming a constant value for comparison
 
 
-    public JumpEqualConstant(SInstruction instruction) {
-        super(instruction);
+    public JumpEqualConstant(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "JUMP_EQUAL_CONSTANT";
         this.cycles = 2;
         this.levelOfExpansion = 3;
@@ -39,20 +39,20 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
         String newLabel = generateNewLabel();
         Engine.labels.add(newLabel);
         WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
-        Engine.variables.add(newWorkVariable);
-        this.ExpandedCommands.add(new Assignment(newWorkVariable,this.label, this.variable, this));
+        this.associatedEngine.getVariables().add(newWorkVariable);
+        this.ExpandedCommands.add(new Assignment(newWorkVariable,this.label, this.variable, this, this.associatedEngine));
         for(int i = 0 ; i < this.constantValue;i++) {
-            this.ExpandedCommands.add(new JumpZero(newWorkVariable, newLabel, "   ", this));
-            this.ExpandedCommands.add(new Decrease(newWorkVariable, "   ", this));
+            this.ExpandedCommands.add(new JumpZero(newWorkVariable, newLabel, "   ", this, this.associatedEngine));
+            this.ExpandedCommands.add(new Decrease(newWorkVariable, "   ", this, this.associatedEngine));
         }
-        this.ExpandedCommands.add(new JumpNotZero(newWorkVariable,newLabel, "   ", this));
-        this.ExpandedCommands.add(new GotoLabel(this.JEConstantLabel, this));
+        this.ExpandedCommands.add(new JumpNotZero(newWorkVariable,newLabel, "   ", this, this.associatedEngine));
+        this.ExpandedCommands.add(new GotoLabel(this.JEConstantLabel, this, this.associatedEngine));
         Variable var = null;
-        for(Variable v : Engine.variables){
+        for(Variable v : this.associatedEngine.getVariables()){
             if( v instanceof OutputVariable)
                 var = v;
         }
-        this.ExpandedCommands.add(new Neutral(var, newLabel, this));
+        this.ExpandedCommands.add(new Neutral(var, newLabel, this, this.associatedEngine));
 
         expandFurther();
     }

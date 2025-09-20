@@ -19,8 +19,8 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
     private final String JEVariableLabel;
     private final String variableName;
 
-    public JumpEqualVariable(SInstruction instruction) {
-        super(instruction);
+    public JumpEqualVariable(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "JUMP_EQUAL_VARIABLE";
         this.cycles = 2;
         this.levelOfExpansion = 3;
@@ -30,14 +30,14 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
         this.variableName = instruction.getSInstructionArguments().getSInstructionArgument().getLast().getValue();
         if(this.variableName.charAt(0)=='z'){
             WorkVariable workVariable = new WorkVariable(this.variableName);
-            Engine.variables.add(workVariable);
+            this.associatedEngine.getVariables().add(workVariable);
             this.associatedVariables.add(workVariable);
         } else if(this.variableName.charAt(0)=='x'){
             if(checkIfVariableExists(this.variableName)) {
                 this.associatedVariables.add(getExistingVariableByName(this.variableName));
             } else {
                 InputVariable inputVariable = new InputVariable(this.variableName);
-                Engine.variables.add(inputVariable);
+                this.associatedEngine.getVariables().add(inputVariable);
                 this.associatedVariables.add(inputVariable);
             }
         }
@@ -48,7 +48,7 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
     }
 
     private Variable getExistingVariableByName(String variableName) {
-        for (Variable var : Engine.variables) {
+        for (Variable var : this.associatedEngine.getVariables()) {
             if (var.getName().equals(variableName)) {
                 return var;
             }
@@ -57,7 +57,7 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
     }
 
     private boolean checkIfVariableExists(String variableName) {
-        for (Variable var : Engine.variables) {
+        for (Variable var : this.associatedEngine.getVariables()) {
             if (var.getName().equals(variableName)) {
                 return true;
             }
@@ -68,13 +68,13 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
     @Override
     public void initializeExpandedCommands() {
         WorkVariable newWorkVariable1 = new WorkVariable(generateNewWorkVariableName());
-        Engine.variables.add(newWorkVariable1);
+        this.associatedEngine.getVariables().add(newWorkVariable1);
         WorkVariable newWorkVariable2 = new WorkVariable(generateNewWorkVariableName());
-        Engine.variables.add(newWorkVariable2);
-        this.ExpandedCommands.add(new Assignment(newWorkVariable1, this.label, this.variable, this));
-        for(Variable v : Engine.variables) {
+        this.associatedEngine.getVariables().add(newWorkVariable2);
+        this.ExpandedCommands.add(new Assignment(newWorkVariable1, this.label, this.variable, this, this.associatedEngine));
+        for(Variable v : this.associatedEngine.getVariables()) {
             if(v.getName().equals(this.variableName)) {
-                this.ExpandedCommands.add(new Assignment(newWorkVariable2, "   ", v, this));
+                this.ExpandedCommands.add(new Assignment(newWorkVariable2, "   ", v, this, this.associatedEngine));
                 break;
             }
         }
@@ -84,15 +84,15 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
         Engine.labels.add(newLabel2);
         String newLabel3 = generateNewLabel();
         Engine.labels.add(newLabel3);
-        this.ExpandedCommands.add(new JumpZero(newWorkVariable1,newLabel3,newLabel2,this));
-        this.ExpandedCommands.add(new JumpZero(newWorkVariable2,newLabel1,"   ",this));
-        this.ExpandedCommands.add(new Decrease(newWorkVariable1,"   ",this));
-        this.ExpandedCommands.add(new Decrease(newWorkVariable2,"   ",this));
-        this.ExpandedCommands.add(new GotoLabel(newLabel2,this));
-        this.ExpandedCommands.add(new JumpZero(newWorkVariable2,this.JEVariableLabel,newLabel3,this));
-        for(Variable v : Engine.variables) {
+        this.ExpandedCommands.add(new JumpZero(newWorkVariable1,newLabel3,newLabel2,this,this.associatedEngine));
+        this.ExpandedCommands.add(new JumpZero(newWorkVariable2,newLabel1,"   ",this,this.associatedEngine));
+        this.ExpandedCommands.add(new Decrease(newWorkVariable1,"   ",this, this.associatedEngine));
+        this.ExpandedCommands.add(new Decrease(newWorkVariable2,"   ",this, this.associatedEngine));
+        this.ExpandedCommands.add(new GotoLabel(newLabel2,this,this.associatedEngine));
+        this.ExpandedCommands.add(new JumpZero(newWorkVariable2,this.JEVariableLabel,newLabel3,this,this.associatedEngine));
+        for(Variable v : this.associatedEngine.getVariables()) {
             if(v instanceof OutputVariable){
-                this.ExpandedCommands.add(new Neutral(v,newLabel1,this));
+                this.ExpandedCommands.add(new Neutral(v,newLabel1,this,this.associatedEngine));
             }
         }
         expandFurther();
@@ -102,7 +102,7 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
     public String execute() {
         int varValue = this.variable.getValue();
         int checkedValue;
-        for(Variable var : Engine.variables)
+        for(Variable var : this.associatedEngine.getVariables())
         {
             if(var.getName().equals(this.variableName)) {
                 checkedValue = var.getValue();
@@ -118,7 +118,7 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
         // If the variable with the specified name is not found, create it with a value of 0
         String newVarName = this.variableName;
         Variable newVar = extractVariables(newVarName);
-        Engine.variables.add(newVar);
+        this.associatedEngine.getVariables().add(newVar);
         if(newVar.getValue() == varValue) {
             // If the newly created variable's value equals the original variable's value, return the label for jumping
             return this.JEVariableLabel;
@@ -154,7 +154,7 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
     public Set<Variable> getAllVariables() {
         Set<Variable> variables = new java.util.HashSet<>();
         variables.add(variable);
-        for(Variable var : Engine.variables) {
+        for(Variable var : this.associatedEngine.getVariables()) {
             if(var.getName().equals(this.variableName)) {
                 variables.add(var);
                 break;

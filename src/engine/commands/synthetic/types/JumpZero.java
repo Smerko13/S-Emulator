@@ -19,8 +19,8 @@ import java.util.Set;
 public class JumpZero extends SyntheticCommand implements Serializable {
     private final String JZLabel;
 
-    public JumpZero(SInstruction instruction) {
-        super(instruction);
+    public JumpZero(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "JUMP_ZERO";
         this.cycles = 2;
         this.levelOfExpansion = 2;
@@ -30,8 +30,8 @@ public class JumpZero extends SyntheticCommand implements Serializable {
         this.isJumpCommand = true;
     }
 
-    public JumpZero(WorkVariable newWorkVariable, String jeConstantLabel, String spaces, Command parentCommand) {
-        super(newWorkVariable,spaces, parentCommand);
+    public JumpZero(WorkVariable newWorkVariable, String jeConstantLabel, String spaces, Command parentCommand, Engine engine) {
+        super(newWorkVariable,spaces, parentCommand, engine);
         this.commandName = "JUMP_ZERO";
         this.cycles = 2;
         this.levelOfExpansion = 2;
@@ -44,11 +44,12 @@ public class JumpZero extends SyntheticCommand implements Serializable {
     @Override
     public void initializeExpandedCommands() {
         String newLabel = this.generateNewLabel();
-        this.ExpandedCommands.add(new JumpNotZero(this.variable, newLabel, this.label, this));
-        this.ExpandedCommands.add(new GotoLabel(this.JZLabel, this));
-        for(Variable v : Engine.variables) {
+        Engine.labels.add(newLabel);
+        this.ExpandedCommands.add(new JumpNotZero(this.variable, newLabel, this.label, this, this.associatedEngine));
+        this.ExpandedCommands.add(new GotoLabel(this.JZLabel, this, this.associatedEngine));
+        for(Variable v : this.associatedEngine.getVariables()) {
             if(v instanceof OutputVariable) {
-                this.ExpandedCommands.add(new Neutral(v, newLabel, this));
+                this.ExpandedCommands.add(new Neutral(v, newLabel, this, this.associatedEngine));
             }
         }
         expandFurther();

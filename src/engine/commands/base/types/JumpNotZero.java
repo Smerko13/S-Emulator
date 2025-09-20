@@ -15,8 +15,8 @@ import java.util.*;
 public class JumpNotZero extends BaseCommand implements Serializable {
     String targetLabel;
 
-    public JumpNotZero(SInstruction instruction){
-        super(instruction);
+    public JumpNotZero(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "JUMP_NOT_ZERO";
         this.cycles = 2;
         this.targetLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
@@ -24,8 +24,8 @@ public class JumpNotZero extends BaseCommand implements Serializable {
         this.isJumpCommand = true;
     }
 
-    public JumpNotZero(Variable variable, String targetLabel, String label, Command parentCommand) {
-        super(variable, label, parentCommand);
+    public JumpNotZero(Variable variable, String targetLabel, String label, Command parentCommand, Engine engine) {
+        super(variable, label, parentCommand, engine);
         this.commandName = "JUMP_NOT_ZERO";
         this.cycles = 2;
         this.targetLabel = targetLabel;

@@ -19,8 +19,8 @@ import java.util.Set;
 public class Assignment extends SyntheticCommand implements Serializable {
     protected Variable assignedVariable;
 
-    public Assignment(SInstruction instruction) {
-        super(instruction);
+    public Assignment(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "ASSIGNMENT";
         this.cycles = 4;
         this.levelOfExpansion = 2;
@@ -29,8 +29,8 @@ public class Assignment extends SyntheticCommand implements Serializable {
         this.associatedVariables.add(assignedVariable);
     }
 
-    public Assignment(Variable newWorkVariable, String label, Variable assignedVariable, Command parentCommand) {
-        super(newWorkVariable, label, parentCommand);
+    public Assignment(Variable newWorkVariable, String label, Variable assignedVariable, Command parentCommand, Engine engine) {
+        super(newWorkVariable, label, parentCommand, engine);
         this.commandName = "ASSIGNMENT";
         this.cycles = 4;
         this.levelOfExpansion = 2;
@@ -46,19 +46,19 @@ public class Assignment extends SyntheticCommand implements Serializable {
         Engine.labels.add(newLabel2);
         String newLabel3 = generateNewLabel();
         Engine.labels.add(newLabel3);
-        this.ExpandedCommands.add(new ZeroVariable(variable,this.label,this));
-        this.ExpandedCommands.add(new JumpNotZero(assignedVariable, newLabel1,"   ", this));
-        this.ExpandedCommands.add(new GotoLabel(newLabel3,this));
-        this.ExpandedCommands.add(new Decrease(assignedVariable,newLabel1, this));
+        this.ExpandedCommands.add(new ZeroVariable(variable,this.label,this, this.associatedEngine));
+        this.ExpandedCommands.add(new JumpNotZero(assignedVariable, newLabel1,"   ", this, this.associatedEngine));
+        this.ExpandedCommands.add(new GotoLabel(newLabel3,this, this.associatedEngine));
+        this.ExpandedCommands.add(new Decrease(assignedVariable,newLabel1, this, this.associatedEngine));
         WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
-        Engine.variables.add(newWorkVariable);
-        this.ExpandedCommands.add(new Increase(newWorkVariable,"   ",this));
-        this.ExpandedCommands.add(new JumpNotZero(assignedVariable, newLabel1, "   ", this));
-        this.ExpandedCommands.add(new Decrease(newWorkVariable,newLabel2, this));
-        this.ExpandedCommands.add(new Increase(variable,"   ", this));
-        this.ExpandedCommands.add(new Increase(assignedVariable,"   ", this));
-        this.ExpandedCommands.add(new JumpNotZero(newWorkVariable, newLabel2, "   ", this));
-        this.ExpandedCommands.add(new Neutral(variable,newLabel3, this));
+        this.associatedEngine.getVariables().add(newWorkVariable);
+        this.ExpandedCommands.add(new Increase(newWorkVariable,"   ",this, this.associatedEngine));
+        this.ExpandedCommands.add(new JumpNotZero(assignedVariable, newLabel1, "   ", this, this.associatedEngine));
+        this.ExpandedCommands.add(new Decrease(newWorkVariable,newLabel2, this, this.associatedEngine));
+        this.ExpandedCommands.add(new Increase(variable,"   ", this, this.associatedEngine));
+        this.ExpandedCommands.add(new Increase(assignedVariable,"   ", this, this.associatedEngine));
+        this.ExpandedCommands.add(new JumpNotZero(newWorkVariable, newLabel2, "   ", this, this.associatedEngine));
+        this.ExpandedCommands.add(new Neutral(variable,newLabel3, this, this.associatedEngine));
 
         expandFurther();
     }

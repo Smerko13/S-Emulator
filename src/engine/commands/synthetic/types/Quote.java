@@ -19,8 +19,8 @@ public class Quote extends SyntheticCommand {
     LinkedHashMap<Variable, Boolean> functionArgumentsVariables;
 
 
-    public Quote(SInstruction instruction) {
-        super(instruction);
+    public Quote(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "QUOTE";
         this.functionName = findCorrectFunctionName(instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue());
         String args = instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue();
@@ -36,7 +36,7 @@ public class Quote extends SyntheticCommand {
           for (String arg : functionArguments) {
             if(arg.charAt(0) == 'x') {
                 boolean found = false;
-                for (Variable v : Engine.variables) {
+                for (Variable v : this.associatedEngine.getVariables()) {
                     if(v.getName().equals(arg) && v instanceof InputVariable) {
                         functionArgumentsVariables.put(v, true);
                         found = true;
@@ -45,11 +45,11 @@ public class Quote extends SyntheticCommand {
                 }
                 if(found) continue;
                 InputVariable inputVariable = new InputVariable(arg);
-                Engine.variables.add(inputVariable);
+                this.associatedEngine.getVariables().add(inputVariable);
                 functionArgumentsVariables.put(inputVariable,true);
                 associatedVariables.add(inputVariable);
             } else if (arg.charAt(0) == 'y') {
-                for (Variable v : Engine.variables) {
+                for (Variable v : this.associatedEngine.getVariables()) {
                     if(v.getName().equals(arg) && v instanceof OutputVariable) {
                         functionArgumentsVariables.put(v,true);
                         break;
@@ -58,7 +58,7 @@ public class Quote extends SyntheticCommand {
                 //something fishy here
             } else {
                 boolean found = false;
-                for (Variable v : Engine.variables) {
+                for (Variable v : this.associatedEngine.getVariables()) {
                     if(v.getName().equals(arg) && v instanceof WorkVariable) {
                         functionArgumentsVariables.put(v,true);
                         found = true;
@@ -67,7 +67,7 @@ public class Quote extends SyntheticCommand {
                 }
                 if(found) continue;
                 WorkVariable workVariable = new WorkVariable(arg);
-                Engine.variables.add(workVariable);
+                this.associatedEngine.getVariables().add(workVariable);
                 functionArgumentsVariables.put(workVariable,true);
                 associatedVariables.add(workVariable);
             }
@@ -107,7 +107,7 @@ public class Quote extends SyntheticCommand {
 
                 for(Variable v : e.getVariables()) {
                     if(v instanceof OutputVariable) {
-                        this.getExpandedCommands().add(new Assignment(this.variable, "   ", v,this));
+                        this.getExpandedCommands().add(new Assignment(this.variable, "   ", v,this,this.associatedEngine));
                     }
                 }
 
@@ -131,13 +131,13 @@ public class Quote extends SyntheticCommand {
     public String execute() {
         List<Variable> variables = new ArrayList<>();
         for(String arg : functionArguments) {
-            for (Variable v : Engine.variables) {
+            for (Variable v : this.associatedEngine.getVariables()) {
                 if(v.getName().equals(arg)) {
                     variables.add(v);
                 }
             }
         }
-        Set<Variable> snapshot = Engine.variables.stream()
+        Set<Variable> snapshot = this.associatedEngine.getVariables().stream()
                 .map(v -> v.clone())
                 .collect(Collectors.toSet());
         for(Engine e : Engine.subFunctions) {
@@ -154,7 +154,7 @@ public class Quote extends SyntheticCommand {
 
     private void setBackOriginalVariables(Set<Variable> snapshot) {
         for(Variable v : snapshot) {
-            for(Variable originalVar : Engine.variables) {
+            for(Variable originalVar : this.associatedEngine.getVariables()) {
                 if(v.getName().equals(originalVar.getName())) {
                     originalVar.setValue(v.getValue());
                 }

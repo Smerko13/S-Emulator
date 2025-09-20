@@ -19,7 +19,7 @@ import java.util.*;
 public class Engine implements S_Emulator , Serializable {
     private List<Command> commands;
     private String currentProgramName;
-    public static Set<Variable> variables;
+    public Set<Variable> variables;
     public static Set<Variable> extraInputVariables;
     private int cycleSum;
     private Stats stats;
@@ -166,25 +166,25 @@ public class Engine implements S_Emulator , Serializable {
 
     private Command createSyntheticCommandFromInstruction(SInstruction instruction) {
         return switch (instruction.getName()) {
-            case "ZERO_VARIABLE" -> new ZeroVariable(instruction);
-            case "GOTO_LABEL" -> new GotoLabel(instruction);
-            case "ASSIGNMENT" -> new Assignment(instruction);
-            case "CONSTANT_ASSIGNMENT" -> new ConstantAssignment(instruction);
-            case "JUMP_ZERO" -> new JumpZero(instruction);
-            case "JUMP_EQUAL_CONSTANT" -> new JumpEqualConstant(instruction);
-            case "JUMP_EQUAL_VARIABLE" -> new JumpEqualVariable(instruction);
-            case "QUOTE" -> new Quote(instruction);
-            case "JUMP_EQUAL_FUNCTION" -> new JumpEqualFunction(instruction);
+            case "ZERO_VARIABLE" -> new ZeroVariable(instruction, this);
+            case "GOTO_LABEL" -> new GotoLabel(instruction, this);
+            case "ASSIGNMENT" -> new Assignment(instruction, this);
+            case "CONSTANT_ASSIGNMENT" -> new ConstantAssignment(instruction, this);
+            case "JUMP_ZERO" -> new JumpZero(instruction,this);
+            case "JUMP_EQUAL_CONSTANT" -> new JumpEqualConstant(instruction, this);
+            case "JUMP_EQUAL_VARIABLE" -> new JumpEqualVariable(instruction,this);
+            case "QUOTE" -> new Quote(instruction,this);
+            case "JUMP_EQUAL_FUNCTION" -> new JumpEqualFunction(instruction,this);
             default -> throw new IllegalArgumentException("Unknown command in file: " + instruction.getName());
         };
     }
 
     private Command createBaseCommandFromInstruction(SInstruction instruction) {
         return switch (instruction.getName()) {
-            case "DECREASE" -> new Decrease(instruction);
-            case "INCREASE" -> new Increase(instruction);
-            case "NEUTRAL" -> new Neutral(instruction);
-            case "JUMP_NOT_ZERO" -> new JumpNotZero(instruction);
+            case "DECREASE" -> new Decrease(instruction, this);
+            case "INCREASE" -> new Increase(instruction, this);
+            case "NEUTRAL" -> new Neutral(instruction, this);
+            case "JUMP_NOT_ZERO" -> new JumpNotZero(instruction, this);
             default -> throw new IllegalArgumentException("Unknown command in file: " + instruction.getName());
         };
     }
@@ -487,7 +487,7 @@ public class Engine implements S_Emulator , Serializable {
         }
 
         int result = 0;
-        for(Variable var : Engine.variables) {
+        for(Variable var : this.variables) {
             if(var instanceof OutputVariable) {
                 result = var.getValue();
             }

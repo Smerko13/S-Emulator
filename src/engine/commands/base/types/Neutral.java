@@ -15,20 +15,20 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class Neutral extends BaseCommand implements Serializable {
-    public Neutral(SInstruction instruction) {
-        super(instruction);
+    public Neutral(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "NEUTRAL";
         this.cycles = 0;
     }
 
-    public Neutral(Variable variable, String newLabel3, Command parentCommand) {
-        super(variable, newLabel3, parentCommand);
+    public Neutral(Variable variable, String newLabel3, Command parentCommand, Engine engine) {
+        super(variable, newLabel3, parentCommand, engine);
         this.commandName = "NEUTRAL";
         this.cycles = 0;
     }
 
-    public Neutral(Command cmd, Quote quote, String label, WorkVariable outputVar) {
-        super(cmd, quote, label, outputVar);
+    public Neutral(Command cmd, Quote quote, String label, WorkVariable outputVar, Engine engine) {
+        super(cmd, quote, label, outputVar, engine);
         this.commandName = "NEUTRAL";
         this.cycles = 0;
     }

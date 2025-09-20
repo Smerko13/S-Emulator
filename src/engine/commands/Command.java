@@ -24,8 +24,10 @@ public abstract class Command implements Serializable {
     protected Set<String> associatedLabels;
     protected Set<Variable> associatedVariables;
     protected boolean isJumpCommand = false;
+    protected Engine associatedEngine;
 
-    public Command(SInstruction instruction) {
+    public Command(SInstruction instruction, Engine engine) {
+        this.associatedEngine = engine;
         this.associatedLabels = new LinkedHashSet<>();
         if (instruction.getSLabel() != null) {
             String label = instruction.getSLabel();
@@ -42,7 +44,8 @@ public abstract class Command implements Serializable {
         this.associatedVariables.add(this.variable);
     }
 
-    public Command(Variable variable, String label, Command parentCommand) {
+    public Command(Variable variable, String label, Command parentCommand, Engine engine) {
+        this.associatedEngine = engine;
         this.parentCommand = parentCommand;
         if(label.length() == 2) {
             label = label + " "; // Ensure label has at least 3 characters
@@ -60,16 +63,17 @@ public abstract class Command implements Serializable {
         this.associatedVariables.add(this.variable);
     }
 
-    public Command(Command cmd, Quote quote , String label, Variable outputVar) {
+    public Command(Command cmd, Quote quote , String label, Variable outputVar, Engine engine) {
+        this.associatedEngine = engine;
         this.associatedVariables = new LinkedHashSet<>();
         if(outputVar == null) {
             this.variable = new WorkVariable(generateNewWorkVariableName());
-            Engine.variables.add(this.variable);
+            this.associatedEngine.getVariables().add(this.variable);
             this.associatedVariables.add(variable);
         } else if (outputVar instanceof  InputVariable) {
             this.variable = new WorkVariable(generateNewWorkVariableName());
             this.variable.setValue(outputVar.getValue());
-            Engine.variables.add(this.variable);
+            this.associatedEngine.getVariables().add(this.variable);
             this.associatedVariables.add(variable);
         } else {
             this.variable = outputVar;
@@ -87,7 +91,7 @@ public abstract class Command implements Serializable {
         Engine.labels.add(label);
     }
 
-    protected static Variable extractVariables(String var) {
+    protected Variable extractVariables(String var) {
         //need to check if the variable already exists in the global scope
         Variable variable = null;
         if(var.charAt(0) == 'x') {
@@ -99,16 +103,16 @@ public abstract class Command implements Serializable {
         else if (var.charAt(0) == 'y') {
             variable = new OutputVariable();
         }
-        return canonicalInGlobalScope(variable);
+        return this.canonicalInGlobalScope(variable);
     }
 
-    private static Variable canonicalInGlobalScope(Variable variable) {
-        for(Variable existingVar : Engine.variables) {
+    private Variable canonicalInGlobalScope(Variable variable) {
+        for(Variable existingVar : this.associatedEngine.getVariables()) {
             if (existingVar.getName().equals(variable.getName())) {
                 return existingVar; // Return the existing variable if found
             }
         }
-        Engine.variables.add(variable); // Add the new variable to the global scope
+        this.associatedEngine.getVariables().add(variable); // Add the new variable to the global scope
         return variable;
     }
 
@@ -197,7 +201,7 @@ public abstract class Command implements Serializable {
         boolean found = false;
         while (!found) {
             String currentWorkVarName = "z" + workArgIndex;
-            if (!Engine.variables.stream().anyMatch(var -> var.getName().equals(currentWorkVarName))) {
+            if (!this.associatedEngine.getVariables().stream().anyMatch(var -> var.getName().equals(currentWorkVarName))) {
                 found = true;
             } else {
                 workArgIndex++;

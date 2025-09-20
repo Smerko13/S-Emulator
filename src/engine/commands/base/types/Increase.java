@@ -16,20 +16,20 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class Increase extends BaseCommand implements Serializable {
-    public Increase(SInstruction instruction) {
-        super(instruction);
+    public Increase(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "INCREASE";
         this.cycles = 1;
     }
 
-    public Increase(Variable variable, String label, Command parentCommand) {
-        super(variable, label, parentCommand);
+    public Increase(Variable variable, String label, Command parentCommand, Engine engine) {
+        super(variable, label, parentCommand, engine);
         this.commandName = "INCREASE";
         this.cycles = 1;
     }
 
-    public Increase(Command cmd, Quote quote, String label, Variable outputVar) {
-        super(cmd, quote, label, outputVar);
+    public Increase(Command cmd, Quote quote, String label, Variable outputVar, Engine engine) {
+        super(cmd, quote, label, outputVar, engine);
     }
 
     @Override

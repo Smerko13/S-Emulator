@@ -16,8 +16,8 @@ import java.util.Set;
 public class GotoLabel extends SyntheticCommand implements Serializable {
     private final String gototLabel;
 
-    public GotoLabel(SInstruction instruction) {
-        super(instruction);
+    public GotoLabel(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "GOTO_LABEL";
         this.cycles = 1;
         this.levelOfExpansion = 1;
@@ -29,8 +29,8 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
         this.isJumpCommand = true;
     }
     
-    public GotoLabel(String gotoLabel, Command parentCommand) {
-        super(null,"   ", parentCommand);
+    public GotoLabel(String gotoLabel, Command parentCommand, Engine engine) {
+        super(null,"   ", parentCommand, engine);
         this.commandName = "GOTO_LABEL";
         this.cycles = 1;
         this.levelOfExpansion = 1;
@@ -45,15 +45,15 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
     private Variable createNewWorkVariable() {
         String workVarName = generateNewWorkVariableName();
         WorkVariable workVariable = new WorkVariable(workVarName);
-        Engine.variables.add(workVariable);
+        this.associatedEngine.getVariables().add(workVariable);
         workVariable.setForGotoLabel(true);
         return workVariable;
     }
 
     @Override
     public void initializeExpandedCommands() {
-        this.ExpandedCommands.add(new Increase(this.variable, this.label,this));
-        this.ExpandedCommands.add(new JumpNotZero(this.variable,this.gototLabel, "   ",this));
+        this.ExpandedCommands.add(new Increase(this.variable, this.label,this,this.associatedEngine));
+        this.ExpandedCommands.add(new JumpNotZero(this.variable,this.gototLabel, "   ",this, this.associatedEngine));
     }
 
     @Override

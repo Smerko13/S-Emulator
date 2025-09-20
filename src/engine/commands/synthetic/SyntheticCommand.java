@@ -14,15 +14,15 @@ import java.util.Set;
 public abstract class SyntheticCommand extends Command implements Serializable {
     protected List<Command> ExpandedCommands;
 
-    public SyntheticCommand(SInstruction instruction) {
-        super(instruction);
+    public SyntheticCommand(SInstruction instruction,Engine engine) {
+        super(instruction,engine);
         this.commandType = 'S'; // SyntheticCommand type
         this.isExpandable = true; // SyntheticCommand is expandable
         this.ExpandedCommands = new java.util.ArrayList<>();
     }
 
-    public SyntheticCommand(Variable variable, String label, Command parentCommand) {
-        super(variable, label, parentCommand);
+    public SyntheticCommand(Variable variable, String label, Command parentCommand, Engine engine) {
+        super(variable, label, parentCommand,engine);
         this.commandType = 'S'; // SyntheticCommand type
         this.isExpandable = true; // SyntheticCommand is expandable
         this.ExpandedCommands = new java.util.ArrayList<>();

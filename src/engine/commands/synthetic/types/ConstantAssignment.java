@@ -1,5 +1,6 @@
 package engine.commands.synthetic.types;
 
+import engine.Engine;
 import engine.arguments.Variable;
 import engine.commands.Command;
 import engine.commands.base.types.Increase;
@@ -14,8 +15,8 @@ import java.util.Set;
 public class ConstantAssignment extends SyntheticCommand implements Serializable {
     private final int constantValue;
 
-    public ConstantAssignment(SInstruction instruction) {
-        super(instruction);
+    public ConstantAssignment(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "CONSTANT_ASSIGNMENT";
         this.cycles = 2;
         this.levelOfExpansion = 2;
@@ -24,9 +25,9 @@ public class ConstantAssignment extends SyntheticCommand implements Serializable
 
     @Override
     public void initializeExpandedCommands() {
-        this.ExpandedCommands.add(new ZeroVariable(this.variable,this.label,this));
+        this.ExpandedCommands.add(new ZeroVariable(this.variable,this.label,this, this.associatedEngine));
         for(int i = 0 ; i < this.constantValue ; i++) {
-            this.ExpandedCommands.add(new Increase(this.variable, "   ",this));
+            this.ExpandedCommands.add(new Increase(this.variable, "   ",this, this.associatedEngine));
         }
         expandFurther();
     }

@@ -14,8 +14,8 @@ public class JumpEqualFunction extends SyntheticCommand {
     private String functionName;
     private List<String> functionArguments;
 
-    public JumpEqualFunction(SInstruction instruction) {
-        super(instruction);
+    public JumpEqualFunction(SInstruction instruction, Engine engine) {
+        super(instruction, engine);
         this.commandName = "JUMP_EQUAL_FUNCTION";
         JEFunctionLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(JEFunctionLabel);
@@ -58,13 +58,13 @@ public class JumpEqualFunction extends SyntheticCommand {
         int returnValue = -1;
         List<Variable> variables = new ArrayList<>();
         for(String arg : functionArguments) {
-            for (Variable v : Engine.variables) {
+            for (Variable v : this.associatedEngine.getVariables()) {
                 if(v.getName().equals(arg)) {
                     variables.add(v);
                 }
             }
         }
-        Set<Variable> snapshot = Engine.variables.stream()
+        Set<Variable> snapshot = this.associatedEngine.getVariables().stream()
                 .map(v -> v.clone())
                 .collect(Collectors.toSet());
         for(Engine e : Engine.subFunctions) {
@@ -80,7 +80,7 @@ public class JumpEqualFunction extends SyntheticCommand {
 
     private void setBackOriginalVariables(Set<Variable> snapshot) {
         for(Variable v : snapshot) {
-            for(Variable originalVar : Engine.variables) {
+            for(Variable originalVar : this.associatedEngine.getVariables()) {
                 if(v.getName().equals(originalVar.getName())) {
                     originalVar.setValue(v.getValue());
                 }
