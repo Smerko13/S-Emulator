@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JumpEqualFunction extends SyntheticCommand {
     private String JEFunctionLabel;
@@ -34,6 +35,7 @@ public class JumpEqualFunction extends SyntheticCommand {
 
     @Override
     public String execute() {
+        int returnValue = -1;
         List<Variable> variables = new ArrayList<>();
         for(String arg : functionArguments) {
             for (Variable v : Engine.variables) {
@@ -42,18 +44,28 @@ public class JumpEqualFunction extends SyntheticCommand {
                 }
             }
         }
-
+        Set<Variable> snapshot = Engine.variables.stream()
+                .map(v -> v.clone())
+                .collect(Collectors.toSet());
         for(Engine e : Engine.subFunctions) {
-            if(e.getCurrentProgramName().equals(functionName)) {
-                int returnValue = e.executeFunction(variables);
-                if(this.variable.getValue() == returnValue) {
-                    return JEFunctionLabel;
-                } else {
-                    return null;
+            String userString = e.getUserString();
+            if(userString.equals(functionName)) {
+                returnValue = e.executeFunction(variables);
+                setBackOriginalVariables(snapshot);
+            }
+        }
+
+        return (this.variable.getValue() == returnValue) ? JEFunctionLabel : null;
+    }
+
+    private void setBackOriginalVariables(Set<Variable> snapshot) {
+        for(Variable v : snapshot) {
+            for(Variable originalVar : Engine.variables) {
+                if(v.getName().equals(originalVar.getName())) {
+                    originalVar.setValue(v.getValue());
                 }
             }
         }
-        return null;
     }
 
     @Override
