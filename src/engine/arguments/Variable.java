@@ -2,7 +2,7 @@ package engine.arguments;
 
 import java.io.Serializable;
 
-public abstract class Variable implements Serializable {
+public abstract class Variable implements Serializable, Cloneable {
     protected char type;
     protected int value = 0;
     protected int id;
@@ -30,5 +30,14 @@ public abstract class Variable implements Serializable {
         this.value = variable.value;
         this.id = variable.id;
         this.name = variable.name;
+    }
+
+    @Override
+    public Variable clone() {
+        try {
+            return (Variable) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

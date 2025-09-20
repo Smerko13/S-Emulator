@@ -26,7 +26,8 @@ public class Engine implements S_Emulator , Serializable {
     public static Set<String> labels;
     private int curretDegree = 0;
     private Command currentCommand;
-    private List<Engine> subFunctions;
+    public static List<Engine> subFunctions;
+    private String userString = null;
 
 
     public Engine() {
@@ -35,7 +36,7 @@ public class Engine implements S_Emulator , Serializable {
         extraInputVariables = new LinkedHashSet<>();
         this.stats = new Stats();
         labels = new LinkedHashSet<>();
-        this.subFunctions = new ArrayList<>();
+        subFunctions = new ArrayList<>();
     }
 
     public void arrangeIDs(int expansionLevel) {
@@ -126,24 +127,11 @@ public class Engine implements S_Emulator , Serializable {
 
     private void parseObjectToLocalVariables(SProgram program) {
         this.currentProgramName = program.getName();
-        SInstructions instructions = program.getSInstructions();
-        for( SInstruction instruction : instructions.getSInstruction()) {
-            if(Objects.equals(instruction.getType(), "basic")){
-                this.commands.add(createBaseCommandFromInstruction(instruction));
-            }
-            else if (Objects.equals(instruction.getType(), "synthetic")){
-                this.commands.add(createSyntheticCommandFromInstruction(instruction));
-            }
-        }
-        for(Command cmd : this.commands) {
-            if(cmd instanceof SyntheticCommand) {
-                ((SyntheticCommand) cmd).initializeExpandedCommands();
-            }
-        }
         if(program.getSFunctions() != null) {
             for (SFunction function : program.getSFunctions().getSFunction()) {
                 Engine subEngine = new Engine();
                 subEngine.currentProgramName = function.getName();
+                subEngine.userString = function.getUserString();
                 SInstructions funcInstructions = function.getSInstructions();
                 for (SInstruction instruction : funcInstructions.getSInstruction()) {
                     if (Objects.equals(instruction.getType(), "basic")) {
@@ -158,6 +146,20 @@ public class Engine implements S_Emulator , Serializable {
                     }
                 }
                 this.subFunctions.add(subEngine);
+            }
+        }
+        SInstructions instructions = program.getSInstructions();
+        for( SInstruction instruction : instructions.getSInstruction()) {
+            if(Objects.equals(instruction.getType(), "basic")){
+                this.commands.add(createBaseCommandFromInstruction(instruction));
+            }
+            else if (Objects.equals(instruction.getType(), "synthetic")){
+                this.commands.add(createSyntheticCommandFromInstruction(instruction));
+            }
+        }
+        for(Command cmd : this.commands) {
+            if(cmd instanceof SyntheticCommand) {
+                ((SyntheticCommand) cmd).initializeExpandedCommands();
             }
         }
     }
@@ -353,22 +355,36 @@ public class Engine implements S_Emulator , Serializable {
     }
 
     public void reset() {
-        List<Variable> varsToRemove = new ArrayList<>();
         for(Variable variable : variables) {
             if(variable instanceof OutputVariable) {
                 variable.setValue(0);
             } else if (variable instanceof InputVariable) {
                 if(!((InputVariable) variable).isOriginal()) {
-                    varsToRemove.add(variable);
-                } else {
                     variable.setValue(0);
+                } else {
+                    variable.setValue(((InputVariable) variable).getOriginalValue());
                 }
             } else if (variable instanceof WorkVariable) {
-                varsToRemove.add(variable);
+                variable.setValue(0);
             }
         }
-        varsToRemove.forEach(variables::remove);
-        extraInputVariables.clear();
+//        List<Variable> varsToRemove = new ArrayList<>();
+//        for(Variable variable : variables) {
+//            if(variable instanceof OutputVariable) {
+//                variable.setValue(0);
+//            } else if (variable instanceof InputVariable) {
+//                if(!((InputVariable) variable).isOriginal()) {
+//                    varsToRemove.add(variable);
+//                } else {
+//                    variable.setValue(0);
+//                }
+//            } else if (variable instanceof WorkVariable) {
+//                varsToRemove.add(variable);
+//            }
+//        }
+//        varsToRemove.forEach(variables::remove);
+//        extraInputVariables.clear();
+//        subFunctions.clear();
     }
 
     @Override
@@ -424,5 +440,72 @@ public class Engine implements S_Emulator , Serializable {
        }
 
        return commandsAtLevel;
+    }
+
+    public String getUserString() {
+        return userString;
+    }
+
+    public void setUserString(String userString) {
+        this.userString = userString;
+    }
+
+    public int executeFunction(List<Variable> variables) {
+        resetWorkAndOutputVariables();
+        assignVarsToCommands(variables);
+        int index = 0;
+        this.cycleSum = 0;
+        List<Command> commands = getCommandsAtDesiredLevel(0);
+        Command currentCommand = commands.get(index);
+        while (currentCommand != null) {
+            String executionLabel = currentCommand.execute();
+            this.cycleSum += currentCommand.getCycles();
+            if(executionLabel != null) {
+                if (executionLabel.length() == 2) {
+                    executionLabel = executionLabel + " "; // Ensure label has at least 3 characters
+                }
+                if (executionLabel.equals("EXIT")) {
+                    break; // End of program
+                }
+                for (Command command : commands) {
+                    String currentLabel = command.getLabel();
+                    if (currentLabel.equals(executionLabel)) {
+                        currentCommand = command;
+                        index = commands.indexOf(currentCommand);
+                        break;
+                    }
+                }
+            }
+            else {
+                index++;
+                if (index < commands.size()) {
+                    currentCommand = commands.get(index);
+                } else {
+                    currentCommand = null; // No more commands to execute
+                }
+            }
+        }
+
+        int result = 0;
+        for(Variable var : Engine.variables) {
+            if(var instanceof OutputVariable) {
+                result = var.getValue();
+            }
+        }
+
+        return result;
+    }
+
+    private void assignVarsToCommands(List<Variable> variables) {
+        for(Command cmd : this.commands) {
+            for(Variable var : cmd.getAssociatedVariables())
+            {
+                for(Variable var2 : variables) {
+                    if(var.getName().equals(var2.getName())) {
+                        var.setValue(var2.getValue());
+                    }
+                }
+            }
+        }
     }
 }

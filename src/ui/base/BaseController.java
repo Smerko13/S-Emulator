@@ -335,18 +335,18 @@ public class BaseController {
         isDebuggingEnabled = false;
 
         // Update variable tables and stats
+        // Update variable tables and stats
         Set<Variable> allVars = s_emulator.getVariables();
-        Set<Variable> displayedVars = new LinkedHashSet<>();
         Set<Variable> inputVars = new LinkedHashSet<>();
         for (Variable v : allVars) {
-            if (v instanceof WorkVariable || v instanceof OutputVariable) {
-                displayedVars.add(v);
-            }
             if (v instanceof engine.arguments.types.InputVariable) {
                 inputVars.add(v);
             }
         }
-        executionPanelComponentController.displayAllVars(displayedVars);
+        executionPanelComponentController.displayVarsForCurrentInstructions(
+                allVars,
+                s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
+        );
         executionPanelComponentController.displayInputVars(inputVars);
         executionPanelComponentController.setCyclesLabel(0);
         statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());

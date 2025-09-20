@@ -79,6 +79,7 @@ public class ExecutionPanelController {
 
     public void stopDebugPressed(ActionEvent actionEvent) {
         this.mainController.stopDebugging();
+
     }
 
     public void continueButtonPressed(ActionEvent actionEvent) {
