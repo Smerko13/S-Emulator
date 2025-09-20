@@ -99,7 +99,7 @@ public class Quote extends SyntheticCommand {
             }
         }
         Set<Variable> snapshot = this.associatedEngine.getVariables().stream()
-                .map(v -> v.clone())
+                .map(Variable::clone)
                 .collect(Collectors.toSet());
         for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();

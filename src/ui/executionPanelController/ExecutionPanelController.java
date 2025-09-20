@@ -176,5 +176,6 @@ public class ExecutionPanelController {
     public void clearAllVars() {
         allVarsTable.getItems().clear();
         inputVarsTable.getItems().clear();
+        cyclesLabel.setText("Cycles: 0");
     }
 }
