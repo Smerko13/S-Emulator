@@ -152,4 +152,14 @@ public class InstructionTableController {
         this.debugHighlight = currentDebugCommand;
         instructionTableView.refresh();
     }
+
+    public void clearInstructions() {
+        this.commands.clear();
+        instructionTableView.getItems().clear(); // Explicitly clear table items
+        instructionTableView.refresh();
+        this.currentHighlight = null;
+        this.selectedCommand = null;
+        this.debugHighlight = null;
+        SummaryLineTextBox.getChildren().clear();
+    }
 }

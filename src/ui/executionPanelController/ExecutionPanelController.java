@@ -172,4 +172,9 @@ public class ExecutionPanelController {
         stopDebugButton.setDisable(!enabled);
         stopDebugButton.setOpacity(enabled ? 1.0 : 0.5); // Dim when disabled
     }
+
+    public void clearAllVars() {
+        allVarsTable.getItems().clear();
+        inputVarsTable.getItems().clear();
+    }
 }

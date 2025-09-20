@@ -3,9 +3,7 @@ package engine.commands.synthetic.types;
 import engine.Engine;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
-import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
-import engine.commands.Command;
 import engine.commands.base.types.*;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
@@ -33,45 +31,35 @@ public class Quote extends SyntheticCommand {
     }
 
     private void initializeFunctionArgumentVariables() {
-          for (String arg : functionArguments) {
-            if(arg.charAt(0) == 'x') {
-                boolean found = false;
-                for (Variable v : this.associatedEngine.getVariables()) {
-                    if(v.getName().equals(arg) && v instanceof InputVariable) {
-                        functionArgumentsVariables.put(v, true);
-                        found = true;
-                        break;
-                    }
+        for(String arg : functionArguments) {
+            boolean found = false;
+            for(Variable var : this.associatedEngine.getVariables()) {
+                if (var.getName().equals(arg)) {
+                    functionArgumentsVariables.put(var, true);
+                    found = true;
+                    break;
                 }
-                if(found) continue;
-                InputVariable inputVariable = new InputVariable(arg);
-                this.associatedEngine.getVariables().add(inputVariable);
-                functionArgumentsVariables.put(inputVariable,true);
-                associatedVariables.add(inputVariable);
-            } else if (arg.charAt(0) == 'y') {
-                for (Variable v : this.associatedEngine.getVariables()) {
-                    if(v.getName().equals(arg) && v instanceof OutputVariable) {
-                        functionArgumentsVariables.put(v,true);
-                        break;
-                    }
-                }
-                //something fishy here
-            } else {
-                boolean found = false;
-                for (Variable v : this.associatedEngine.getVariables()) {
-                    if(v.getName().equals(arg) && v instanceof WorkVariable) {
-                        functionArgumentsVariables.put(v,true);
-                        found = true;
-                        break;
-                    }
-                }
-                if(found) continue;
-                WorkVariable workVariable = new WorkVariable(arg);
-                this.associatedEngine.getVariables().add(workVariable);
-                functionArgumentsVariables.put(workVariable,true);
-                associatedVariables.add(workVariable);
+            }
+            if(!found) {
+                Variable newVar = getVariable(arg);
+                this.associatedEngine.getVariables().add(newVar);
+                functionArgumentsVariables.put(newVar, true);
             }
         }
+    }
+
+    private Variable getVariable(String arg) {
+        Variable newVar = null;
+        if(arg.charAt(0) == 'z') { newVar = new WorkVariable(arg);}
+        else if(arg.charAt(0) == 'x') { newVar = new InputVariable(arg);}
+        else if (arg.charAt(0) == 'y') { 
+            for(Variable var : this.associatedEngine.getVariables()) {
+                if(var instanceof InputVariable && var.getName().equals(arg)) {
+                    newVar = var;
+                }
+            }
+        }
+        return newVar;
     }
 
 
@@ -97,23 +85,7 @@ public class Quote extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
-        WorkVariable returnVar = new WorkVariable(generateNewWorkVariableName());
-        for(Engine e : this.associatedEngine.subFunctions) {
-            String userString = e.getUserString();
-            if(userString.equals(functionName)) {
-                for (Command cmd : e.getCommands()) {
-                    this.getExpandedCommands().add(cmd);
-                }
 
-                for(Variable v : e.getVariables()) {
-                    if(v instanceof OutputVariable) {
-                        this.getExpandedCommands().add(new Assignment(this.variable, "   ", v,this,this.associatedEngine));
-                    }
-                }
-
-            }
-        }
-        expandFurther();
     }
 
     @Override

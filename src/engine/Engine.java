@@ -145,6 +145,7 @@ public class Engine implements S_Emulator , Serializable {
                     if (cmd instanceof SyntheticCommand) {
                         ((SyntheticCommand) cmd).initializeExpandedCommands();
                     }
+                    subEngine.variables.addAll(List.of(cmd.getAssociatedVariables()));
                 }
                 this.subFunctions.add(subEngine);
             }
@@ -498,13 +499,10 @@ public class Engine implements S_Emulator , Serializable {
     }
 
     private void assignVarsToCommands(List<Variable> variables) {
-        for(Command cmd : this.commands) {
-            for(Variable var : cmd.getAssociatedVariables())
-            {
-                for(Variable var2 : variables) {
-                    if(var.getName().equals(var2.getName())) {
-                        var.setValue(var2.getValue());
-                    }
+        for(Variable var : variables) {
+            for(Variable engineVar : this.variables) {
+                if(var.getName().equals(engineVar.getName())) {
+                    engineVar.setValue(var.getValue());
                 }
             }
         }

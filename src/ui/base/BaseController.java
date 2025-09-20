@@ -55,14 +55,16 @@ public class BaseController {
             historyPanelComponentController.setMainController(this);
             statPanelComponentController.setMainController(this);
         }
-        s_emulator = new Engine(true);
         programHistory = new ArrayList<>();
     }
 
 
     public void loadFile(File selectedFile) {
+        instructionTableComponentController.clearInstructions();
+        executionPanelComponentController.clearAllVars();
+        s_emulator = new Engine(true);
+        programHistory.add(s_emulator);
         showLoadingProgress(() -> Platform.runLater(() -> {
-            programHistory.add(s_emulator);
             boolean fileLoadedSuccessfully = s_emulator.readProgramFromXml(selectedFile.toString());
             if (fileLoadedSuccessfully) {
                 isFileLoaded = true;
@@ -253,10 +255,12 @@ public class BaseController {
                 inputVars.add(v);
             }
         }
-        executionPanelComponentController.displayVarsForCurrentInstructions(
-                s_emulator.getVariables(),
-                s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
-        );
+        s_emulator.getVariables().forEach(v -> {
+            if (v instanceof OutputVariable) {
+                displayedVars.add(v);
+            }
+        });
+        executionPanelComponentController.displayAllVars(displayedVars);
         executionPanelComponentController.displayInputVars(inputVars);
         executionPanelComponentController.setCyclesLabel(s_emulator.getCycleSum());
         statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
