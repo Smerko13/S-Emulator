@@ -76,7 +76,7 @@ public class Quote extends SyntheticCommand {
 
 
     private int calculateSubFunctionExpansionLevel() {
-        for(Engine e : Engine.subFunctions) {
+        for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
                 return e.getMaxExpansionDepth();
@@ -86,7 +86,7 @@ public class Quote extends SyntheticCommand {
     }
 
     private int calculateSubFunctionCycles() {
-        for(Engine e : Engine.subFunctions) {
+        for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
                 return e.getTotalCycles();
@@ -98,7 +98,7 @@ public class Quote extends SyntheticCommand {
     @Override
     public void initializeExpandedCommands() {
         WorkVariable returnVar = new WorkVariable(generateNewWorkVariableName());
-        for(Engine e : Engine.subFunctions) {
+        for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
                 for (Command cmd : e.getCommands()) {
@@ -116,17 +116,6 @@ public class Quote extends SyntheticCommand {
         expandFurther();
     }
 
-    private String checkLabel(Command cmd, List<Command> commands) {
-        if(commands.indexOf(cmd) == 0 && !this.label.trim().isEmpty()) {
-            return this.label;
-        } else if (!cmd.getLabel().trim().isEmpty()) {
-            // need to impelment matchig label algorithem here
-            return cmd.getLabel(); // need to change
-        } else {
-            return "   ";
-        }
-    }
-
     @Override
     public String execute() {
         List<Variable> variables = new ArrayList<>();
@@ -140,7 +129,7 @@ public class Quote extends SyntheticCommand {
         Set<Variable> snapshot = this.associatedEngine.getVariables().stream()
                 .map(v -> v.clone())
                 .collect(Collectors.toSet());
-        for(Engine e : Engine.subFunctions) {
+        for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
                 int returnValue = e.executeFunction(variables);
@@ -196,7 +185,7 @@ public class Quote extends SyntheticCommand {
     }
 
     private String findCorrectFunctionName(String functionName) {
-        for(Engine e : Engine.subFunctions) {
+        for(Engine e : this.associatedEngine.subFunctions) {
             if(e.getCurrentProgramName().equals(functionName)) {
                 return e.getUserString();
             }

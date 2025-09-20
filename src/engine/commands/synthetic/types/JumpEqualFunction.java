@@ -29,7 +29,7 @@ public class JumpEqualFunction extends SyntheticCommand {
     }
 
     private int calculateSubFunctionExpansionLevel() {
-        for(Engine e : Engine.subFunctions) {
+        for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
                 return e.getMaxExpansionDepth();
@@ -39,7 +39,7 @@ public class JumpEqualFunction extends SyntheticCommand {
     }
 
     private int calculateSubFunctionCycles() {
-        for(Engine e : Engine.subFunctions) {
+        for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
                 return e.getTotalCycles();
@@ -67,7 +67,7 @@ public class JumpEqualFunction extends SyntheticCommand {
         Set<Variable> snapshot = this.associatedEngine.getVariables().stream()
                 .map(v -> v.clone())
                 .collect(Collectors.toSet());
-        for(Engine e : Engine.subFunctions) {
+        for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
                 returnValue = e.executeFunction(variables);
@@ -122,7 +122,7 @@ public class JumpEqualFunction extends SyntheticCommand {
     }
 
     private String findCorrectFunctionName(String functionName) {
-        for(Engine e : Engine.subFunctions) {
+        for(Engine e : this.associatedEngine.subFunctions) {
             if(e.getCurrentProgramName().equals(functionName)) {
                 return e.getUserString();
             }

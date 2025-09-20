@@ -55,14 +55,13 @@ public class BaseController {
             historyPanelComponentController.setMainController(this);
             statPanelComponentController.setMainController(this);
         }
-        s_emulator = new Engine();
+        s_emulator = new Engine(true);
         programHistory = new ArrayList<>();
     }
 
 
     public void loadFile(File selectedFile) {
         showLoadingProgress(() -> Platform.runLater(() -> {
-            s_emulator = new Engine();
             programHistory.add(s_emulator);
             boolean fileLoadedSuccessfully = s_emulator.readProgramFromXml(selectedFile.toString());
             if (fileLoadedSuccessfully) {
@@ -86,6 +85,12 @@ public class BaseController {
                         }
                     }
                 }
+                s_emulator.getVariables().forEach(v -> {
+                    if (v instanceof OutputVariable) {
+                        displayedVars.add(v);
+                    }
+                });
+
                 executionPanelComponentController.displayAllVars(displayedVars);
                 executionPanelComponentController.displayInputVars(inputVars);
             } else {
@@ -124,6 +129,11 @@ public class BaseController {
                 }
             }
         }
+        s_emulator.getVariables().forEach(v -> {
+            if (v instanceof OutputVariable) {
+                displayedVars.add(v);
+            }
+        });
         executionPanelComponentController.displayAllVars(displayedVars);
         executionPanelComponentController.displayInputVars(inputVars);
     }
@@ -149,6 +159,11 @@ public class BaseController {
                 }
             }
         }
+        s_emulator.getVariables().forEach(v -> {
+            if (v instanceof OutputVariable) {
+                displayedVars.add(v);
+            }
+        });
         executionPanelComponentController.displayAllVars(displayedVars);
         executionPanelComponentController.displayInputVars(inputVars);
     }

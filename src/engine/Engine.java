@@ -26,17 +26,20 @@ public class Engine implements S_Emulator , Serializable {
     public  Set<String> labels;
     private int currentDegree = 0;
     private Command currentCommand;
-    public static List<Engine> subFunctions;
+    public  List<Engine> subFunctions;
     private String userString = null;
+    boolean isOriginal = false;
 
 
-    public Engine() {
+    public Engine(boolean isOriginal) {
+        this.isOriginal = isOriginal;
         this.commands = new ArrayList<>();
         variables = new LinkedHashSet<>();
         extraInputVariables = new LinkedHashSet<>();
         this.stats = new Stats();
         labels = new LinkedHashSet<>();
         subFunctions = new ArrayList<>();
+        OutputVariable outputVar = new OutputVariable(true);
     }
 
     public void arrangeIDs(int expansionLevel) {
@@ -47,8 +50,6 @@ public class Engine implements S_Emulator , Serializable {
             id++;
         }
     }
-
-
 
     public String getCurrentProgramName() {
         return currentProgramName;
@@ -129,7 +130,7 @@ public class Engine implements S_Emulator , Serializable {
         this.currentProgramName = program.getName();
         if(program.getSFunctions() != null) {
             for (SFunction function : program.getSFunctions().getSFunction()) {
-                Engine subEngine = new Engine();
+                Engine subEngine = new Engine(false);
                 subEngine.currentProgramName = function.getName();
                 subEngine.userString = function.getUserString();
                 SInstructions funcInstructions = function.getSInstructions();
