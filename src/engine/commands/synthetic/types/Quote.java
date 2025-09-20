@@ -2,32 +2,129 @@ package engine.commands.synthetic.types;
 
 import engine.Engine;
 import engine.arguments.Variable;
+import engine.arguments.types.InputVariable;
+import engine.arguments.types.OutputVariable;
+import engine.arguments.types.WorkVariable;
+import engine.commands.Command;
+import engine.commands.base.types.*;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Quote extends SyntheticCommand {
     String functionName;
     List<String> functionArguments;
+    LinkedHashMap<Variable, Boolean> functionArgumentsVariables;
 
 
     public Quote(SInstruction instruction) {
         super(instruction);
         this.commandName = "QUOTE";
-        this.cycles = 5; // need to calculate
         this.functionName = findCorrectFunctionName(instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue());
         String args = instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue();
         this.functionArguments = (args.isEmpty() ? new ArrayList<>() : Arrays.asList(args.split(",")));
+        this.functionArgumentsVariables = new LinkedHashMap<>();
+        initializeFunctionArgumentVariables();
+        this.associatedVariables.addAll(functionArgumentsVariables.keySet());
+        this.cycles = 5 + calculateSubFunctionCycles();
+        this.levelOfExpansion = calculateSubFunctionExpansionLevel() + 1;
+    }
+
+    private void initializeFunctionArgumentVariables() {
+          for (String arg : functionArguments) {
+            if(arg.charAt(0) == 'x') {
+                boolean found = false;
+                for (Variable v : Engine.variables) {
+                    if(v.getName().equals(arg) && v instanceof InputVariable) {
+                        functionArgumentsVariables.put(v, true);
+                        found = true;
+                        break;
+                    }
+                }
+                if(found) continue;
+                InputVariable inputVariable = new InputVariable(arg);
+                Engine.variables.add(inputVariable);
+                functionArgumentsVariables.put(inputVariable,true);
+                associatedVariables.add(inputVariable);
+            } else if (arg.charAt(0) == 'y') {
+                for (Variable v : Engine.variables) {
+                    if(v.getName().equals(arg) && v instanceof OutputVariable) {
+                        functionArgumentsVariables.put(v,true);
+                        break;
+                    }
+                }
+                //something fishy here
+            } else {
+                boolean found = false;
+                for (Variable v : Engine.variables) {
+                    if(v.getName().equals(arg) && v instanceof WorkVariable) {
+                        functionArgumentsVariables.put(v,true);
+                        found = true;
+                        break;
+                    }
+                }
+                if(found) continue;
+                WorkVariable workVariable = new WorkVariable(arg);
+                Engine.variables.add(workVariable);
+                functionArgumentsVariables.put(workVariable,true);
+                associatedVariables.add(workVariable);
+            }
+        }
+    }
+
+
+    private int calculateSubFunctionExpansionLevel() {
+        for(Engine e : Engine.subFunctions) {
+            String userString = e.getUserString();
+            if(userString.equals(functionName)) {
+                return e.getMaxExpansionDepth();
+            }
+        }
+        return 0;
+    }
+
+    private int calculateSubFunctionCycles() {
+        for(Engine e : Engine.subFunctions) {
+            String userString = e.getUserString();
+            if(userString.equals(functionName)) {
+                return e.getTotalCycles();
+            }
+        }
+        return 0;
     }
 
     @Override
     public void initializeExpandedCommands() {
+        WorkVariable returnVar = new WorkVariable(generateNewWorkVariableName());
+        for(Engine e : Engine.subFunctions) {
+            String userString = e.getUserString();
+            if(userString.equals(functionName)) {
+                for (Command cmd : e.getCommands()) {
+                    this.getExpandedCommands().add(cmd);
+                }
 
+                for(Variable v : e.getVariables()) {
+                    if(v instanceof OutputVariable) {
+                        this.getExpandedCommands().add(new Assignment(this.variable, "   ", v,this));
+                    }
+                }
+
+            }
+        }
+        expandFurther();
+    }
+
+    private String checkLabel(Command cmd, List<Command> commands) {
+        if(commands.indexOf(cmd) == 0 && !this.label.trim().isEmpty()) {
+            return this.label;
+        } else if (!cmd.getLabel().trim().isEmpty()) {
+            // need to impelment matchig label algorithem here
+            return cmd.getLabel(); // need to change
+        } else {
+            return "   ";
+        }
     }
 
     @Override
@@ -77,8 +174,11 @@ public class Quote extends SyntheticCommand {
 
     @Override
     public Set<Variable> getAllVariables() {
-        return Set.of();
+        Set<Variable> vars = new HashSet<>(functionArgumentsVariables.keySet());
+        vars.add(this.variable);
+        return vars;
     }
+
 
     @Override
     public String toString() {

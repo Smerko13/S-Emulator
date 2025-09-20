@@ -2,11 +2,12 @@ package engine.commands.synthetic;
 
 import engine.Engine;
 import engine.arguments.Variable;
-import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
+import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -49,20 +50,6 @@ public abstract class SyntheticCommand extends Command implements Serializable {
         return "L" + labelIndex;
     }
 
-    public String generateNewWorkVariableName() {
-        int workArgIndex = 1;
-        boolean found = false;
-        while (!found) {
-            String currentWorkVarName = "z" + workArgIndex;
-            if (!Engine.variables.stream().anyMatch(var -> var.getName().equals(currentWorkVarName))) {
-                found = true;
-            } else {
-                workArgIndex++;
-            }
-        }
-        return "z" + workArgIndex;
-    }
-
     protected void expandFurther() {
         for(Command cmd : this.ExpandedCommands) {
             if(cmd instanceof SyntheticCommand) {
@@ -81,4 +68,5 @@ public abstract class SyntheticCommand extends Command implements Serializable {
     public abstract String getTargetLabel();
 
     public abstract Set<Variable> getAllVariables();
+
 }

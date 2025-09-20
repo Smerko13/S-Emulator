@@ -4,6 +4,7 @@ import engine.Engine;
 import engine.arguments.Variable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
+import engine.commands.Command;
 import engine.commands.base.types.Decrease;
 import engine.commands.base.types.JumpNotZero;
 import engine.commands.base.types.Neutral;
@@ -13,6 +14,7 @@ import schema.SInstruction;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class JumpEqualConstant extends SyntheticCommand implements Serializable {
@@ -83,6 +85,8 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
     public Set<Variable> getAllVariables() {
         return Collections.singleton(this.variable);
     }
+
+
 
     @Override
     public String toString() {

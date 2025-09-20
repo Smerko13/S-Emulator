@@ -2,13 +2,11 @@ package engine.commands.synthetic.types;
 
 import engine.Engine;
 import engine.arguments.Variable;
+import engine.commands.Command;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class JumpEqualFunction extends SyntheticCommand {
@@ -19,13 +17,35 @@ public class JumpEqualFunction extends SyntheticCommand {
     public JumpEqualFunction(SInstruction instruction) {
         super(instruction);
         this.commandName = "JUMP_EQUAL_FUNCTION";
-        this.cycles = 6; // need to calculate
         JEFunctionLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(JEFunctionLabel);
+        Engine.labels.add(JEFunctionLabel);
         this.isJumpCommand = true;
         this.functionName = findCorrectFunctionName(instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue());
         String args = instruction.getSInstructionArguments().getSInstructionArgument().get(2).getValue();
         this.functionArguments = (args.isEmpty() ? new ArrayList<>() : Arrays.asList(args.split(",")));
+        this.cycles = 6 + calculateSubFunctionCycles();
+        this.levelOfExpansion = calculateSubFunctionExpansionLevel() + 1;
+    }
+
+    private int calculateSubFunctionExpansionLevel() {
+        for(Engine e : Engine.subFunctions) {
+            String userString = e.getUserString();
+            if(userString.equals(functionName)) {
+                return e.getMaxExpansionDepth();
+            }
+        }
+        return 0;
+    }
+
+    private int calculateSubFunctionCycles() {
+        for(Engine e : Engine.subFunctions) {
+            String userString = e.getUserString();
+            if(userString.equals(functionName)) {
+                return e.getTotalCycles();
+            }
+        }
+        return 0;
     }
 
     @Override
@@ -80,8 +100,10 @@ public class JumpEqualFunction extends SyntheticCommand {
 
     @Override
     public Set<Variable> getAllVariables() {
-        return Set.of();
+        return Collections.singleton(this.variable);
     }
+
+
 
     @Override
     public String toString() {

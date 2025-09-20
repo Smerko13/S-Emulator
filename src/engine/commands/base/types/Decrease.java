@@ -1,13 +1,17 @@
 package engine.commands.base.types;
 
+import engine.Engine;
 import engine.arguments.Variable;
+import engine.arguments.types.InputVariable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
+import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class Decrease extends BaseCommand implements Serializable {
@@ -55,4 +59,6 @@ public class Decrease extends BaseCommand implements Serializable {
     public Set<Variable> getAllVariables() {
         return Collections.singleton(this.variable);
     }
+
+
 }

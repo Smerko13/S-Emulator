@@ -5,12 +5,11 @@ import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
+import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 public abstract class Command implements Serializable {
     protected String label = "   "; // Default label
@@ -59,6 +58,33 @@ public abstract class Command implements Serializable {
             this.variable = null; // Handle case where variable is null
         }
         this.associatedVariables.add(this.variable);
+    }
+
+    public Command(Command cmd, Quote quote , String label, Variable outputVar) {
+        this.associatedVariables = new LinkedHashSet<>();
+        if(outputVar == null) {
+            this.variable = new WorkVariable(generateNewWorkVariableName());
+            Engine.variables.add(this.variable);
+            this.associatedVariables.add(variable);
+        } else if (outputVar instanceof  InputVariable) {
+            this.variable = new WorkVariable(generateNewWorkVariableName());
+            this.variable.setValue(outputVar.getValue());
+            Engine.variables.add(this.variable);
+            this.associatedVariables.add(variable);
+        } else {
+            this.variable = outputVar;
+            this.associatedVariables.add(outputVar);
+        }
+        this.label = cmd.label;
+        this.cycles = cmd.cycles;
+        this.commandType = cmd.commandType;
+        this.isExpandable = cmd.isExpandable;
+        this.commandName = cmd.commandName;
+        this.levelOfExpansion = cmd.levelOfExpansion;
+        this.parentCommand = quote;
+        this.associatedLabels = new LinkedHashSet<>();
+        this.associatedLabels.add(label);
+        Engine.labels.add(label);
     }
 
     protected static Variable extractVariables(String var) {
@@ -164,5 +190,23 @@ public abstract class Command implements Serializable {
 
     public String getCommandName() {
         return commandName;
+    }
+
+    public String generateNewWorkVariableName() {
+        int workArgIndex = 1;
+        boolean found = false;
+        while (!found) {
+            String currentWorkVarName = "z" + workArgIndex;
+            if (!Engine.variables.stream().anyMatch(var -> var.getName().equals(currentWorkVarName))) {
+                found = true;
+            } else {
+                workArgIndex++;
+            }
+        }
+        return "z" + workArgIndex;
+    }
+
+    public Object getVar() {
+        return this.variable;
     }
 }

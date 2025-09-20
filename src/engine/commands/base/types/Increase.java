@@ -1,13 +1,18 @@
 package engine.commands.base.types;
 
+import engine.Engine;
 import engine.arguments.Variable;
+import engine.arguments.types.InputVariable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
+import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class Increase extends BaseCommand implements Serializable {
@@ -21,6 +26,10 @@ public class Increase extends BaseCommand implements Serializable {
         super(variable, label, parentCommand);
         this.commandName = "INCREASE";
         this.cycles = 1;
+    }
+
+    public Increase(Command cmd, Quote quote, String label, Variable outputVar) {
+        super(cmd, quote, label, outputVar);
     }
 
     @Override
@@ -53,4 +62,6 @@ public class Increase extends BaseCommand implements Serializable {
     public Set<Variable> getAllVariables() {
         return Collections.singleton(this.variable);
     }
+
+
 }

@@ -30,6 +30,7 @@ public abstract class Variable implements Serializable, Cloneable {
         this.value = variable.value;
         this.id = variable.id;
         this.name = variable.name;
+        this.isOriginal = variable.isOriginal;
     }
 
     @Override
@@ -39,5 +40,9 @@ public abstract class Variable implements Serializable, Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }
+    }
+
+    public char getType() {
+        return this.type;
     }
 }

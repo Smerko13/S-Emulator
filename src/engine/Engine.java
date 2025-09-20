@@ -508,4 +508,12 @@ public class Engine implements S_Emulator , Serializable {
             }
         }
     }
+
+    public int getTotalCycles() {
+        int totalCycles = 0;
+        for(Command cmd : this.commands) {
+            totalCycles += cmd.getCycles();
+        }
+        return totalCycles;
+    }
 }

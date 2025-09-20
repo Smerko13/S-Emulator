@@ -1,12 +1,14 @@
 package engine.commands.synthetic.types;
 
 import engine.arguments.Variable;
+import engine.commands.Command;
 import engine.commands.base.types.Increase;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class ConstantAssignment extends SyntheticCommand implements Serializable {
@@ -53,6 +55,8 @@ public class ConstantAssignment extends SyntheticCommand implements Serializable
     public Set<Variable> getAllVariables() {
         return Collections.singleton(this.variable);
     }
+
+
 
     @Override
     public String toString() {

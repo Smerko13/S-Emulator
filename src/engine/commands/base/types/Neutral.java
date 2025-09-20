@@ -1,12 +1,17 @@
 package engine.commands.base.types;
 
+import engine.Engine;
 import engine.arguments.Variable;
+import engine.arguments.types.InputVariable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
+import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class Neutral extends BaseCommand implements Serializable {
@@ -18,6 +23,12 @@ public class Neutral extends BaseCommand implements Serializable {
 
     public Neutral(Variable variable, String newLabel3, Command parentCommand) {
         super(variable, newLabel3, parentCommand);
+        this.commandName = "NEUTRAL";
+        this.cycles = 0;
+    }
+
+    public Neutral(Command cmd, Quote quote, String label, WorkVariable outputVar) {
+        super(cmd, quote, label, outputVar);
         this.commandName = "NEUTRAL";
         this.cycles = 0;
     }
@@ -50,4 +61,6 @@ public class Neutral extends BaseCommand implements Serializable {
     public Set<Variable> getAllVariables() {
         return Collections.singleton(this.variable);
     }
+
+
 }

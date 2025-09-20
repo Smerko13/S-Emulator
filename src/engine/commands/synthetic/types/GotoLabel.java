@@ -10,6 +10,7 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class GotoLabel extends SyntheticCommand implements Serializable {
@@ -75,6 +76,8 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
     public Set<Variable> getAllVariables() {
         return null;
     }
+
+
 
     @Override
     public String toString() {

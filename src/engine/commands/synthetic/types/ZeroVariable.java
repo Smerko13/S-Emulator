@@ -12,6 +12,7 @@ import schema.SInstruction;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 
@@ -63,6 +64,8 @@ public class ZeroVariable extends SyntheticCommand implements Serializable {
     public Set<Variable> getAllVariables() {
         return Collections.singleton(this.variable);
     }
+
+
 
     @Override
     public String toString() {

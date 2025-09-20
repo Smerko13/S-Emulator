@@ -13,6 +13,7 @@ import schema.SInstruction;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class Assignment extends SyntheticCommand implements Serializable {
@@ -28,7 +29,7 @@ public class Assignment extends SyntheticCommand implements Serializable {
         this.associatedVariables.add(assignedVariable);
     }
 
-    public Assignment(WorkVariable newWorkVariable, String label, Variable assignedVariable, Command parentCommand) {
+    public Assignment(Variable newWorkVariable, String label, Variable assignedVariable, Command parentCommand) {
         super(newWorkVariable, label, parentCommand);
         this.commandName = "ASSIGNMENT";
         this.cycles = 4;
@@ -90,6 +91,8 @@ public class Assignment extends SyntheticCommand implements Serializable {
         vars.add(this.variable);
         return vars;
     }
+
+
 
     @Override
     public String toString() {
