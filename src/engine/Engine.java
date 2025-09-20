@@ -20,7 +20,7 @@ public class Engine implements S_Emulator , Serializable {
     private List<Command> commands;
     private String currentProgramName;
     public Set<Variable> variables;
-    public static Set<Variable> extraInputVariables;
+    public Set<Variable> extraInputVariables;
     private int cycleSum;
     private Stats stats;
     public static Set<String> labels;
