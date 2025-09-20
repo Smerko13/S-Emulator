@@ -23,8 +23,8 @@ public class Engine implements S_Emulator , Serializable {
     public Set<Variable> extraInputVariables;
     private int cycleSum;
     private Stats stats;
-    public static Set<String> labels;
-    private int curretDegree = 0;
+    public  Set<String> labels;
+    private int currentDegree = 0;
     private Command currentCommand;
     public static List<Engine> subFunctions;
     private String userString = null;
@@ -398,20 +398,20 @@ public class Engine implements S_Emulator , Serializable {
 
     @Override
     public int getCurrentDegree() {
-        return curretDegree;
+        return currentDegree;
     }
 
     @Override
     public void increaseDegree() {
-        if (this.curretDegree < getMaxExpansionDepth()) {
-            this.curretDegree++;
+        if (this.currentDegree < getMaxExpansionDepth()) {
+            this.currentDegree++;
         }
     }
 
     @Override
     public void decreaseDegree() {
-        if (this.curretDegree > 0) {
-            this.curretDegree--;
+        if (this.currentDegree > 0) {
+            this.currentDegree--;
         }
     }
 

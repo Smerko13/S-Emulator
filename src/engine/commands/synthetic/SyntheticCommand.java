@@ -41,7 +41,7 @@ public abstract class SyntheticCommand extends Command implements Serializable {
         boolean found = false;
         while (!found) {
             String currentLabel = "L" + labelIndex;
-            if (!Engine.labels.contains(currentLabel)) {
+            if (!this.associatedEngine.labels.contains(currentLabel)) {
                 found = true;
             } else {
                 labelIndex++;

@@ -26,7 +26,7 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
         this.levelOfExpansion = 3;
         this.JEVariableLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(JEVariableLabel);
-        Engine.labels.add(JEVariableLabel);
+        this.associatedEngine.labels.add(JEVariableLabel);
         this.variableName = instruction.getSInstructionArguments().getSInstructionArgument().getLast().getValue();
         if(this.variableName.charAt(0)=='z'){
             WorkVariable workVariable = new WorkVariable(this.variableName);
@@ -79,11 +79,11 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
             }
         }
         String newLabel1 = generateNewLabel();
-        Engine.labels.add(newLabel1);
+        this.associatedEngine.labels.add(newLabel1);
         String newLabel2 = generateNewLabel();
-        Engine.labels.add(newLabel2);
+        this.associatedEngine.labels.add(newLabel2);
         String newLabel3 = generateNewLabel();
-        Engine.labels.add(newLabel3);
+        this.associatedEngine.labels.add(newLabel3);
         this.ExpandedCommands.add(new JumpZero(newWorkVariable1,newLabel3,newLabel2,this,this.associatedEngine));
         this.ExpandedCommands.add(new JumpZero(newWorkVariable2,newLabel1,"   ",this,this.associatedEngine));
         this.ExpandedCommands.add(new Decrease(newWorkVariable1,"   ",this, this.associatedEngine));

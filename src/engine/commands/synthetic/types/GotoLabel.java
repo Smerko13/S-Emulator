@@ -23,7 +23,7 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
         this.levelOfExpansion = 1;
         gototLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(gototLabel);
-        Engine.labels.add(gototLabel);
+        this.associatedEngine.labels.add(gototLabel);
         this.variable = createNewWorkVariable();
         this.associatedVariables.add(variable);
         this.isJumpCommand = true;
@@ -36,7 +36,7 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
         this.levelOfExpansion = 1;
         this.gototLabel = gotoLabel;
         this.associatedLabels.add(gototLabel);
-        Engine.labels.add(gototLabel);
+        this.associatedEngine.labels.add(gototLabel);
         this.variable = createNewWorkVariable();
         this.associatedVariables.add(variable);
         this.isJumpCommand = true;

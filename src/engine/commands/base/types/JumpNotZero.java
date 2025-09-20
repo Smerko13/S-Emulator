@@ -20,7 +20,7 @@ public class JumpNotZero extends BaseCommand implements Serializable {
         this.commandName = "JUMP_NOT_ZERO";
         this.cycles = 2;
         this.targetLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
-        Engine.labels.add(targetLabel);
+        this.associatedEngine.labels.add(targetLabel);
         this.isJumpCommand = true;
     }
 
@@ -29,7 +29,7 @@ public class JumpNotZero extends BaseCommand implements Serializable {
         this.commandName = "JUMP_NOT_ZERO";
         this.cycles = 2;
         this.targetLabel = targetLabel;
-        Engine.labels.add(targetLabel);
+        this.associatedEngine.labels.add(targetLabel);
         this.isJumpCommand = true;
     }
 

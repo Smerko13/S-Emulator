@@ -29,7 +29,7 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
         this.levelOfExpansion = 3;
         this.constantValue = Integer.parseInt(instruction.getSInstructionArguments().getSInstructionArgument().getLast().getValue());
         this.JEConstantLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
-        Engine.labels.add(JEConstantLabel);
+        this.associatedEngine.labels.add(JEConstantLabel);
         this.associatedLabels.add(JEConstantLabel);
         this.isJumpCommand = true;
     }
@@ -37,7 +37,7 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
     @Override
     public void initializeExpandedCommands() {
         String newLabel = generateNewLabel();
-        Engine.labels.add(newLabel);
+        this.associatedEngine.labels.add(newLabel);
         WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
         this.associatedEngine.getVariables().add(newWorkVariable);
         this.ExpandedCommands.add(new Assignment(newWorkVariable,this.label, this.variable, this, this.associatedEngine));

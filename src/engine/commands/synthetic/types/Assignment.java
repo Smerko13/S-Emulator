@@ -41,11 +41,11 @@ public class Assignment extends SyntheticCommand implements Serializable {
     @Override
     public void initializeExpandedCommands() {
         String newLabel1 = generateNewLabel();
-        Engine.labels.add(newLabel1);
+        this.associatedEngine.labels.add(newLabel1);
         String newLabel2 = generateNewLabel();
-        Engine.labels.add(newLabel2);
+        this.associatedEngine.labels.add(newLabel2);
         String newLabel3 = generateNewLabel();
-        Engine.labels.add(newLabel3);
+        this.associatedEngine.labels.add(newLabel3);
         this.ExpandedCommands.add(new ZeroVariable(variable,this.label,this, this.associatedEngine));
         this.ExpandedCommands.add(new JumpNotZero(assignedVariable, newLabel1,"   ", this, this.associatedEngine));
         this.ExpandedCommands.add(new GotoLabel(newLabel3,this, this.associatedEngine));

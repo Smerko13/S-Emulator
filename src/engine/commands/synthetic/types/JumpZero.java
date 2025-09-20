@@ -26,7 +26,7 @@ public class JumpZero extends SyntheticCommand implements Serializable {
         this.levelOfExpansion = 2;
         JZLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(JZLabel);
-        Engine.labels.add(JZLabel);
+        this.associatedEngine.labels.add(JZLabel);
         this.isJumpCommand = true;
     }
 
@@ -37,14 +37,14 @@ public class JumpZero extends SyntheticCommand implements Serializable {
         this.levelOfExpansion = 2;
         JZLabel = jeConstantLabel;
         this.associatedLabels.add(JZLabel);
-        Engine.labels.add(JZLabel);
+        this.associatedEngine.labels.add(JZLabel);
         this.isJumpCommand = true;
     }
 
     @Override
     public void initializeExpandedCommands() {
         String newLabel = this.generateNewLabel();
-        Engine.labels.add(newLabel);
+        this.associatedEngine.labels.add(newLabel);
         this.ExpandedCommands.add(new JumpNotZero(this.variable, newLabel, this.label, this, this.associatedEngine));
         this.ExpandedCommands.add(new GotoLabel(this.JZLabel, this, this.associatedEngine));
         for(Variable v : this.associatedEngine.getVariables()) {

@@ -19,7 +19,7 @@ public class JumpEqualFunction extends SyntheticCommand {
         this.commandName = "JUMP_EQUAL_FUNCTION";
         JEFunctionLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(JEFunctionLabel);
-        Engine.labels.add(JEFunctionLabel);
+        this.associatedEngine.labels.add(JEFunctionLabel);
         this.isJumpCommand = true;
         this.functionName = findCorrectFunctionName(instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue());
         String args = instruction.getSInstructionArguments().getSInstructionArgument().get(2).getValue();

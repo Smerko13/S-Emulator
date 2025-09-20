@@ -34,7 +34,7 @@ public class ZeroVariable extends SyntheticCommand implements Serializable {
 
     public void initializeExpandedCommands() {
         String newLabel = generateNewLabel();
-        Engine.labels.add(newLabel);
+        this.associatedEngine.labels.add(newLabel);
         if(this.label.equals("   ")) {
             this.ExpandedCommands.add(new Decrease(this.variable,newLabel, this, this.associatedEngine));
         } else {

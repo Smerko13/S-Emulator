@@ -35,7 +35,7 @@ public abstract class Command implements Serializable {
                 label = label + " "; // Ensure label has at least 3 characters
             }
             this.label = label;
-            Engine.labels.add(label);
+            this.associatedEngine.labels.add(label);
             this.associatedLabels.add(label);
         }
         String var = instruction.getSVariable();
@@ -53,7 +53,7 @@ public abstract class Command implements Serializable {
         this.label = label;
         this.associatedLabels = new LinkedHashSet<>();
         this.associatedLabels.add(label);
-        Engine.labels.add(label);
+        this.associatedEngine.labels.add(label);
         this.associatedVariables = new LinkedHashSet<>();
         if(variable != null) {
             this.variable = extractVariables(variable.getName());
@@ -88,7 +88,7 @@ public abstract class Command implements Serializable {
         this.parentCommand = quote;
         this.associatedLabels = new LinkedHashSet<>();
         this.associatedLabels.add(label);
-        Engine.labels.add(label);
+        this.associatedEngine.labels.add(label);
     }
 
     protected Variable extractVariables(String var) {
