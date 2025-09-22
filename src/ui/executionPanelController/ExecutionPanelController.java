@@ -1,7 +1,6 @@
 package ui.executionPanelController;
 
 import engine.arguments.Variable;
-import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
