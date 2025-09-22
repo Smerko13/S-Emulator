@@ -148,7 +148,7 @@ public class Quote extends SyntheticCommand {
 
                 for (Command cmd : subFunctionCommands) {// might cause some  (last two line)
                     String targetLabel = cmd.getTargetLabel();
-                    if (targetLabel.equals("EXIT")){
+                    if (targetLabel != null && targetLabel.equals("EXIT")){
                         exitLabel = this.generateNewLabel()+"END";
                         this.associatedEngine.labels.add(exitLabel);
                         cmd.replaceLabel("EXIT", exitLabel);
