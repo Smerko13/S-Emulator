@@ -536,4 +536,8 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
             throw new AssertionError();
         }
     }
+
+    public Variable getOutputVar() {
+        return this.variables.stream().filter(v -> v instanceof OutputVariable).findFirst().orElse(null);
+    }
 }

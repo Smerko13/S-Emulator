@@ -88,13 +88,21 @@ public class Quote extends SyntheticCommand {
     @Override
     public void initializeExpandedCommands() {
         String newOutputVarName = null;
+
+        if(!this.label.trim().isEmpty()) {
+            this.ExpandedCommands.add(new Neutral(this.associatedEngine.getOutputVar(),this.label,this, this.associatedEngine));
+        }
+
         for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
+            boolean exitLabelRequired = false;
+            String exitLabel = null;
             if(userString.equals(functionName)) {
                 Engine clonedSubFunction = e.clone();
                 List<Command> subFunctionCommands = clonedSubFunction.getCommands();
 
                 for (String lbl : clonedSubFunction.labels) {
+                    if (lbl.equals("EXIT")) continue;
                     if (!this.associatedEngine.labels.contains(lbl)) {
                         this.associatedEngine.labels.add(lbl);
                     } else {
@@ -138,11 +146,27 @@ public class Quote extends SyntheticCommand {
                     }
                 }
 
+                for (Command cmd : subFunctionCommands) {// might cause some  (last two line)
+                    String targetLabel = cmd.getTargetLabel();
+                    if (targetLabel.equals("EXIT")){
+                        exitLabel = this.generateNewLabel()+"END";
+                        this.associatedEngine.labels.add(exitLabel);
+                        cmd.replaceLabel("EXIT", exitLabel);
+                        exitLabelRequired = true;
+                    }
+                    cmd.setParent(this);
+                    cmd.setAssociatedEngine(this.associatedEngine);
+                }
+
                 this.ExpandedCommands.addAll(subFunctionCommands);
 
                 for(Variable v: this.associatedEngine.getVariables()) {
                     if(v.getName().equals(newOutputVarName)) {
-                        this.ExpandedCommands.add(new Assignment(this.variable,"   ", v, this, this.associatedEngine));
+                        if(!exitLabelRequired) {
+                            this.ExpandedCommands.add(new Assignment(this.variable, "   ", v, this, this.associatedEngine));
+                        } else {
+                            this.ExpandedCommands.add(new Assignment(this.variable, exitLabel, v, this, this.associatedEngine));
+                        }
                         break;
                     }
                 }
