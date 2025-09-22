@@ -9,10 +9,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.converter.IntegerStringConverter;
@@ -23,8 +20,6 @@ import java.util.List;
 import java.util.Set;
 
 public class ExecutionPanelController {
-
-
     @FXML private Button stepOverButton;
     @FXML private TableView inputVarsTable;
     @FXML private TableView allVarsTable;
@@ -34,9 +29,24 @@ public class ExecutionPanelController {
     @FXML private Button programExecuteButton;
     @FXML private Label cyclesLabel;
     private BaseController mainController;
+    private Set<String> changedVarNames = new HashSet<>();
 
     public void initialize() {
         disableAllButtons();
+        inputVarsTable.setEditable(true); // Allow editing
+        if (inputVarsTable.getColumns().size() == 2) {
+            TableColumn<Variable, String> nameCol = (TableColumn<Variable, String>) inputVarsTable.getColumns().get(0);
+            TableColumn<Variable, Integer> valueCol = (TableColumn<Variable, Integer>) inputVarsTable.getColumns().get(1);
+            nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+            valueCol.setCellValueFactory(new PropertyValueFactory<>("value"));
+            valueCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+            valueCol.setOnEditCommit(event -> {
+                Variable var = event.getRowValue();
+                if (var instanceof engine.arguments.types.InputVariable) {
+                    var.setValue(event.getNewValue());
+                }
+            });
+        }
     }
 
     private void disableAllButtons() {
@@ -104,30 +114,38 @@ public class ExecutionPanelController {
         }
     }
 
-    public void displayInputVars(Set<Variable> variables) {
-        inputVarsTable.getItems().clear();
-        ObservableList<InputVariable> inputVars = FXCollections.observableArrayList();
+    public void displayAllVars(Set<Variable> variables, Set<String> changedVarNames) {
+        this.changedVarNames = changedVarNames != null ? changedVarNames : Set.of();
+        allVarsTable.getItems().clear();
+        ObservableList<Variable> allVars = FXCollections.observableArrayList();
         for (Variable v : variables) {
-            if (v instanceof InputVariable) {
-                inputVars.add((InputVariable) v);
+            if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                allVars.add(v);
             }
         }
-        inputVarsTable.setItems(inputVars);
+        allVarsTable.setItems(allVars);
 
-        if (inputVarsTable.getColumns().size() == 2) {
-            TableColumn<InputVariable, String> nameCol = (TableColumn<InputVariable, String>) inputVarsTable.getColumns().get(0);
-            TableColumn<InputVariable, Integer> valueCol = (TableColumn<InputVariable, Integer>) inputVarsTable.getColumns().get(1);
-
+        if (allVarsTable.getColumns().size() == 2) {
+            TableColumn<Variable, String> nameCol = (TableColumn<Variable, String>) allVarsTable.getColumns().get(0);
+            TableColumn<Variable, Integer> valueCol = (TableColumn<Variable, Integer>) allVarsTable.getColumns().get(1);
             nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
             valueCol.setCellValueFactory(new PropertyValueFactory<>("value"));
-
-            valueCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
-            valueCol.setOnEditCommit(event -> {
-                InputVariable var = event.getRowValue();
-                var.setValue(event.getNewValue());
-            });
-
-            inputVarsTable.setEditable(true);
+        }
+        allVarsTable.setRowFactory(tv -> new TableRow<Variable>() {
+            @Override
+            protected void updateItem(Variable item, boolean empty) {
+                super.updateItem(item, empty);
+                if (!empty && item != null && changedVarNames.contains(item.getName())) {
+                    setStyle("-fx-background-color: lightgreen;");
+                } else {
+                    setStyle("");
+                }
+            }
+        });
+        // Remove highlight after 2 seconds
+        if (!this.changedVarNames.isEmpty()) {
+                    this.changedVarNames = Set.of();
+                    allVarsTable.refresh();
         }
     }
 
@@ -177,5 +195,39 @@ public class ExecutionPanelController {
         allVarsTable.getItems().clear();
         inputVarsTable.getItems().clear();
         cyclesLabel.setText("Cycles: 0");
+    }
+
+    // Java
+    public void displayInputVars(Set<Variable> variables, Set<String> changedVarNames) {
+        inputVarsTable.getItems().clear();
+        ObservableList<Variable> inputVars = FXCollections.observableArrayList();
+        for (Variable v : variables) {
+            if (v instanceof engine.arguments.types.InputVariable) {
+                inputVars.add(v);
+            }
+        }
+        inputVarsTable.setItems(inputVars);
+
+        if (inputVarsTable.getColumns().size() == 2) {
+            TableColumn<Variable, String> nameCol = (TableColumn<Variable, String>) inputVarsTable.getColumns().get(0);
+            TableColumn<Variable, Integer> valueCol = (TableColumn<Variable, Integer>) inputVarsTable.getColumns().get(1);
+            nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+            valueCol.setCellValueFactory(new PropertyValueFactory<>("value"));
+        }
+        inputVarsTable.setRowFactory(tv -> new TableRow<Variable>() {
+            @Override
+            protected void updateItem(Variable item, boolean empty) {
+                super.updateItem(item, empty);
+                if (!empty && item != null && changedVarNames != null && changedVarNames.contains(item.getName())) {
+                    setStyle("-fx-background-color: lightgreen;");
+                } else {
+                    setStyle("");
+                }
+            }
+        });
+        // Remove highlight after 2 seconds
+        if (changedVarNames != null && !changedVarNames.isEmpty()) {
+            inputVarsTable.refresh();
+        }
     }
 }

@@ -97,7 +97,7 @@ public class BaseController {
             });
 
             executionPanelComponentController.displayAllVars(displayedVars);
-            executionPanelComponentController.displayInputVars(inputVars);
+            executionPanelComponentController.displayInputVars(inputVars, null);
         } else {
             System.out.println("WRONG FILE");
         }
@@ -146,7 +146,7 @@ public class BaseController {
             }
         });
         executionPanelComponentController.displayAllVars(displayedVars);
-        executionPanelComponentController.displayInputVars(inputVars);
+        executionPanelComponentController.displayInputVars(inputVars, null);
     }
 
     public void collapseProgram() {
@@ -176,7 +176,7 @@ public class BaseController {
             }
         });
         executionPanelComponentController.displayAllVars(displayedVars);
-        executionPanelComponentController.displayInputVars(inputVars);
+        executionPanelComponentController.displayInputVars(inputVars, null);
     }
 
     public void setMonitors() {
@@ -249,8 +249,23 @@ public class BaseController {
     }
 
     public void executeProgram() {
+        Map<String, Integer> prevValues = new HashMap<>();
         Engine engineToRun = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
+        for (Variable v : engineToRun.getVariables()) {
+            prevValues.put(v.getName(), v.getValue());
+        }
+
+        // 2. Execute
         engineToRun.executeProgram(engineToRun.getCurrentDegree());
+
+        // 3. Find changed variables
+        Set<String> changedVars = new HashSet<>();
+        for (Variable v : engineToRun.getVariables()) {
+            Integer prev = prevValues.get(v.getName());
+            if (prev != null && prev != v.getValue()) {
+                changedVars.add(v.getName());
+            }
+        }
 
         int currExpansionLvl = engineToRun.getCurrentDegree();
         List<Command> displayedCommands = engineToRun.getCommandsAtDesiredLevel(currExpansionLvl);
@@ -276,8 +291,8 @@ public class BaseController {
                 displayedVars.add(v);
             }
         });
-        executionPanelComponentController.displayAllVars(displayedVars);
-        executionPanelComponentController.displayInputVars(inputVars);
+        executionPanelComponentController.displayAllVars(displayedVars, changedVars);
+        executionPanelComponentController.displayInputVars(inputVars, changedVars);
         executionPanelComponentController.setCyclesLabel(engineToRun.getCycleSum());
         statPanelComponentController.refreshExecutionNumbers(engineToRun.getExecutionHistory());
     }
@@ -354,7 +369,7 @@ public class BaseController {
                 s_emulator.getVariables(),
                 s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
         );
-        executionPanelComponentController.displayInputVars(inputVars);
+        executionPanelComponentController.displayInputVars(inputVars, null);
         executionPanelComponentController.setCyclesLabel(s_emulator.getCycleSum());
         statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
     }
@@ -382,7 +397,7 @@ public class BaseController {
                 allVars,
                 s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
         );
-        executionPanelComponentController.displayInputVars(inputVars);
+        executionPanelComponentController.displayInputVars(inputVars, null);
         executionPanelComponentController.setCyclesLabel(0);
         statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
     }
@@ -399,7 +414,7 @@ public class BaseController {
                 s_emulator.getVariables(),
                 s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
         );
-        executionPanelComponentController.displayInputVars(s_emulator.getVariables());
+        executionPanelComponentController.displayInputVars(s_emulator.getVariables(),null);
         executionPanelComponentController.setCyclesLabel(s_emulator.getCycleSum());
         statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
         // Disable debugging
@@ -445,7 +460,7 @@ public class BaseController {
             });
 
             executionPanelComponentController.displayAllVars(displayedVars);
-            executionPanelComponentController.displayInputVars(inputVars);
+            executionPanelComponentController.displayInputVars(inputVars, null);
         }
     }
 }
