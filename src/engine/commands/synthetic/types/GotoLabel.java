@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 public class GotoLabel extends SyntheticCommand implements Serializable {
-    private final String gototLabel;
+    private String gototLabel;
 
     public GotoLabel(SInstruction instruction, Engine engine) {
         super(instruction, engine);
@@ -101,5 +101,17 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
         }
         this.associatedVariables.remove(variable);
         this.associatedVariables.add(v);
+    }
+
+    @Override
+    public void replaceLabel(String lbl, String newLabel) {
+        if (this.label.equals(lbl)) {
+            this.label = newLabel;
+        }
+        if (this.gototLabel.equals(lbl)) {
+            this.gototLabel = newLabel;
+        }
+        this.associatedLabels.remove(lbl);
+        this.associatedLabels.add(newLabel);
     }
 }

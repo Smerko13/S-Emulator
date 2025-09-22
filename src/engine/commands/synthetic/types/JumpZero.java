@@ -14,7 +14,7 @@ import java.io.Serializable;
 import java.util.*;
 
 public class JumpZero extends SyntheticCommand implements Serializable {
-    private final String JZLabel;
+    private String JZLabel;
 
     public JumpZero(SInstruction instruction, Engine engine) {
         super(instruction, engine);
@@ -102,5 +102,17 @@ public class JumpZero extends SyntheticCommand implements Serializable {
             this.associatedVariables.remove(variable);
             this.associatedVariables.add(v);
         }
+    }
+
+    @Override
+    public void replaceLabel(String lbl, String newLabel) {
+        if (this.label.equals(lbl)) {
+            this.label = newLabel;
+        }
+        if (this.JZLabel.equals(lbl)) {
+            this.JZLabel = newLabel;
+        }
+        this.associatedLabels.remove(lbl);
+        this.associatedLabels.add(newLabel);
     }
 }

@@ -69,4 +69,13 @@ public class Decrease extends BaseCommand implements Serializable {
         this.associatedVariables.remove(variable);
         this.associatedVariables.add(v);
     }
+
+    @Override
+    public void replaceLabel(String lbl, String newLabel) {
+        if (this.label.equals(lbl)) {
+            this.label = newLabel;
+        }
+        this.associatedLabels.remove(lbl);
+        this.associatedLabels.add(newLabel);
+    }
 }

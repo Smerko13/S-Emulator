@@ -15,7 +15,7 @@ import java.io.Serializable;
 import java.util.*;
 
 public class JumpEqualConstant extends SyntheticCommand implements Serializable {
-    private final String JEConstantLabel; // Label for the jump if condition is met
+    private String JEConstantLabel; // Label for the jump if condition is met
     private final int constantValue; // Assuming a constant value for comparison
 
 
@@ -105,5 +105,17 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
         }
         this.associatedVariables.remove(variable);
         this.associatedVariables.add(v);
+    }
+
+    @Override
+    public void replaceLabel(String lbl, String newLabel) {
+        if (this.label.equals(lbl)) {
+            this.label = newLabel;
+        }
+        if (this.JEConstantLabel.equals(lbl)) {
+            this.JEConstantLabel = newLabel;
+        }
+        this.associatedLabels.remove(lbl);
+        this.associatedLabels.add(newLabel);
     }
 }

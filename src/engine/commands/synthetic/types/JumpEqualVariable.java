@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 public class JumpEqualVariable extends SyntheticCommand implements Serializable {
-    private final String JEVariableLabel;
+    private String JEVariableLabel;
     private String variableName;
 
     public JumpEqualVariable(SInstruction instruction, Engine engine) {
@@ -198,5 +198,17 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
                 break;
             }
         }
+    }
+
+    @Override
+    public void replaceLabel(String lbl, String newLabel) {
+        if (this.label.equals(lbl)) {
+            this.label = newLabel;
+        }
+        if (this.JEVariableLabel.equals(lbl)) {
+            this.JEVariableLabel = newLabel;
+        }
+        this.associatedLabels.remove(lbl);
+        this.associatedLabels.add(newLabel);
     }
 }
