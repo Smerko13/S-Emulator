@@ -36,6 +36,7 @@ public class BaseController {
     List<S_Emulator> programHistory;
     private boolean isFileLoaded = false;
     private boolean isDebuggingEnabled = false;
+    private Engine selectedEngine = null;
 
     public boolean isDebuggingEnabled() {
         return isDebuggingEnabled;
@@ -248,11 +249,11 @@ public class BaseController {
     }
 
     public void executeProgram() {
-        // Run the program
-        this.s_emulator.executeProgram(s_emulator.getCurrentDegree());
+        Engine engineToRun = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
+        engineToRun.executeProgram(engineToRun.getCurrentDegree());
 
-        int currExpansionLvl = s_emulator.getCurrentDegree();
-        List<Command> displayedCommands = s_emulator.getCommandsAtDesiredLevel(currExpansionLvl);
+        int currExpansionLvl = engineToRun.getCurrentDegree();
+        List<Command> displayedCommands = engineToRun.getCommandsAtDesiredLevel(currExpansionLvl);
         instructionTableComponentController.displayInstructions(displayedCommands);
 
         Set<Variable> displayedVars = new LinkedHashSet<>();
@@ -270,15 +271,15 @@ public class BaseController {
                 }
             }
         }
-        s_emulator.getVariables().forEach(v -> {
+        engineToRun.getVariables().forEach(v -> {
             if (v instanceof OutputVariable) {
                 displayedVars.add(v);
             }
         });
         executionPanelComponentController.displayAllVars(displayedVars);
         executionPanelComponentController.displayInputVars(inputVars);
-        executionPanelComponentController.setCyclesLabel(s_emulator.getCycleSum());
-        statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
+        executionPanelComponentController.setCyclesLabel(engineToRun.getCycleSum());
+        statPanelComponentController.refreshExecutionNumbers(engineToRun.getExecutionHistory());
     }
 
     public Stats getStats() {
@@ -406,19 +407,19 @@ public class BaseController {
     }
 
     public void onFunctionSelectionChanged(String selectedName) {
-        Engine selectedEngine = null;
-        // Check main program
+        Engine engineToShow = null;
         if (selectedName.equals(s_emulator.getCurrentProgramName())) {
-            selectedEngine = (Engine) s_emulator;
+            engineToShow = (Engine) s_emulator;
         } else {
             for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
                 if (selectedName.equals(sub.getUserString())) {
-                    selectedEngine = sub;
+                    engineToShow = sub;
                     break;
                 }
             }
         }
-        if (selectedEngine != null) {
+        if (engineToShow != null) {
+            selectedEngine = engineToShow; // Track the selected engine
             List<Command> displayedCommands = selectedEngine.getCommands();
             instructionTableComponentController.displayInstructions(displayedCommands);
 
