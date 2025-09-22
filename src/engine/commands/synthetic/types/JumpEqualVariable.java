@@ -21,6 +21,18 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
     private String JEVariableLabel;
     private String variableName;
 
+    public JumpEqualVariable(Variable targetVariable, Variable fucValue, String targetLabel,Command parentCommand, Engine engine) {
+        super(targetVariable,"   ", parentCommand, engine);
+        this.commandName = "JUMP_EQUAL_VARIABLE";
+        this.cycles = 2;
+        this.levelOfExpansion = 3;
+        this.JEVariableLabel = targetLabel;
+        this.associatedLabels.add(JEVariableLabel);
+        this.associatedEngine.labels.add(JEVariableLabel);
+        this.variableName = fucValue.getName();
+        this.isJumpCommand = true;
+    }
+
     public JumpEqualVariable(SInstruction instruction, Engine engine) {
         super(instruction, engine);
         this.commandName = "JUMP_EQUAL_VARIABLE";

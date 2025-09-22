@@ -19,6 +19,18 @@ public class Quote extends SyntheticCommand {
     LinkedHashMap<Variable, Boolean> functionArgumentsVariables;
 
 
+    public Quote(Variable assignedVariable, String functionName, List<String> functionArguments, String label, Command parentCommand, Engine engine) {
+        super(assignedVariable, label, parentCommand, engine);
+        this.commandName = "QUOTE";
+        this.functionName = functionName;
+        this.functionArguments = functionArguments;
+        this.functionArgumentsVariables = new LinkedHashMap<>();
+        initializeFunctionArgumentVariables();
+        this.associatedVariables.addAll(functionArgumentsVariables.keySet());
+        this.cycles = 5 + calculateSubFunctionCycles();
+        this.levelOfExpansion = calculateSubFunctionExpansionLevel() + 1;
+    }
+
     public Quote(SInstruction instruction, Engine engine) {
         super(instruction, engine);
         this.commandName = "QUOTE";

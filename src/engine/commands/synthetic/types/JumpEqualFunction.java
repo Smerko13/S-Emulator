@@ -3,7 +3,6 @@ package engine.commands.synthetic.types;
 import engine.Engine;
 import engine.arguments.Variable;
 import engine.arguments.types.WorkVariable;
-import engine.commands.Command;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
@@ -51,7 +50,9 @@ public class JumpEqualFunction extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
-
+        WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
+        this.ExpandedCommands.add(new Quote(newWorkVariable,this.functionName,this.functionArguments,this.label,this,this.associatedEngine));
+        this.ExpandedCommands.add(new JumpEqualVariable(this.variable,newWorkVariable,this.JEFunctionLabel,this,this.associatedEngine));
     }
 
     @Override
