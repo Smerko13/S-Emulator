@@ -58,4 +58,6 @@ public interface S_Emulator {
     void stepOver();
 
     Command getCurrentDebugCommand();
+
+    Engine[] getSunFunctions();
 }

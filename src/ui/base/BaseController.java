@@ -101,6 +101,13 @@ public class BaseController {
             System.out.println("WRONG FILE");
         }
         this.executionPanelComponentController.enableAllButtons();
+        List<String> functionNames = new ArrayList<>();
+        functionNames.add(s_emulator.getCurrentProgramName());
+        for (Engine sub : s_emulator.getSunFunctions()) {
+            functionNames.add(sub.getUserString());
+        }
+        // Call a method in HeaderController to update the selector
+        headerComponentController.updateFunctionSelector(functionNames);
     }
 
     public String getCurrentDegree() {

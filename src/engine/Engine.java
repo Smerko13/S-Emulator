@@ -318,6 +318,15 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
         return this.currentCommand;
     }
 
+    @Override
+    public Engine[] getSunFunctions() {
+        List<Engine> funcs = new ArrayList<>(this.subFunctions);
+        for(Engine subFunction : subFunctions) {
+            funcs.addAll(Arrays.asList(subFunction.getSunFunctions()));
+        }
+        return funcs.toArray(new Engine[0]);
+    }
+
 
     @Override
     public void executeProgram(int expansionLevel) {

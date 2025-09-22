@@ -11,9 +11,11 @@ import javafx.stage.FileChooser;
 import ui.base.BaseController;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 
 public class HeaderController {
+    @FXML private ComboBox FunctionAndProgramSelector;
     private BaseController mainController;
     @FXML private Button loadFileButton;
     @FXML private TextField filePathTextBox;
@@ -74,7 +76,11 @@ public class HeaderController {
 
     }
 
-
+    public void updateFunctionSelector(List<String> functionNames) {
+        FunctionAndProgramSelector.getItems().clear();
+        FunctionAndProgramSelector.getItems().addAll(functionNames);
+        FunctionAndProgramSelector.getSelectionModel().selectFirst();
+    }
 }
 
 
