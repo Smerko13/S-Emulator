@@ -243,16 +243,23 @@ public class BaseController {
         // Run the program
         this.s_emulator.executeProgram(s_emulator.getCurrentDegree());
 
-        // Get all variables from the engine (source of truth)
-        Set<Variable> allVars = s_emulator.getVariables();
+        int currExpansionLvl = s_emulator.getCurrentDegree();
+        List<Command> displayedCommands = s_emulator.getCommandsAtDesiredLevel(currExpansionLvl);
+        instructionTableComponentController.displayInstructions(displayedCommands);
+
         Set<Variable> displayedVars = new LinkedHashSet<>();
         Set<Variable> inputVars = new LinkedHashSet<>();
-        for (Variable v : allVars) {
-            if (v instanceof WorkVariable || v instanceof OutputVariable) {
-                displayedVars.add(v);
-            }
-            if (v instanceof engine.arguments.types.InputVariable) {
-                inputVars.add(v);
+        for (Command cmd : displayedCommands) {
+            Set<Variable> cmdVars = cmd.getAllVariables();
+            if (cmdVars != null) {
+                for (Variable v : cmdVars) {
+                    if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                        displayedVars.add(v);
+                    }
+                    if (v instanceof engine.arguments.types.InputVariable) {
+                        inputVars.add(v);
+                    }
+                }
             }
         }
         s_emulator.getVariables().forEach(v -> {

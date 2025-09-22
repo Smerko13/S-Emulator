@@ -520,12 +520,26 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     public Engine clone() {
         try {
             Engine cloned = (Engine) super.clone();
-            // Deep copy mutable fields
-            cloned.commands = new ArrayList<>(this.commands); // Shallow copy; deep copy if Command is mutable
-            cloned.variables = new LinkedHashSet<>(this.variables); // Shallow copy; deep copy if Variable is mutable
-            cloned.extraInputVariables = new LinkedHashSet<>(this.extraInputVariables);
+            // Deep copy commands
+            cloned.commands = new ArrayList<>();
+            for (Command cmd : this.commands) {
+                cloned.commands.add(cmd.clone());
+            }
+            // Deep copy variables
+            cloned.variables = new LinkedHashSet<>();
+            for (Variable var : this.variables) {
+                cloned.variables.add(var.clone());
+            }
+            // Deep copy extraInputVariables
+            cloned.extraInputVariables = new LinkedHashSet<>();
+            for (Variable var : this.extraInputVariables) {
+                cloned.extraInputVariables.add(var.clone());
+            }
+            // Deep copy labels
             cloned.labels = new LinkedHashSet<>(this.labels);
+            // Deep copy stats
             cloned.stats = this.stats != null ? this.stats.clone() : null;
+            // Deep copy subFunctions
             cloned.subFunctions = new ArrayList<>();
             for (Engine sub : this.subFunctions) {
                 cloned.subFunctions.add(sub.clone());

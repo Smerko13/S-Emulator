@@ -141,11 +141,11 @@ public class JumpEqualFunction extends SyntheticCommand {
 
     @Override
     public void replaceVariable(Variable variable, WorkVariable v) {
-        if(this.variable.equals(variable)) {
+        if(this.variable.getName().equals(variable.getName())) {
             this.variable = v;
+            this.associatedVariables.remove(variable);
+            this.associatedVariables.add(v);
         }
-        this.associatedVariables.remove(variable);
-        this.associatedVariables.add(v);
     }
 
     @Override

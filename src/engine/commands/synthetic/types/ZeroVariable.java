@@ -81,12 +81,11 @@ public class ZeroVariable extends SyntheticCommand implements Serializable {
 
     @Override
     public void replaceVariable(Variable variable, WorkVariable v) {
-        if (this.variable.equals(variable)) {
-            this.variable = v;
-        }
-        if (this.associatedVariables.contains(variable)) {
-            this.associatedVariables.remove(variable);
-            this.associatedVariables.add(v);
+        for(Variable var : this.associatedVariables) {
+            if(var.getName().equals(variable.getName())) {
+                this.associatedVariables.remove(var);
+                this.associatedVariables.add(v);
+            }
         }
     }
 
