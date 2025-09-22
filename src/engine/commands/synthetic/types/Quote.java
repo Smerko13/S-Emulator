@@ -64,15 +64,19 @@ public class Quote extends SyntheticCommand {
         return newVar;
     }
 
-
     private int calculateSubFunctionExpansionLevel() {
+        int maxLevel = 2;
         for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
-                return e.getMaxExpansionDepth();
+                for(Command cmd : e.getCommands()) {
+                    if(cmd.getExpansionDepth() > maxLevel) {
+                        maxLevel = cmd.getExpansionDepth();
+                    }
+                }
             }
         }
-        return 0;
+        return maxLevel;
     }
 
     private int calculateSubFunctionCycles() {

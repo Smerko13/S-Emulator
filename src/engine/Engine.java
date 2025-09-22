@@ -164,6 +164,15 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
                 ((SyntheticCommand) cmd).initializeExpandedCommands();
             }
         }
+        if(!this.subFunctions.isEmpty()) {
+            for(Engine e : this.subFunctions) {
+                for(Command cmd : e.commands) {
+                    if(cmd instanceof SyntheticCommand) {
+                        ((SyntheticCommand) cmd).initializeExpandedCommands();
+                    }
+                }
+            }
+        }
     }
 
     private Command createSyntheticCommandFromInstruction(SInstruction instruction) {
@@ -229,7 +238,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     @Override
     public int getMaxExpansionDepth() {
         int maxDepth = 0;
-        for (Command command : commands) {
+        for (Command command : this.commands) {
             if (command.getExpansionDepth() > maxDepth) {
                 maxDepth = command.getExpansionDepth();
             }

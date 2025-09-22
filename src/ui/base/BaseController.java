@@ -24,6 +24,8 @@ import ui.statPanel.StatPanelController;
 import java.io.File;
 import java.util.*;
 
+import static java.lang.Thread.sleep;
+
 public class BaseController {
     @FXML private HeaderController headerComponentController;
     @FXML private InstructionTableController instructionTableComponentController;
@@ -59,46 +61,45 @@ public class BaseController {
     }
 
 
-    public void loadFile(File selectedFile) {
+    public void loadFile(File selectedFile) throws InterruptedException {
         instructionTableComponentController.clearInstructions();
         executionPanelComponentController.clearAllVars();
         s_emulator = new Engine(true);
         programHistory.add(s_emulator);
-        showLoadingProgress(() -> Platform.runLater(() -> {
-            boolean fileLoadedSuccessfully = s_emulator.readProgramFromXml(selectedFile.toString());
-            if (fileLoadedSuccessfully) {
-                isFileLoaded = true;
-                isDebuggingEnabled = false;
-                List<Command> displayedCommands = s_emulator.getCommands();
-                instructionTableComponentController.displayInstructions(displayedCommands);
+        showLoadingProgress(() -> Platform.runLater(() -> {}));
+        boolean fileLoadedSuccessfully = s_emulator.readProgramFromXml(selectedFile.toString());
+        if (fileLoadedSuccessfully) {
+            isFileLoaded = true;
+            isDebuggingEnabled = false;
+            List<Command> displayedCommands = s_emulator.getCommands();
+            instructionTableComponentController.displayInstructions(displayedCommands);
 
-                Set<Variable> displayedVars = new LinkedHashSet<>();
-                Set<Variable> inputVars = new LinkedHashSet<>();
-                for (Command cmd : displayedCommands) {
-                    Set<Variable> cmdVars = cmd.getAllVariables();
-                    if (cmdVars != null) {
-                        for (Variable v : cmdVars) {
-                            if (v instanceof WorkVariable || v instanceof OutputVariable) {
-                                displayedVars.add(v);
-                            }
-                            if (v instanceof engine.arguments.types.InputVariable) {
-                                inputVars.add(v);
-                            }
+            Set<Variable> displayedVars = new LinkedHashSet<>();
+            Set<Variable> inputVars = new LinkedHashSet<>();
+            for (Command cmd : displayedCommands) {
+                Set<Variable> cmdVars = cmd.getAllVariables();
+                if (cmdVars != null) {
+                    for (Variable v : cmdVars) {
+                        if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                            displayedVars.add(v);
+                        }
+                        if (v instanceof engine.arguments.types.InputVariable) {
+                            inputVars.add(v);
                         }
                     }
                 }
-                s_emulator.getVariables().forEach(v -> {
-                    if (v instanceof OutputVariable) {
-                        displayedVars.add(v);
-                    }
-                });
-
-                executionPanelComponentController.displayAllVars(displayedVars);
-                executionPanelComponentController.displayInputVars(inputVars);
-            } else {
-                System.out.println("WRONG FILE");
             }
-        }));
+            s_emulator.getVariables().forEach(v -> {
+                if (v instanceof OutputVariable) {
+                    displayedVars.add(v);
+                }
+            });
+
+            executionPanelComponentController.displayAllVars(displayedVars);
+            executionPanelComponentController.displayInputVars(inputVars);
+        } else {
+            System.out.println("WRONG FILE");
+        }
         this.executionPanelComponentController.enableAllButtons();
     }
 
@@ -297,7 +298,7 @@ public class BaseController {
                 // Simulate loading steps
                 for (int i = 1; i <= 3; i++) {
                     updateProgress(i, 3);
-                    Thread.sleep(700); // Simulate work
+                    sleep(700); // Simulate work
                 }
                 return null;
             }

@@ -32,7 +32,7 @@ public class HeaderController {
         });
     }
 
-    public void loadFileButtonPressed(ActionEvent actionEvent) {
+    public void loadFileButtonPressed(ActionEvent actionEvent) throws InterruptedException {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select Program");
 
