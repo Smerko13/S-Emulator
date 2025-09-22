@@ -404,4 +404,47 @@ public class BaseController {
         // Disable debugging
         isDebuggingEnabled = false;
     }
+
+    public void onFunctionSelectionChanged(String selectedName) {
+        Engine selectedEngine = null;
+        // Check main program
+        if (selectedName.equals(s_emulator.getCurrentProgramName())) {
+            selectedEngine = (Engine) s_emulator;
+        } else {
+            for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+                if (selectedName.equals(sub.getUserString())) {
+                    selectedEngine = sub;
+                    break;
+                }
+            }
+        }
+        if (selectedEngine != null) {
+            List<Command> displayedCommands = selectedEngine.getCommands();
+            instructionTableComponentController.displayInstructions(displayedCommands);
+
+            Set<Variable> displayedVars = new LinkedHashSet<>();
+            Set<Variable> inputVars = new LinkedHashSet<>();
+            for (Command cmd : displayedCommands) {
+                Set<Variable> cmdVars = cmd.getAllVariables();
+                if (cmdVars != null) {
+                    for (Variable v : cmdVars) {
+                        if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                            displayedVars.add(v);
+                        }
+                        if (v instanceof engine.arguments.types.InputVariable) {
+                            inputVars.add(v);
+                        }
+                    }
+                }
+            }
+            selectedEngine.getVariables().forEach(v -> {
+                if (v instanceof OutputVariable) {
+                    displayedVars.add(v);
+                }
+            });
+
+            executionPanelComponentController.displayAllVars(displayedVars);
+            executionPanelComponentController.displayInputVars(inputVars);
+        }
+    }
 }

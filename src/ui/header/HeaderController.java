@@ -32,6 +32,11 @@ public class HeaderController {
                 mainController.onHighlightSelectionChanged(newVal);
             }
         });
+        FunctionAndProgramSelector.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (mainController != null && newVal != null) {
+                mainController.onFunctionSelectionChanged(newVal.toString());
+            }
+        });
     }
 
     public void loadFileButtonPressed(ActionEvent actionEvent) throws InterruptedException {
