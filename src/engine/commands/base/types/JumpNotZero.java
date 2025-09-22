@@ -78,4 +78,13 @@ public class JumpNotZero extends BaseCommand implements Serializable {
         return labels;
     }
 
+    @Override
+    public void replaceVariable(Variable variable, WorkVariable v) {
+        if(this.variable.equals(variable)) {
+            this.variable = v;
+        }
+        this.associatedVariables.remove(variable);
+        this.associatedVariables.add(v);
+    }
+
 }

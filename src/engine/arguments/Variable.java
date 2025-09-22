@@ -45,4 +45,8 @@ public abstract class Variable implements Serializable, Cloneable {
     public char getType() {
         return this.type;
     }
+
+    public void setName(String newName) {
+        this.name = newName;
+    }
 }

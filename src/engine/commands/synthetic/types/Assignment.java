@@ -106,4 +106,16 @@ public class Assignment extends SyntheticCommand implements Serializable {
     public String toString() {
         return variable.getName() + " <- " + assignedVariable.getName();
     }
+
+    @Override
+    public void replaceVariable(Variable variable, WorkVariable v) {
+        if(this.variable.equals(variable)) {
+            this.variable = v;
+        }
+        if(this.assignedVariable.equals(variable)) {
+            this.assignedVariable = v;
+        }
+        this.associatedVariables.remove(variable);
+        this.associatedVariables.add(v);
+    }
 }

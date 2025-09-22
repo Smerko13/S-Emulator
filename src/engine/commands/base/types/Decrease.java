@@ -2,11 +2,9 @@ package engine.commands.base.types;
 
 import engine.Engine;
 import engine.arguments.Variable;
-import engine.arguments.types.InputVariable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
-import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
 import java.io.Serializable;
@@ -61,5 +59,14 @@ public class Decrease extends BaseCommand implements Serializable {
     @Override
     public Collection<String> getAssociatedLabels() {
         return Collections.singleton(this.label);
+    }
+
+    @Override
+    public void replaceVariable(Variable variable, WorkVariable v) {
+        if(this.variable.equals(variable)) {
+            this.variable = v;
+        }
+        this.associatedVariables.remove(variable);
+        this.associatedVariables.add(v);
     }
 }

@@ -65,5 +65,12 @@ public class Increase extends BaseCommand implements Serializable {
         return Collections.singleton(this.label);
     }
 
-
+    @Override
+    public void replaceVariable(Variable variable, WorkVariable v) {
+        if(this.variable.equals(variable)) {
+            this.variable = v;
+        }
+        this.associatedVariables.remove(variable);
+        this.associatedVariables.add(v);
+    }
 }

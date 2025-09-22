@@ -19,7 +19,7 @@ import java.util.Set;
 
 public class JumpEqualVariable extends SyntheticCommand implements Serializable {
     private final String JEVariableLabel;
-    private final String variableName;
+    private String variableName;
 
     public JumpEqualVariable(SInstruction instruction, Engine engine) {
         super(instruction, engine);
@@ -178,5 +178,25 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
     @Override
     public String toString() {
         return "IF " + this.variable.getName() + " = " + this.variableName + " GOTO " + JEVariableLabel;
+    }
+
+    @Override
+    public void replaceVariable(Variable variable, WorkVariable v) {
+        java.util.Iterator<Variable> it = this.associatedVariables.iterator();
+        while (it.hasNext()) {
+            Variable var = it.next();
+            if (var.equals(variable)) {
+                it.remove();
+                this.associatedVariables.add(v);
+                if (this.variable.equals(variable)) {
+                    this.variable = v;
+                }
+                // Also update variableName if needed
+                if (var.getName().equals(this.variableName)) {
+                    this.variableName = v.getName();
+                }
+                break;
+            }
+        }
     }
 }

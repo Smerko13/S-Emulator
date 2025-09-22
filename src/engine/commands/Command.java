@@ -233,4 +233,6 @@ public abstract class Command implements Serializable, Cloneable {
     }
 
     public abstract Collection<String> getAssociatedLabels();
+
+    public abstract void replaceVariable(Variable variable, WorkVariable v);
 }

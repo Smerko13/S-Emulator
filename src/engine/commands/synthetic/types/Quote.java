@@ -3,6 +3,7 @@ package engine.commands.synthetic.types;
 import engine.Engine;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
+import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.types.*;
@@ -86,23 +87,18 @@ public class Quote extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
-        List<Command> clonedCommands = new ArrayList<>();
-        Set<Variable> clonedVars = new HashSet<>();
-        Set<String> clonedLabels = new HashSet<>();
         for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
-                for(Command cmd : e.getCommands()) {
-                    Command clonedCmd = cmd.clone();
-                    clonedCommands.add(clonedCmd);
-                    clonedVars.addAll(List.of(clonedCmd.getAssociatedVariables()));
-                    clonedLabels.addAll(clonedCmd.getAssociatedLabels());
-                }
+
             }
         }
-        this.ExpandedCommands.addAll(clonedCommands);
+
+
+
         expandFurther();
     }
+
 
     @Override
     public String execute() {
@@ -189,5 +185,34 @@ public class Quote extends SyntheticCommand {
     @Override
     public Collection<String> getAssociatedLabels() {
         return Collections.singleton(this.label);
+    }
+
+    @Override
+    public void replaceVariable(Variable variable, WorkVariable v) {
+        // Safely update associatedVariables
+        Iterator<Variable> it = this.associatedVariables.iterator();
+        while (it.hasNext()) {
+            Variable var = it.next();
+            if (var.equals(variable)) {
+                it.remove();
+                this.associatedVariables.add(v);
+                break;
+            }
+        }
+        // Update functionArgumentsVariables
+        if (this.functionArgumentsVariables.containsKey(variable)) {
+            Boolean value = this.functionArgumentsVariables.remove(variable);
+            this.functionArgumentsVariables.put(v, value);
+        }
+        // Update functionArguments if needed
+        for (int i = 0; i < this.functionArguments.size(); i++) {
+            if (this.functionArguments.get(i).equals(variable.getName())) {
+                this.functionArguments.set(i, v.getName());
+            }
+        }
+        // Update main variable reference
+        if (this.variable.equals(variable)) {
+            this.variable = v;
+        }
     }
 }

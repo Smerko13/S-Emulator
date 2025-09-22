@@ -2,6 +2,7 @@ package engine.commands.synthetic.types;
 
 import engine.Engine;
 import engine.arguments.Variable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
@@ -136,5 +137,14 @@ public class JumpEqualFunction extends SyntheticCommand {
             }
         }
         return null;
+    }
+
+    @Override
+    public void replaceVariable(Variable variable, WorkVariable v) {
+        if(this.variable.equals(variable)) {
+            this.variable = v;
+        }
+        this.associatedVariables.remove(variable);
+        this.associatedVariables.add(v);
     }
 }

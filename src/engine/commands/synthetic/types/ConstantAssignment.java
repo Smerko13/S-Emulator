@@ -2,6 +2,7 @@ package engine.commands.synthetic.types;
 
 import engine.Engine;
 import engine.arguments.Variable;
+import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.types.Increase;
 import engine.commands.synthetic.SyntheticCommand;
@@ -68,5 +69,14 @@ public class ConstantAssignment extends SyntheticCommand implements Serializable
     @Override
     public String toString() {
         return variable.getName() + " <- " + constantValue; // Assigning a constant value to the variable
+    }
+
+    @Override
+    public void replaceVariable(Variable variable, WorkVariable v) {
+        if(this.variable.equals(variable)) {
+            this.variable = v;
+        }
+        this.associatedVariables.remove(variable);
+        this.associatedVariables.add(v);
     }
 }

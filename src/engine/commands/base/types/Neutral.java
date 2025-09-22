@@ -64,4 +64,13 @@ public class Neutral extends BaseCommand implements Serializable {
     public Collection<String> getAssociatedLabels() {
         return Collections.singleton(this.label);
     }
+
+    @Override
+    public void replaceVariable(Variable variable, WorkVariable v) {
+        if(this.variable.equals(variable)) {
+            this.variable = v;
+        }
+        this.associatedVariables.remove(variable);
+        this.associatedVariables.add(v);
+    }
 }
