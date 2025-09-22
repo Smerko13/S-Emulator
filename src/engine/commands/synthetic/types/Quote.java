@@ -87,15 +87,67 @@ public class Quote extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
+        String newOutputVarName = null;
         for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
+                Engine clonedSubFunction = e.clone();
+                List<Command> subFunctionCommands = clonedSubFunction.getCommands();
 
+                for (String lbl : clonedSubFunction.labels) {
+                    if (!this.associatedEngine.labels.contains(lbl)) {
+                        this.associatedEngine.labels.add(lbl);
+                    } else {
+                        String newLabel = generateNewLabel();
+                        for (Command cmd : subFunctionCommands) {
+                            cmd.replaceLabel(lbl, newLabel);
+                        }
+                        this.associatedEngine.labels.add(newLabel);
+                    }
+                }
+
+                for(Variable v : clonedSubFunction.getVariables()) {
+                    if(v instanceof WorkVariable) {
+                        String newWorkVarName = generateNewWorkVariableName();
+                        WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
+                        this.associatedEngine.getVariables().add(newWorkVar);
+                        for(Command cmd : subFunctionCommands) {
+                            cmd.replaceVariable(v, newWorkVar);
+                        }
+                    } else if (v instanceof OutputVariable) {
+                        newOutputVarName = generateNewWorkVariableName();
+                        WorkVariable newWorkVar = new WorkVariable(newOutputVarName);
+                        this.associatedEngine.getVariables().add(newWorkVar);
+                        for(Command cmd : subFunctionCommands) {
+                            cmd.replaceVariable(v, newWorkVar);
+                        }
+                    } else if (v instanceof InputVariable) {
+                        String newWorkVarName = generateNewWorkVariableName();
+                        WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
+                        this.associatedEngine.getVariables().add(newWorkVar);
+                        for(Command cmd : subFunctionCommands) {
+                            cmd.replaceVariable(v, newWorkVar);
+                        }
+                        for(Variable funcArgVar : functionArgumentsVariables.keySet()) {
+                            if(functionArgumentsVariables.get(funcArgVar) == true) {
+                                this.ExpandedCommands.add(new Assignment(newWorkVar,"   ", funcArgVar, this, this.associatedEngine));
+                                functionArgumentsVariables.put(funcArgVar, false);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                this.ExpandedCommands.addAll(subFunctionCommands);
+
+                for(Variable v: this.associatedEngine.getVariables()) {
+                    if(v.getName().equals(newOutputVarName)) {
+                        this.ExpandedCommands.add(new Assignment(this.variable,"   ", v, this, this.associatedEngine));
+                        break;
+                    }
+                }
             }
         }
-
-
-
         expandFurther();
     }
 

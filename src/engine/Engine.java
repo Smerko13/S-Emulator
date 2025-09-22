@@ -16,7 +16,7 @@ import schema.*;
 import java.io.*;
 import java.util.*;
 
-public class Engine implements S_Emulator , Serializable {
+public class Engine implements S_Emulator , Serializable, Cloneable {
     private List<Command> commands;
     private String currentProgramName;
     public Set<Variable> variables;
@@ -514,5 +514,26 @@ public class Engine implements S_Emulator , Serializable {
             totalCycles += cmd.getCycles();
         }
         return totalCycles;
+    }
+
+    @Override
+    public Engine clone() {
+        try {
+            Engine cloned = (Engine) super.clone();
+            // Deep copy mutable fields
+            cloned.commands = new ArrayList<>(this.commands); // Shallow copy; deep copy if Command is mutable
+            cloned.variables = new LinkedHashSet<>(this.variables); // Shallow copy; deep copy if Variable is mutable
+            cloned.extraInputVariables = new LinkedHashSet<>(this.extraInputVariables);
+            cloned.labels = new LinkedHashSet<>(this.labels);
+            cloned.stats = this.stats != null ? this.stats.clone() : null;
+            cloned.subFunctions = new ArrayList<>();
+            for (Engine sub : this.subFunctions) {
+                cloned.subFunctions.add(sub.clone());
+            }
+            // Strings and primitives are immutable, so no need to clone
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

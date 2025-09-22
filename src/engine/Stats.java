@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public class Stats implements Serializable {
+public class Stats implements Serializable, Cloneable {
     List<Execution> executionHistory;
 
     public void updateStatEntry(int expansionLevel, Set<Variable> variables, Set<Variable> extraInputVariables, int cycleSum) {
@@ -62,16 +62,38 @@ public class Stats implements Serializable {
             sb.append("    Expansion Level: ").append(expansionLevel).append("\n");
             sb.append("    Input Variables: ");
             for (Variable var : inputVariables) {
-                sb.append(var.getName()).append(" = ").append(((InputVariable)var).getOriginalValue()).append(", ");
+                sb.append(var.getName()).append(" = ").append(((InputVariable) var).getOriginalValue()).append(", ");
             }
             if (outputVariable != null) {
                 sb.append("Output Variable: ").append(outputVariable.getName())
-                  .append(" = ").append(outputVariable.getValue()).append("\n");
+                        .append(" = ").append(outputVariable.getValue()).append("\n");
             } else {
                 sb.append("No Output Variable\n");
             }
             sb.append("    Cycle Count: ").append(cycleCount).append("\n");
             return sb.toString();
+        }
+
+        @Override
+        public Execution clone() {
+            try {
+                Execution cloned = (Execution) super.clone();
+                cloned.inputVariables = new ArrayList<>();
+                for (Variable var : this.inputVariables) {
+                    if (var instanceof InputVariable) {
+                        cloned.inputVariables.add(new InputVariable((InputVariable) var));
+                    } else {
+                        // fallback for other Variable types
+                        cloned.inputVariables.add(var); // or handle as needed
+                    }
+                }
+                cloned.outputVariable = this.outputVariable != null
+                        ? new OutputVariable(this.outputVariable)
+                        : null;
+                return cloned;
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError();
+            }
         }
     }
 
@@ -93,5 +115,18 @@ public class Stats implements Serializable {
         return sb.toString().trim();
     }
 
+    @Override
+    public Stats clone() {
+        try {
+            Stats cloned = (Stats) super.clone();
+            cloned.executionHistory = new ArrayList<>();
+            for (Execution exec : this.executionHistory) {
+                cloned.executionHistory.add(exec.clone());
+            }
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
 
+        }
+    }
 }
