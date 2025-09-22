@@ -77,7 +77,10 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
         return null;
     }
 
-
+    @Override
+    public GotoLabel clone() {
+        return (GotoLabel) super.clone();
+    }
 
     @Override
     public String toString() {

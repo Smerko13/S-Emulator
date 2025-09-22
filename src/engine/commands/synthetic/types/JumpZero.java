@@ -81,7 +81,10 @@ public class JumpZero extends SyntheticCommand implements Serializable {
         return Collections.singleton(this.variable);
     }
 
-
+    @Override
+    public JumpZero clone() {
+        return (JumpZero) super.clone();
+    }
 
     @Override
     public String toString() {

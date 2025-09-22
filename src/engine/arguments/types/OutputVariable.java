@@ -14,7 +14,7 @@ public class OutputVariable extends Variable implements Serializable {
 
     public OutputVariable(OutputVariable variable) {
         super(variable);
-        new OutputVariable();
+        this.isOriginal = variable.isOriginal;
     }
 
     public OutputVariable(boolean isOriginal) {

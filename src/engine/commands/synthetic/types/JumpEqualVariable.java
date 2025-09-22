@@ -163,7 +163,10 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
         return variables;
     }
 
-
+    @Override
+    public JumpEqualVariable clone() {
+        return (JumpEqualVariable) super.clone();
+    }
 
     @Override
     public String toString() {

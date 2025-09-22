@@ -66,7 +66,10 @@ public class ZeroVariable extends SyntheticCommand implements Serializable {
         return Collections.singleton(this.variable);
     }
 
-
+    @Override
+    public ZeroVariable clone() {
+        return (ZeroVariable) super.clone();
+    }
 
     @Override
     public String toString() {

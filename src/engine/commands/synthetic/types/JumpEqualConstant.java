@@ -86,7 +86,10 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
         return Collections.singleton(this.variable);
     }
 
-
+    @Override
+    public JumpEqualConstant clone() {
+        return (JumpEqualConstant) super.clone();
+    }
 
     @Override
     public String toString() {

@@ -103,7 +103,10 @@ public class JumpEqualFunction extends SyntheticCommand {
         return Collections.singleton(this.variable);
     }
 
-
+    @Override
+    public JumpEqualFunction clone() {
+        return (JumpEqualFunction) super.clone();
+    }
 
     @Override
     public String toString() {

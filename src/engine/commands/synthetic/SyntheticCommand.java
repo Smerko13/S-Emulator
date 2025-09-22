@@ -69,4 +69,13 @@ public abstract class SyntheticCommand extends Command implements Serializable {
 
     public abstract Set<Variable> getAllVariables();
 
+    @Override
+    public SyntheticCommand clone() {
+        SyntheticCommand cloned = (SyntheticCommand) super.clone();
+        cloned.ExpandedCommands = new java.util.ArrayList<>();
+        for (Command cmd : this.ExpandedCommands) {
+            cloned.ExpandedCommands.add(cmd.clone());
+        }
+        return cloned;
+    }
 }

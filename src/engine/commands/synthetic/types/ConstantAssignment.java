@@ -57,7 +57,10 @@ public class ConstantAssignment extends SyntheticCommand implements Serializable
         return Collections.singleton(this.variable);
     }
 
-
+    @Override
+    public ConstantAssignment clone() {
+        return (ConstantAssignment) super.clone();
+    }
 
     @Override
     public String toString() {

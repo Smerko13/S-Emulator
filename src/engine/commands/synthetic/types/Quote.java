@@ -4,6 +4,7 @@ import engine.Engine;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
 import engine.arguments.types.WorkVariable;
+import engine.commands.Command;
 import engine.commands.base.types.*;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
@@ -85,7 +86,18 @@ public class Quote extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
-
+        List<Command> clonedCommands = new ArrayList<>();
+        for(Engine e : this.associatedEngine.subFunctions) {
+            String userString = e.getUserString();
+            if(userString.equals(functionName)) {
+                for(Command cmd : e.getCommands()) {
+                    Command clonedCmd = cmd.clone();
+                    clonedCommands.add(clonedCmd);
+                }
+            }
+        }
+        this.ExpandedCommands.addAll(clonedCommands);
+        expandFurther();
     }
 
     @Override
@@ -163,5 +175,10 @@ public class Quote extends SyntheticCommand {
             }
         }
         return null;
+    }
+
+    @Override
+    public Quote clone() {
+        return (Quote) super.clone();
     }
 }

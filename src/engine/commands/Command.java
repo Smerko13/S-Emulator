@@ -11,7 +11,7 @@ import schema.SInstruction;
 import java.io.Serializable;
 import java.util.*;
 
-public abstract class Command implements Serializable {
+public abstract class Command implements Serializable, Cloneable {
     protected String label = "   "; // Default label
     protected int cycles;
     protected char commandType;
@@ -212,5 +212,23 @@ public abstract class Command implements Serializable {
 
     public Object getVar() {
         return this.variable;
+    }
+
+    @Override
+    public Command clone() {
+        try {
+            Command cloned = (Command) super.clone();
+            // Deep copy mutable fields
+            cloned.associatedLabels = new LinkedHashSet<>(this.associatedLabels);
+            cloned.associatedVariables = new LinkedHashSet<>(this.associatedVariables);
+            // If variable is mutable, clone it as well
+            if (this.variable != null) {
+                cloned.variable = this.variable.clone();
+            }
+            // Note: associatedEngine is not cloned (shared reference)
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("Cloning not supported", e);
+        }
     }
 }

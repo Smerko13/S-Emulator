@@ -92,7 +92,12 @@ public class Assignment extends SyntheticCommand implements Serializable {
         return vars;
     }
 
-
+    @Override
+    public Assignment clone() {
+        Assignment cloned = (Assignment) super.clone();
+        cloned.assignedVariable = this.assignedVariable != null ? this.assignedVariable.clone() : null;
+        return cloned;
+    }
 
     @Override
     public String toString() {
