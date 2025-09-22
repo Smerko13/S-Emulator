@@ -12,7 +12,9 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 public class JumpEqualVariable extends SyntheticCommand implements Serializable {
@@ -166,6 +168,11 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
     @Override
     public JumpEqualVariable clone() {
         return (JumpEqualVariable) super.clone();
+    }
+
+    @Override
+    public Collection<String> getAssociatedLabels() {
+        return List.of(this.label, this.JEVariableLabel);
     }
 
     @Override

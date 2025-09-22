@@ -12,10 +12,7 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.*;
 
 public class JumpEqualConstant extends SyntheticCommand implements Serializable {
     private final String JEConstantLabel; // Label for the jump if condition is met
@@ -89,6 +86,11 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
     @Override
     public JumpEqualConstant clone() {
         return (JumpEqualConstant) super.clone();
+    }
+
+    @Override
+    public Collection<String> getAssociatedLabels() {
+        return List.of(this.label, this.JEConstantLabel);
     }
 
     @Override

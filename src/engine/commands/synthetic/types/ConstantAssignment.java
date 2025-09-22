@@ -8,9 +8,7 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.*;
 
 public class ConstantAssignment extends SyntheticCommand implements Serializable {
     private final int constantValue;
@@ -60,6 +58,11 @@ public class ConstantAssignment extends SyntheticCommand implements Serializable
     @Override
     public ConstantAssignment clone() {
         return (ConstantAssignment) super.clone();
+    }
+
+    @Override
+    public Collection<String> getAssociatedLabels() {
+        return Collections.singleton(this.label);
     }
 
     @Override

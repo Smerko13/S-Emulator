@@ -87,12 +87,16 @@ public class Quote extends SyntheticCommand {
     @Override
     public void initializeExpandedCommands() {
         List<Command> clonedCommands = new ArrayList<>();
+        Set<Variable> clonedVars = new HashSet<>();
+        Set<String> clonedLabels = new HashSet<>();
         for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
                 for(Command cmd : e.getCommands()) {
                     Command clonedCmd = cmd.clone();
                     clonedCommands.add(clonedCmd);
+                    clonedVars.addAll(List.of(clonedCmd.getAssociatedVariables()));
+                    clonedLabels.addAll(clonedCmd.getAssociatedLabels());
                 }
             }
         }
@@ -180,5 +184,10 @@ public class Quote extends SyntheticCommand {
     @Override
     public Quote clone() {
         return (Quote) super.clone();
+    }
+
+    @Override
+    public Collection<String> getAssociatedLabels() {
+        return Collections.singleton(this.label);
     }
 }

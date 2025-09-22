@@ -10,7 +10,9 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 public class GotoLabel extends SyntheticCommand implements Serializable {
@@ -80,6 +82,11 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
     @Override
     public GotoLabel clone() {
         return (GotoLabel) super.clone();
+    }
+
+    @Override
+    public Collection<String> getAssociatedLabels() {
+        return List.of(this.gototLabel, this.label);
     }
 
     @Override

@@ -231,4 +231,6 @@ public abstract class Command implements Serializable, Cloneable {
             throw new AssertionError("Cloning not supported", e);
         }
     }
+
+    public abstract Collection<String> getAssociatedLabels();
 }

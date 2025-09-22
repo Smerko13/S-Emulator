@@ -11,10 +11,7 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.*;
 
 public class JumpZero extends SyntheticCommand implements Serializable {
     private final String JZLabel;
@@ -84,6 +81,11 @@ public class JumpZero extends SyntheticCommand implements Serializable {
     @Override
     public JumpZero clone() {
         return (JumpZero) super.clone();
+    }
+
+    @Override
+    public Collection<String> getAssociatedLabels() {
+        return List.of(this.label, this.JZLabel);
     }
 
     @Override

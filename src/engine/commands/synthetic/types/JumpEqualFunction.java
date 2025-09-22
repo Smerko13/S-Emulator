@@ -109,6 +109,11 @@ public class JumpEqualFunction extends SyntheticCommand {
     }
 
     @Override
+    public Collection<String> getAssociatedLabels() {
+        return List.of(this.label, this.JEFunctionLabel);
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         if(functionArguments.isEmpty()) {

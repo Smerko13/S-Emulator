@@ -70,4 +70,12 @@ public class JumpNotZero extends BaseCommand implements Serializable {
         return Collections.singleton(this.variable);
     }
 
+    @Override
+    public Collection<String> getAssociatedLabels() {
+        Collection<String> labels = new HashSet<>();
+        labels.add(this.label);
+        labels.add(this.targetLabel);
+        return labels;
+    }
+
 }

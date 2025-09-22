@@ -10,9 +10,7 @@ import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.*;
 
 public class Neutral extends BaseCommand implements Serializable {
     public Neutral(SInstruction instruction, Engine engine) {
@@ -62,5 +60,8 @@ public class Neutral extends BaseCommand implements Serializable {
         return Collections.singleton(this.variable);
     }
 
-
+    @Override
+    public Collection<String> getAssociatedLabels() {
+        return Collections.singleton(this.label);
+    }
 }

@@ -12,9 +12,7 @@ import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.*;
 
 public class Assignment extends SyntheticCommand implements Serializable {
     protected Variable assignedVariable;
@@ -97,6 +95,11 @@ public class Assignment extends SyntheticCommand implements Serializable {
         Assignment cloned = (Assignment) super.clone();
         cloned.assignedVariable = this.assignedVariable != null ? this.assignedVariable.clone() : null;
         return cloned;
+    }
+
+    @Override
+    public Collection<String> getAssociatedLabels() {
+        return Collections.singleton(this.label);
     }
 
     @Override
