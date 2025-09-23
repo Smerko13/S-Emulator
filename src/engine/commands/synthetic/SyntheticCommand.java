@@ -13,6 +13,7 @@ import java.util.Set;
 
 public abstract class SyntheticCommand extends Command implements Serializable {
     protected List<Command> ExpandedCommands;
+    protected boolean didInitialize = false;
 
     public SyntheticCommand(SInstruction instruction,Engine engine) {
         super(instruction,engine);

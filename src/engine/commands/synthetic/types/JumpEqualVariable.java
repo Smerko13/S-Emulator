@@ -194,10 +194,22 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
 
     @Override
     public void replaceVariable(Variable variable, WorkVariable v) {
-        for(Variable var : this.associatedVariables) {
-            if(var.getName().equals(variable.getName())) {
+        if (this.variable.getName().equals(variable.getName())) {
+            this.variable = v;
+            for (Variable var : this.associatedVariables) {
+                if (var.getName().equals(variable.getName())) {
+                    this.associatedVariables.remove(var);
+                    this.associatedVariables.add(v);
+                    break;
+                }
+            }
+        }
+
+        for (Variable var : this.associatedVariables) {
+            if (var.getName().equals(variable.getName())) {
                 this.associatedVariables.remove(var);
                 this.associatedVariables.add(v);
+                break;
             }
         }
     }

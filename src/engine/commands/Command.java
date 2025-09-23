@@ -234,7 +234,18 @@ public abstract class Command implements Serializable, Cloneable {
 
     public abstract Collection<String> getAssociatedLabels();
 
-    public abstract void replaceVariable(Variable variable, WorkVariable v);
+    public void replaceVariable(Variable variable, WorkVariable v) {
+        if (this.variable.getName().equals(variable.getName())) {
+            this.variable = v;
+            for (Variable var : this.associatedVariables) {
+                if (var.getName().equals(variable.getName())) {
+                    this.associatedVariables.remove(var);
+                    this.associatedVariables.add(v);
+                    break;
+                }
+            }
+        }
+    }
 
     public abstract void replaceLabel(String lbl, String newLabel);
 

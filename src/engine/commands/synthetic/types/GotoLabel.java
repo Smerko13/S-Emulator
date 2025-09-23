@@ -95,15 +95,6 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
     }
 
     @Override
-    public void replaceVariable(Variable variable, WorkVariable v) {
-        if(this.variable.getName().equals(variable.getName())) {
-            this.variable = v;
-            this.associatedVariables.remove(variable);
-            this.associatedVariables.add(v);
-        }
-    }
-
-    @Override
     public void replaceLabel(String lbl, String newLabel) {
         if (this.label.equals(lbl)) {
             this.label = newLabel;

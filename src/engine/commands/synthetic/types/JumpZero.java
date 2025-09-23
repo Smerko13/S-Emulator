@@ -94,16 +94,6 @@ public class JumpZero extends SyntheticCommand implements Serializable {
     }
 
     @Override
-    public void replaceVariable(Variable variable, WorkVariable v) {
-        for(Variable var : this.associatedVariables) {
-            if(var.getName().equals(variable.getName())) {
-                this.associatedVariables.remove(var);
-                this.associatedVariables.add(v);
-            }
-        }
-    }
-
-    @Override
     public void replaceLabel(String lbl, String newLabel) {
         if (this.label.equals(lbl)) {
             this.label = newLabel;

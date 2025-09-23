@@ -53,6 +53,8 @@ public class JumpEqualFunction extends SyntheticCommand {
         WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
         this.ExpandedCommands.add(new Quote(newWorkVariable,this.functionName,this.functionArguments,this.label,this,this.associatedEngine));
         this.ExpandedCommands.add(new JumpEqualVariable(this.variable,newWorkVariable,this.JEFunctionLabel,this,this.associatedEngine));
+
+        expandFurther();
     }
 
     @Override
@@ -138,15 +140,6 @@ public class JumpEqualFunction extends SyntheticCommand {
             }
         }
         return null;
-    }
-
-    @Override
-    public void replaceVariable(Variable variable, WorkVariable v) {
-        if(this.variable.getName().equals(variable.getName())) {
-            this.variable = v;
-            this.associatedVariables.remove(variable);
-            this.associatedVariables.add(v);
-        }
     }
 
     @Override

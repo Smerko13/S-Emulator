@@ -24,6 +24,16 @@ public class ConstantAssignment extends SyntheticCommand implements Serializable
 
     @Override
     public void initializeExpandedCommands() {
+        if(this.didInitialize) {
+            this.getExpandedCommands().clear();
+            expansionLogic();
+            return;
+        }
+        expansionLogic();
+        this.didInitialize = true;
+    }
+
+    private void expansionLogic() {
         this.ExpandedCommands.add(new ZeroVariable(this.variable,this.label,this, this.associatedEngine));
         for(int i = 0 ; i < this.constantValue ; i++) {
             this.ExpandedCommands.add(new Increase(this.variable, "   ",this, this.associatedEngine));
@@ -69,15 +79,6 @@ public class ConstantAssignment extends SyntheticCommand implements Serializable
     @Override
     public String toString() {
         return variable.getName() + " <- " + constantValue; // Assigning a constant value to the variable
-    }
-
-    @Override
-    public void replaceVariable(Variable variable, WorkVariable v) {
-        if(this.variable.getName().equals(variable.getName())) {
-            this.variable = v;
-            this.associatedVariables.remove(variable);
-            this.associatedVariables.add(v);
-        }
     }
 
     @Override

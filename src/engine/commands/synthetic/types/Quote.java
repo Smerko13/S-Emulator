@@ -285,7 +285,7 @@ public class Quote extends SyntheticCommand {
         Iterator<Variable> it = this.associatedVariables.iterator();
         while (it.hasNext()) {
             Variable var = it.next();
-            if (var.equals(variable)) {
+            if (var.getName().equals(variable.getName())) {
                 it.remove();
                 this.associatedVariables.add(v);
                 break;
@@ -303,7 +303,7 @@ public class Quote extends SyntheticCommand {
             }
         }
         // Update main variable reference
-        if (this.variable.equals(variable)) {
+        if (this.variable.getName().equals(variable.getName())) {
             this.variable = v;
         }
     }
