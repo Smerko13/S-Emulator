@@ -118,7 +118,6 @@ public class Quote extends SyntheticCommand {
         for(Engine e : this.associatedEngine.subFunctions) {
             if(e.getUserString().equals(functionName)) {
                 List<Variable> varsToPass = new ArrayList<Variable>();
-                Engine clonedEngine = e.clone();
                 for(String arg : argumentList) {
                     if(arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
                         for (Variable v : this.associatedEngine.getVariables()) {
@@ -126,8 +125,8 @@ public class Quote extends SyntheticCommand {
                                 varsToPass.add(v);
                                 break;
                             }
-                            Variable var = new WorkVariable(generateNewWorkVariableName());
-                            varsToPass.add(var);
+                            //Variable var = new WorkVariable(generateNewWorkVariableName());
+                            //varsToPass.add(var);
                         }
                     } else if (arg.charAt(0) == '(') {
                         //handle function calls inside arguments
@@ -145,6 +144,8 @@ public class Quote extends SyntheticCommand {
                                                 break;
                                             }
                                         }
+                                    } else if (subArg.charAt(0) == '(') {
+
                                     } else {
                                         throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
                                     }
@@ -162,10 +163,15 @@ public class Quote extends SyntheticCommand {
                     }
                 }
                 result = e.executeFunction(varsToPass);
+                break;
             }
         }
         this.variable.setValue(result);
         return null;
+    }
+
+    private void handleFunctionCall(String arg) {
+
     }
 
     @Override
