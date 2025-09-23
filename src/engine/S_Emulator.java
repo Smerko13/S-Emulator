@@ -13,15 +13,11 @@ public interface S_Emulator {
 
     Boolean readProgramFromXml(String filePath);
 
-    String getListOfInputParameters(int expansionLevel);
-
     Set<String> getLabels(int expansionLevel);
 
     List<Command> getCommands();
 
     int getMaxExpansionDepth();
-
-    void SetInputVariablesValues(String[] values);
 
     Set<Variable> getVariables();
 
@@ -33,11 +29,7 @@ public interface S_Emulator {
 
     List<Command> getCommandsAtDesiredLevel(int expansionLevel);
 
-    void arrangeIDs(int expansionLevel);
-
     void reset();
-
-    void saveCurrentProgram(String filePath);
 
     static Engine loadSavedProgram(String filePath) {
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filePath))) {

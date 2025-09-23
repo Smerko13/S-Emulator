@@ -200,17 +200,6 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
         };
     }
 
-    public String getListOfInputParameters(int expansionLevel) {
-        StringBuilder sb = new StringBuilder();
-        for(Variable variable : variables) {
-            if(variable instanceof InputVariable) {
-                sb.append(variable.getName()).append(" ");
-            }
-        }
-
-        return sb.toString().trim();
-    }
-
     @Override
     public Set<String> getLabels(int expansionLevel) {
         Set<String> labels = new LinkedHashSet<>();
@@ -244,30 +233,6 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
             }
         }
         return maxDepth;
-    }
-
-    @Override
-    public void SetInputVariablesValues(String[] values) {
-        int index = 0;
-        for( Variable variable : variables) {
-            if (variable instanceof InputVariable && variable.getName().charAt(1) == (index+1)+ '0') {
-                if (index < values.length) {
-                    variable.setValue(Integer.parseInt(values[index]));
-                    ((InputVariable) variable).setOriginalValue(Integer.parseInt(values[index]));
-                }
-                index++;
-            }
-        }
-        if(index < values.length) {
-            while(index < values.length) {
-                InputVariable newInputVar = new InputVariable("x" + (index+1), Integer.parseInt(values[index]), false);
-                newInputVar.setOriginalValue(Integer.parseInt(values[index]));
-                newInputVar.setValue(Integer.parseInt(values[index]));
-                //variables.add(newInputVar);
-                extraInputVariables.add(newInputVar);
-                index++;
-            }
-        }
     }
 
     public Set<Variable> getVariables() {
@@ -408,15 +373,6 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     }
 
     @Override
-    public void saveCurrentProgram(String filePath) {
-        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filePath + "\\" + this.currentProgramName))) {
-            out.writeObject(this);
-        } catch (Exception e) {
-            throw new RuntimeException("[ERROR] Could not save the program.",e);
-        }
-    }
-
-    @Override
     public int getCurrentDegree() {
         return currentDegree;
     }
@@ -517,10 +473,13 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     }
 
     private void assignVarsToCommands(List<Variable> variables) {
-        for(Variable var : variables) {
-            for(Variable engineVar : this.variables) {
-                if(var.getName().equals(engineVar.getName())) {
-                    engineVar.setValue(var.getValue());
+        if(variables.isEmpty()) {return;}
+        Variable currentVar = variables.getFirst();
+        for(Variable v : this.variables) {
+            if(v instanceof InputVariable) {
+                v.setValue(currentVar.getValue());
+                if(variables.indexOf(currentVar) + 1 < variables.size()) {
+                    currentVar = variables.get(variables.indexOf(currentVar) + 1);
                 }
             }
         }
@@ -571,5 +530,18 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
 
     public Variable getOutputVar() {
         return this.variables.stream().filter(v -> v instanceof OutputVariable).findFirst().orElse(null);
+    }
+
+    public int getReturnValue() {
+        for(Variable var : this.variables) {
+            if(var instanceof OutputVariable) {
+                return var.getValue();
+            }
+        }
+        return 0;
+    }
+
+    public void setVariables(ArrayList<Variable> variables) {
+        this.variables.addAll(variables);
     }
 }

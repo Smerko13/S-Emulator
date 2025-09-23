@@ -3,243 +3,170 @@ package engine.commands.synthetic.types;
 import engine.Engine;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
-import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
-import engine.commands.Command;
-import engine.commands.base.types.*;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 public class Quote extends SyntheticCommand {
     String functionName;
-    List<String> functionArguments;
-    LinkedHashMap<Variable, Boolean> functionArgumentsVariables;
-
-
-    public Quote(Variable assignedVariable, String functionName, List<String> functionArguments, String label, Command parentCommand, Engine engine) {
-        super(assignedVariable, label, parentCommand, engine);
-        this.commandName = "QUOTE";
-        this.functionName = functionName;
-        this.functionArguments = functionArguments;
-        this.functionArgumentsVariables = new LinkedHashMap<>();
-        initializeFunctionArgumentVariables();
-        this.associatedVariables.addAll(functionArgumentsVariables.keySet());
-        this.cycles = 5 + calculateSubFunctionCycles();
-        this.levelOfExpansion = calculateSubFunctionExpansionLevel() + 1;
-    }
+    String functionArguments;
+    List<String> argumentList;
 
     public Quote(SInstruction instruction, Engine engine) {
         super(instruction, engine);
         this.commandName = "QUOTE";
-        this.functionName = findCorrectFunctionName(instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue());
-        String args = instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue();
-        this.functionArguments = (args.isEmpty() ? new ArrayList<>() : Arrays.asList(args.split(",")));
-        this.functionArgumentsVariables = new LinkedHashMap<>();
-        initializeFunctionArgumentVariables();
-        this.associatedVariables.addAll(functionArgumentsVariables.keySet());
-        this.cycles = 5 + calculateSubFunctionCycles();
-        this.levelOfExpansion = calculateSubFunctionExpansionLevel() + 1;
-    }
-
-    private void initializeFunctionArgumentVariables() {
-        for(String arg : functionArguments) {
-            boolean found = false;
-            for(Variable var : this.associatedEngine.getVariables()) {
-                if (var.getName().equals(arg)) {
-                    functionArgumentsVariables.put(var, true);
-                    found = true;
-                    break;
-                }
-            }
-            if(!found) {
-                Variable newVar = getVariable(arg);
-                this.associatedEngine.getVariables().add(newVar);
-                functionArgumentsVariables.put(newVar, true);
-            }
-        }
-    }
-
-    private Variable getVariable(String arg) {
-        Variable newVar = null;
-        if(arg.charAt(0) == 'z') { newVar = new WorkVariable(arg);}
-        else if(arg.charAt(0) == 'x') { newVar = new InputVariable(arg);}
-        else if (arg.charAt(0) == 'y') { 
-            for(Variable var : this.associatedEngine.getVariables()) {
-                if(var instanceof InputVariable && var.getName().equals(arg)) {
-                    newVar = var;
-                }
-            }
-        }
-        return newVar;
-    }
-
-    private int calculateSubFunctionExpansionLevel() {
-        int maxLevel = 2;
+        String name = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         for(Engine e : this.associatedEngine.subFunctions) {
-            String userString = e.getUserString();
-            if(userString.equals(functionName)) {
-                for(Command cmd : e.getCommands()) {
-                    if(cmd.getExpansionDepth() > maxLevel) {
-                        maxLevel = cmd.getExpansionDepth();
+            if(e.getCurrentProgramName().equals(name)) {
+                this.functionName = e.getUserString();
+                break;
+            }
+        }
+        this.functionArguments = instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue();
+        this.argumentList = initializeArgumentList(this.functionArguments);
+        initializeAssociatedVariables();
+    }
+
+    private void initializeAssociatedVariables() {
+        List <String> tempList = new ArrayList<>(List.of(this.functionArguments.split(",")));
+        if(functionArguments.isEmpty()) {return;}
+        tempList.removeIf(s -> s.charAt(0) == '('); //remove function calls
+        for (String arg : tempList) {
+            if(arg.startsWith("x") || arg.startsWith("z") || arg.startsWith("y")) {
+                int index = 0;
+                for(char c: arg.toCharArray()) {
+                    if(c == 'x' || c == 'y' || c == 'z' || Character.isDigit(c)) {
+                        index++;
+                    } else {
+                        break;
                     }
                 }
+                String cleanedArg = arg.substring(0, index);
+                boolean found = false;
+                for (Variable v : this.associatedEngine.getVariables()) {
+                    if (v.getName().equals(cleanedArg)) {
+                        this.associatedVariables.add(v);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    Variable var = new InputVariable(cleanedArg);
+                    this.associatedEngine.getVariables().add(var);
+                    this.associatedVariables.add(var);
+                }
             }
         }
-        return maxLevel;
     }
 
-    private int calculateSubFunctionCycles() {
+    public Quote(String arg, Engine associatedEngine, Variable tempVar) {
+        super(tempVar, "", null, associatedEngine);
+        this.commandName = "QUOTE";
+        String name = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
         for(Engine e : this.associatedEngine.subFunctions) {
-            String userString = e.getUserString();
-            if(userString.equals(functionName)) {
-                return e.getTotalCycles();
+            if (e.getCurrentProgramName().equals(name)) {
+                this.functionName = e.getUserString();
+                break;
             }
         }
-        return 0;
+        this.functionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
+        this.argumentList = initializeArgumentList(this.functionArguments);
+    }
+
+    private List<String> initializeArgumentList(String functionArguments) {
+        List<String> returnList = new ArrayList<String>();
+        int i = 0;
+        if(functionArguments.isEmpty()) {
+            return returnList;
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for(char c : functionArguments.toCharArray()) {
+                if (c == '(') { i++; }
+                if (c == ')') { i--; }
+                if (c == ',' && i == 0) {
+                    returnList.add(sb.toString());
+                    sb.setLength(0);
+                } else {
+                    sb.append(c);
+                }
+            }
+            returnList.add(sb.toString());
+            return returnList;
+        }
+    }
+
+    public Quote(WorkVariable newWorkVariable, String functionName, List<String> functionArguments, String label, JumpEqualFunction jumpEqualFunction, Engine associatedEngine) {
+        super(newWorkVariable, label, jumpEqualFunction, associatedEngine);
     }
 
     @Override
     public void initializeExpandedCommands() {
-        if(this.didInitialize) {
-            this.getExpandedCommands().clear();
-            expansionLogic();
-            return;
-        }
-        expansionLogic();
-        this.didInitialize = true;
-    }
 
-    private void expansionLogic() {
-        String newOutputVarName = null;
-
-        if(!this.label.trim().isEmpty()) {
-            this.ExpandedCommands.add(new Neutral(this.associatedEngine.getOutputVar(),this.label,this, this.associatedEngine));
-        }
-
-        for(Engine e : this.associatedEngine.subFunctions) {
-            String userString = e.getUserString();
-            boolean exitLabelRequired = false;
-            String exitLabel = null;
-            if(userString.equals(functionName)) {
-                Engine clonedSubFunction = e.clone();
-                List<Command> subFunctionCommands = clonedSubFunction.getCommands();
-
-                for (String lbl : clonedSubFunction.labels) {
-                    if (lbl.equals("EXIT")) continue;
-                    if (!this.associatedEngine.labels.contains(lbl)) {
-                        this.associatedEngine.labels.add(lbl);
-                    } else {
-                        String newLabel = generateNewLabel();
-                        for (Command cmd : subFunctionCommands) {
-                            cmd.replaceLabel(lbl, newLabel);
-                        }
-                        this.associatedEngine.labels.add(newLabel);
-                    }
-                }
-
-                for(Variable v : clonedSubFunction.getVariables()) {
-                    if(v instanceof WorkVariable) {
-                        String newWorkVarName = generateNewWorkVariableName();
-                        WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
-                        this.associatedEngine.getVariables().add(newWorkVar);
-                        for(Command cmd : subFunctionCommands) {
-                            cmd.replaceVariable(v, newWorkVar);
-                        }
-                    } else if (v instanceof OutputVariable) {
-                        newOutputVarName = generateNewWorkVariableName();
-                        WorkVariable newWorkVar = new WorkVariable(newOutputVarName);
-                        this.associatedEngine.getVariables().add(newWorkVar);
-                        for(Command cmd : subFunctionCommands) {
-                            cmd.replaceVariable(v, newWorkVar);
-                        }
-                    } else if (v instanceof InputVariable) {
-                        String newWorkVarName = generateNewWorkVariableName();
-                        WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
-                        this.associatedEngine.getVariables().add(newWorkVar);
-                        for(Command cmd : subFunctionCommands) {
-                            cmd.replaceVariable(v, newWorkVar);
-                        }
-                        for(Variable funcArgVar : functionArgumentsVariables.keySet()) {
-                            if(functionArgumentsVariables.get(funcArgVar) == true) {
-                                this.ExpandedCommands.add(new Assignment(newWorkVar,"   ", funcArgVar, this, this.associatedEngine));
-                                functionArgumentsVariables.put(funcArgVar, false);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                for (Command cmd : subFunctionCommands) {// might cause some  (last two line)
-                    String targetLabel = cmd.getTargetLabel();
-                    if (targetLabel != null && targetLabel.equals("EXIT")){
-                        exitLabel = this.generateNewLabel()+"END";
-                        this.associatedEngine.labels.add(exitLabel);
-                        cmd.replaceLabel("EXIT", exitLabel);
-                        exitLabelRequired = true;
-                    }
-                    cmd.setParent(this);
-                    cmd.setAssociatedEngine(this.associatedEngine);
-                }
-
-                this.ExpandedCommands.addAll(subFunctionCommands);
-
-                for(Variable v: this.associatedEngine.getVariables()) {
-                    if(v.getName().equals(newOutputVarName)) {
-                        if(!exitLabelRequired) {
-                            this.ExpandedCommands.add(new Assignment(this.variable, "   ", v, this, this.associatedEngine));
-                        } else {
-                            this.ExpandedCommands.add(new Assignment(this.variable, exitLabel, v, this, this.associatedEngine));
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        expandFurther();
-    }
-
-
-
-        @Override
-    public String execute() {
-        List<Variable> variables = new ArrayList<>();
-        for(String arg : functionArguments) {
-            for (Variable v : this.associatedEngine.getVariables()) {
-                if(v.getName().equals(arg)) {
-                    variables.add(v);
-                }
-            }
-        }
-        Set<Variable> snapshot = this.associatedEngine.getVariables().stream()
-                .map(Variable::clone)
-                .collect(Collectors.toSet());
-        for(Engine e : this.associatedEngine.subFunctions) {
-            String userString = e.getUserString();
-            if(userString.equals(functionName)) {
-                int returnValue = e.executeFunction(variables);
-                setBackOriginalVariables(snapshot);
-                this.variable.setValue(returnValue);
-                return null;
-            }
-        }
-        return null;
-    }
-
-    private void setBackOriginalVariables(Set<Variable> snapshot) {
-        for(Variable v : snapshot) {
-            for(Variable originalVar : this.associatedEngine.getVariables()) {
-                if(v.getName().equals(originalVar.getName())) {
-                    originalVar.setValue(v.getValue());
-                }
-            }
-        }
     }
 
     @Override
-    public boolean isValid() {//need to fix
+    public String execute() {
+        int result = 0;
+        for(Engine e : this.associatedEngine.subFunctions) {
+            if(e.getUserString().equals(functionName)) {
+                List<Variable> varsToPass = new ArrayList<Variable>();
+                Engine clonedEngine = e.clone();
+                for(String arg : argumentList) {
+                    if(arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
+                        for (Variable v : this.associatedEngine.getVariables()) {
+                            if(v.getName().equals(arg)) {
+                                varsToPass.add(v);
+                                break;
+                            }
+                            Variable var = new WorkVariable(generateNewWorkVariableName());
+                            varsToPass.add(var);
+                        }
+                    } else if (arg.charAt(0) == '(') {
+                        //handle function calls inside arguments
+                        for (Engine subE : this.associatedEngine.subFunctions) {
+                            String name = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
+                            if (subE.getCurrentProgramName().equals(name)) {
+                                List<Variable> subVarsToPass = new ArrayList<Variable>();
+                                String subFunctionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
+                                List<String> subArgumentList = initializeArgumentList(subFunctionArguments);
+                                for (String subArg : subArgumentList) {
+                                    if (subArg.charAt(0) == 'x' || subArg.charAt(0) == 'y' || subArg.charAt(0) == 'z') {
+                                        for (Variable v : this.associatedEngine.getVariables()) {
+                                            if (v.getName().equals(subArg)) {
+                                                subVarsToPass.add(v);
+                                                break;
+                                            }
+                                        }
+                                    } else {
+                                        throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
+                                    }
+                                }
+                                subE.setVariables(new ArrayList<>(this.associatedEngine.getVariables()));
+                                int resultOfSubFunction = subE.executeFunction(subVarsToPass);
+                                Variable var = new WorkVariable("temp");
+                                var.setValue(resultOfSubFunction);
+                                varsToPass.add(var);
+                                break;
+                            }
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
+                    }
+                }
+                result = e.executeFunction(varsToPass);
+            }
+        }
+        this.variable.setValue(result);
+        return null;
+    }
+
+    @Override
+    public boolean isValid() {
         return true;
     }
 
@@ -250,92 +177,25 @@ public class Quote extends SyntheticCommand {
 
     @Override
     public Set<Variable> getAllVariables() {
-        Set<Variable> vars = new HashSet<>(functionArgumentsVariables.keySet());
-        vars.add(this.variable);
-        return vars;
-    }
-
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        if(functionArguments.isEmpty()) {
-            return this.variable.getName() + " <- (" + functionName + ")";
-        } else if (functionArguments.size() == 1) {
-            return this.variable.getName() + " <- (" + functionName + "," + functionArguments.getFirst() + ")";
-        } else {
-            for (String arg : functionArguments) {
-                sb.append(arg).append(", ");
-            }
-            return this.variable.getName() + " <- (" + functionName + "," + sb + ")";
-        }
-    }
-
-    private String findCorrectFunctionName(String functionName) {
-        for(Engine e : this.associatedEngine.subFunctions) {
-            if(e.getCurrentProgramName().equals(functionName)) {
-                return e.getUserString();
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Quote clone() {
-        return (Quote) super.clone();
+        return Set.copyOf(this.associatedVariables);
     }
 
     @Override
     public Collection<String> getAssociatedLabels() {
-        return Collections.singleton(this.label);
-    }
-
-    @Override
-    public void replaceVariable(Variable variable, WorkVariable v) {
-        // Safely update associatedVariables
-        Iterator<Variable> it = this.associatedVariables.iterator();
-        while (it.hasNext()) {
-            Variable var = it.next();
-            if (var.getName().equals(variable.getName())) {
-                it.remove();
-                this.associatedVariables.add(v);
-                break;
-            }
-        }
-        // Update functionArgumentsVariables
-        if (this.functionArgumentsVariables.containsKey(variable)) {
-            Boolean value = this.functionArgumentsVariables.remove(variable);
-            this.functionArgumentsVariables.put(v, value);
-        }
-        // Update functionArguments if needed
-        for (int i = 0; i < this.functionArguments.size(); i++) {
-            if (this.functionArguments.get(i).equals(variable.getName())) {
-                this.functionArguments.set(i, v.getName());
-            }
-        }
-        // Update main variable reference
-        if (this.variable.getName().equals(variable.getName())) {
-            this.variable = v;
-        }
+        return List.of();
     }
 
     @Override
     public void replaceLabel(String lbl, String newLabel) {
-        if (this.label.equals(lbl)) {
-            this.label = newLabel;
-        }
-        this.associatedLabels.remove(lbl);
-        this.associatedLabels.add(newLabel);
+
     }
 
     @Override
-    public int getExpansionDepth() {
-        int maxDepth = 1; // Start with 1 for the current command
-        for (Command cmd : this.getExpandedCommands()) {
-            if (cmd.getExpansionDepth() > maxDepth) {
-                maxDepth = cmd.getExpansionDepth() + 1; // Add 1 for the current command
-            }
+    public String toString() {
+        if(functionArguments.isEmpty()) {
+            return variable.getName() + " <- (" + functionName + ")";
+        } else {
+            return variable.getName() + " <- (" + functionName + "," + functionArguments + ")";
         }
-        return maxDepth;
     }
 }
