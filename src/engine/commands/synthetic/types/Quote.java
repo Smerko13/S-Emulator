@@ -129,35 +129,7 @@ public class Quote extends SyntheticCommand {
                             //varsToPass.add(var);
                         }
                     } else if (arg.charAt(0) == '(') {
-                        //handle function calls inside arguments
-                        for (Engine subE : this.associatedEngine.subFunctions) {
-                            String name = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
-                            if (subE.getCurrentProgramName().equals(name)) {
-                                List<Variable> subVarsToPass = new ArrayList<Variable>();
-                                String subFunctionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
-                                List<String> subArgumentList = initializeArgumentList(subFunctionArguments);
-                                for (String subArg : subArgumentList) {
-                                    if (subArg.charAt(0) == 'x' || subArg.charAt(0) == 'y' || subArg.charAt(0) == 'z') {
-                                        for (Variable v : this.associatedEngine.getVariables()) {
-                                            if (v.getName().equals(subArg)) {
-                                                subVarsToPass.add(v);
-                                                break;
-                                            }
-                                        }
-                                    } else if (subArg.charAt(0) == '(') {
-
-                                    } else {
-                                        throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
-                                    }
-                                }
-                                subE.setVariables(new ArrayList<>(this.associatedEngine.getVariables()));
-                                int resultOfSubFunction = subE.executeFunction(subVarsToPass);
-                                Variable var = new WorkVariable("temp");
-                                var.setValue(resultOfSubFunction);
-                                varsToPass.add(var);
-                                break;
-                            }
-                        }
+                        varsToPass.add(handleFunctionCall(arg));
                     } else {
                         throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                     }
@@ -170,8 +142,39 @@ public class Quote extends SyntheticCommand {
         return null;
     }
 
-    private void handleFunctionCall(String arg) {
+    private Variable handleFunctionCall(String arg) {
+        //handle function calls inside arguments
+        Variable var = null;
+        List<Variable> subVarsToPass = null;
+        for (Engine subE : this.associatedEngine.subFunctions) {
+            String name = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
+            if (subE.getCurrentProgramName().equals(name)) {
+                subVarsToPass = new ArrayList<Variable>();
+                String subFunctionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
+                List<String> subArgumentList = initializeArgumentList(subFunctionArguments);
+                for (String subArg : subArgumentList) {
+                    if (subArg.charAt(0) == 'x' || subArg.charAt(0) == 'y' || subArg.charAt(0) == 'z') {
+                        for (Variable v : this.associatedEngine.getVariables()) {
+                            if (v.getName().equals(subArg)) {
+                                subVarsToPass.add(v);
+                                break;
+                            }
+                        }
+                    } else if (subArg.charAt(0) == '(') {
+                        subVarsToPass.add(handleFunctionCall(subArg));
 
+                    } else {
+                        throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
+                    }
+                }
+                subE.setVariables(new ArrayList<>(this.associatedEngine.getVariables()));
+                int resultOfSubFunction = subE.executeFunction(subVarsToPass);
+                var = new WorkVariable("temp");
+                var.setValue(resultOfSubFunction);
+                break;
+            }
+        }
+        return var;
     }
 
     @Override
