@@ -54,11 +54,21 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
 
     @Override
     public void initializeExpandedCommands() {
+        if(this.didInitialize) {
+            this.getExpandedCommands().clear();
+            expansionLogic();
+            return;
+        }
+        expansionLogic();
+        this.didInitialize = true;
+    }
+
+    private void expansionLogic() {
         this.ExpandedCommands.add(new Increase(this.variable, this.label,this,this.associatedEngine));
         this.ExpandedCommands.add(new JumpNotZero(this.variable,this.gototLabel, "   ",this, this.associatedEngine));
     }
 
-    @Override
+        @Override
     public String execute() {
         this.variable.setValue(this.variable.getValue() + 1);
         return gototLabel;

@@ -81,6 +81,16 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
 
     @Override
     public void initializeExpandedCommands() {
+        if(this.didInitialize) {
+            this.getExpandedCommands().clear();
+            expansionLogic();
+            return;
+        }
+        expansionLogic();
+        this.didInitialize = true;
+    }
+
+    private void expansionLogic() {
         WorkVariable newWorkVariable1 = new WorkVariable(generateNewWorkVariableName());
         this.associatedEngine.getVariables().add(newWorkVariable1);
         WorkVariable newWorkVariable2 = new WorkVariable(generateNewWorkVariableName());
@@ -112,7 +122,7 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
         expandFurther();
     }
 
-    @Override
+        @Override
     public String execute() {
         int varValue = this.variable.getValue();
         int checkedValue;

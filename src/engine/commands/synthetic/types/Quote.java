@@ -103,6 +103,16 @@ public class Quote extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
+        if(this.didInitialize) {
+            this.getExpandedCommands().clear();
+            expansionLogic();
+            return;
+        }
+        expansionLogic();
+        this.didInitialize = true;
+    }
+
+    private void expansionLogic() {
         String newOutputVarName = null;
 
         if(!this.label.trim().isEmpty()) {
@@ -192,7 +202,8 @@ public class Quote extends SyntheticCommand {
     }
 
 
-    @Override
+
+        @Override
     public String execute() {
         List<Variable> variables = new ArrayList<>();
         for(String arg : functionArguments) {

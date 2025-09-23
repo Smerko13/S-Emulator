@@ -50,6 +50,16 @@ public class JumpEqualFunction extends SyntheticCommand {
 
     @Override
     public void initializeExpandedCommands() {
+        if(this.didInitialize) {
+            this.getExpandedCommands().clear();
+            expansionLogic();
+            return;
+        }
+        expansionLogic();
+        this.didInitialize = true;
+    }
+
+    private void expansionLogic() {
         WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
         this.ExpandedCommands.add(new Quote(newWorkVariable,this.functionName,this.functionArguments,this.label,this,this.associatedEngine));
         this.ExpandedCommands.add(new JumpEqualVariable(this.variable,newWorkVariable,this.JEFunctionLabel,this,this.associatedEngine));
@@ -57,7 +67,7 @@ public class JumpEqualFunction extends SyntheticCommand {
         expandFurther();
     }
 
-    @Override
+        @Override
     public String execute() {
         int returnValue = -1;
         List<Variable> variables = new ArrayList<>();

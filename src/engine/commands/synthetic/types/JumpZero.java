@@ -40,6 +40,16 @@ public class JumpZero extends SyntheticCommand implements Serializable {
 
     @Override
     public void initializeExpandedCommands() {
+        if(this.didInitialize) {
+            this.getExpandedCommands().clear();
+            expansionLogic();
+            return;
+        }
+        expansionLogic();
+        this.didInitialize = true;
+    }
+
+    private void expansionLogic() {
         String newLabel = this.generateNewLabel();
         this.associatedEngine.labels.add(newLabel);
         this.ExpandedCommands.add(new JumpNotZero(this.variable, newLabel, this.label, this, this.associatedEngine));
@@ -52,7 +62,7 @@ public class JumpZero extends SyntheticCommand implements Serializable {
         expandFurther();
     }
 
-    @Override
+        @Override
     public String execute() {
         // Check if the variable is zero
         if (variable.getValue() == 0) {

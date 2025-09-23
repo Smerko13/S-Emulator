@@ -31,6 +31,16 @@ public class ZeroVariable extends SyntheticCommand implements Serializable {
     }
 
     public void initializeExpandedCommands() {
+        if(this.didInitialize) {
+            this.getExpandedCommands().clear();
+            expansionLogic();
+            return;
+        }
+        expansionLogic();
+        this.didInitialize = true;
+    }
+
+    private void expansionLogic() {
         String newLabel = generateNewLabel();
         this.associatedEngine.labels.add(newLabel);
         if(this.label.equals("   ")) {
@@ -43,7 +53,7 @@ public class ZeroVariable extends SyntheticCommand implements Serializable {
         expandFurther();
     }
 
-    @Override
+        @Override
     public String execute() {
         this.variable.setValue(0);
         return null;

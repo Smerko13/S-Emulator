@@ -38,6 +38,16 @@ public class Assignment extends SyntheticCommand implements Serializable {
 
     @Override
     public void initializeExpandedCommands() {
+        if(this.didInitialize) {
+            this.getExpandedCommands().clear();
+            expansionLogic();
+            return;
+        }
+        expansionLogic();
+        this.didInitialize = true;
+    }
+
+    private void expansionLogic(){
         String newLabel1 = generateNewLabel();
         this.associatedEngine.labels.add(newLabel1);
         String newLabel2 = generateNewLabel();

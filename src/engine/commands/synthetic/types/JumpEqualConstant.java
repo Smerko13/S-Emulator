@@ -33,6 +33,16 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
 
     @Override
     public void initializeExpandedCommands() {
+        if(this.didInitialize) {
+            this.getExpandedCommands().clear();
+            expansionLogic();
+            return;
+        }
+        expansionLogic();
+        this.didInitialize = true;
+    }
+
+    private void expansionLogic() {
         String newLabel = generateNewLabel();
         this.associatedEngine.labels.add(newLabel);
         WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
@@ -54,7 +64,7 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
         expandFurther();
     }
 
-    @Override
+        @Override
     public String execute() {
         // Check if the variable's value equals the constant value
         if (variable.getValue() == constantValue) {
