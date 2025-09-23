@@ -27,6 +27,9 @@ public class Quote extends SyntheticCommand {
                 break;
             }
         }
+        if (this.functionName == null) {
+            throw new IllegalArgumentException("Function name not found for Quote command: " + name);
+        }
         this.functionArguments = instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue();
         this.argumentList = initializeArgumentList(this.functionArguments);
         initializeAssociatedVariables();
