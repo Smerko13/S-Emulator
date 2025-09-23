@@ -2,11 +2,8 @@ package engine.commands.base.types;
 
 import engine.Engine;
 import engine.arguments.Variable;
-import engine.arguments.types.InputVariable;
-import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
-import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
 import java.io.Serializable;
@@ -23,10 +20,6 @@ public class Increase extends BaseCommand implements Serializable {
         super(variable, label, parentCommand, engine);
         this.commandName = "INCREASE";
         this.cycles = 1;
-    }
-
-    public Increase(Command cmd, Quote quote, String label, Variable outputVar, Engine engine) {
-        super(cmd, quote, label, outputVar, engine);
     }
 
     @Override

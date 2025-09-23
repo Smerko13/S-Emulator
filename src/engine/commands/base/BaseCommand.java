@@ -40,4 +40,7 @@ public abstract class BaseCommand extends Command implements Serializable {
 
     public abstract Set<Variable> getAllVariables();
 
+    public int getExpansionDepth() {
+        return this.levelOfExpansion;
+    }
 }

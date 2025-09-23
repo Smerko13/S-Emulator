@@ -5,6 +5,7 @@ import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
+import engine.commands.base.BaseCommand;
 import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
@@ -131,9 +132,7 @@ public abstract class Command implements Serializable, Cloneable {
     }
 
 
-    public int getExpansionDepth() {
-        return levelOfExpansion;
-    }
+    public abstract int getExpansionDepth();
 
 
     public abstract String execute();
@@ -264,4 +263,6 @@ public abstract class Command implements Serializable, Cloneable {
     public void setAssociatedEngine(Engine engine) {
         this.associatedEngine = engine;
     }
+
+
 }

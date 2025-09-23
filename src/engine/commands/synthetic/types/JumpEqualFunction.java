@@ -3,6 +3,7 @@ package engine.commands.synthetic.types;
 import engine.Engine;
 import engine.arguments.Variable;
 import engine.arguments.types.WorkVariable;
+import engine.commands.Command;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
@@ -162,5 +163,16 @@ public class JumpEqualFunction extends SyntheticCommand {
         }
         this.associatedLabels.remove(lbl);
         this.associatedLabels.add(newLabel);
+    }
+
+    @Override
+    public int getExpansionDepth() {
+        int maxDepth = 1; // Start with 1 for the current command
+        for (Command cmd : this.getExpandedCommands()) {
+            if (cmd.getExpansionDepth() > maxDepth) {
+                maxDepth = cmd.getExpansionDepth() + 1; // Add 1 for the current command
+            }
+        }
+        return maxDepth;
     }
 }
