@@ -114,9 +114,10 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
         for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
+            String functionName1 = e.getCurrentProgramName();
             boolean exitLabelRequired = false;
             String exitLabel = null;
-            if(userString.equals(functionName)) {
+            if(userString.equals(functionName) || this.functionName.equals(functionName1)) {
                 Engine clonedSubFunction = e.clone();
                 List<Command> subFunctionCommands = clonedSubFunction.getCommands();
 
@@ -133,46 +134,49 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     }
                 }
 
+                int index = 0;
                 for(Variable v : clonedSubFunction.getVariables()) {
-                    if(v instanceof WorkVariable) {
+                    if (v instanceof WorkVariable) {
                         String newWorkVarName = generateNewWorkVariableName();
                         WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
                         this.associatedEngine.getVariables().add(newWorkVar);
-                        for(Command cmd : subFunctionCommands) {
+                        for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
                         }
                     } else if (v instanceof OutputVariable) {
                         newOutputVarName = generateNewWorkVariableName();
                         WorkVariable newWorkVar = new WorkVariable(newOutputVarName);
                         this.associatedEngine.getVariables().add(newWorkVar);
-                        for(Command cmd : subFunctionCommands) {
+                        for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
                         }
                     } else if (v instanceof InputVariable) {
                         String newWorkVarName = generateNewWorkVariableName();
                         WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
                         this.associatedEngine.getVariables().add(newWorkVar);
-                        for(Command cmd : subFunctionCommands) {
+                        for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
                         }
-                        for(String arg : argumentList) {
-                            if(arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
-                                for(Variable var : this.associatedEngine.getVariables()) {
-                                    if(var.getName().equals(arg)) {
-                                        this.ExpandedCommands.add(new Assignment(newWorkVar,"   ", var, this, this.associatedEngine));
-                                        break;
-                                    }
+                        String arg = this.argumentList.get(index++);
+                        if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
+                            for (Variable var : this.associatedEngine.getVariables()) {
+                                if (var.getName().equals(arg)) {
+                                    this.ExpandedCommands.add(new Assignment(newWorkVar, "   ", var, this, this.associatedEngine));
+                                    break;
                                 }
-//                            } else if (arg.charAt(0) == '(') {
-//                                Variable funcCallVar = handleFunctionCall(arg);
-//                                funcCallVar.setName(arg);
-//                                this.ExpandedCommands.add(new Assignment(newWorkVar,"   ", funcCallVar, this, this.associatedEngine));
-//                            } else {
-                                //throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                             }
+                        } else if (arg.charAt(0) == '(') {
+                            String functionName = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
+                            String functionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
+                            List<String> subArgumentList = initializeArgumentList(functionArguments);
+                            this.ExpandedCommands.add(new Quote(newWorkVar, functionName, subArgumentList, "   ", this, this.associatedEngine));
+                        } else {
+                            throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                         }
+
                     }
                 }
+
 
                 for (Command cmd : subFunctionCommands) {// might cause some  (last two line)
                     String targetLabel = cmd.getTargetLabel();
