@@ -14,6 +14,7 @@ import java.util.*;
 
 public class Quote extends SyntheticCommand implements Cloneable {
     String functionName;
+    String userString;
     String functionArguments;
     List<String> argumentList;
 
@@ -23,7 +24,8 @@ public class Quote extends SyntheticCommand implements Cloneable {
         String name = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         for (Engine e : this.associatedEngine.subFunctions) {
             if (e.getCurrentProgramName().equals(name)) {
-                this.functionName = e.getUserString();
+                this.userString = e.getUserString();
+                this.functionName = e.getCurrentProgramName();
                 break;
             }
         }
@@ -38,7 +40,13 @@ public class Quote extends SyntheticCommand implements Cloneable {
     public Quote(Variable assignedVariable, String functionName, List<String> functionArguments, String label, Command parentCommand, Engine engine) {
         super(assignedVariable, label, parentCommand, engine);
         this.commandName = "QUOTE";
-        this.functionName = functionName;
+        this.functionName = functionName; // fix needed
+        for(Engine e : this.associatedEngine.subFunctions) {
+            if(e.getCurrentProgramName().equals(functionName)) {
+                this.userString = e.getUserString();
+                break;
+            }
+        }
         this.argumentList = functionArguments;
         this.functionArguments = String.join(",", functionArguments);
         initializeAssociatedVariables();
@@ -113,11 +121,10 @@ public class Quote extends SyntheticCommand implements Cloneable {
         }
 
         for(Engine e : this.associatedEngine.subFunctions) {
-            String userString = e.getUserString();
-            String functionName1 = e.getCurrentProgramName();
+            String SubFunctionName = e.getCurrentProgramName();
             boolean exitLabelRequired = false;
             String exitLabel = null;
-            if(userString.equals(functionName) || this.functionName.equals(functionName1)) {
+            if(SubFunctionName.equals(functionName) /*|| this.functionName.equals(functionName1)*/) {
                 Engine clonedSubFunction = e.clone();
                 List<Command> subFunctionCommands = clonedSubFunction.getCommands();
 
@@ -229,7 +236,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
     public String execute() {
         int result = 0;
         for (Engine e : this.associatedEngine.subFunctions) {
-            if (e.getUserString().equals(functionName)) {
+            if (e.getCurrentProgramName().equals(functionName)) {
                 List<Variable> varsToPass = new ArrayList<Variable>();
                 for (String arg : argumentList) {
                     if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {

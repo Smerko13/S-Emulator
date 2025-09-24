@@ -287,8 +287,9 @@ public class BaseController {
     public void startDebugging() {
         if (!isFileLoaded) return;
         isDebuggingEnabled = true;
-        s_emulator.prepareForDebugging();
-        Command currentDebugCommand = s_emulator.getCurrentDebugCommand();
+        Engine engineToDebug = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
+        engineToDebug.prepareForDebugging();
+        Command currentDebugCommand = engineToDebug.getCurrentDebugCommand();
         instructionTableComponentController.setDebugHighlight(currentDebugCommand);
         executionPanelComponentController.updateDebugButtons();
     }

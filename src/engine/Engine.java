@@ -242,7 +242,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     @Override
     public void prepareForDebugging() {
         resetWorkAndOutputVariables();
-        this.currentCommand = commands.getFirst();
+        this.currentCommand = getCommandsAtDesiredLevel(currentDegree).getFirst();
     }
 
     @Override
@@ -258,7 +258,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
                     this.currentCommand = null; // End of program
                     return;
                 }
-                for (Command command : commands) {
+                for (Command command : getCommandsAtDesiredLevel(currentDegree)) {
                     String currentLabel = command.getLabel();
                     if (currentLabel.equals(executionLabel)) {
                         this.currentCommand = command;
@@ -267,10 +267,10 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
                 }
             }
             else {
-                int currentIndex = commands.indexOf(this.currentCommand);
+                int currentIndex = getCommandsAtDesiredLevel(currentDegree).indexOf(this.currentCommand);
                 currentIndex++;
-                if (currentIndex < commands.size()) {
-                    this.currentCommand = commands.get(currentIndex);
+                if (currentIndex < getCommandsAtDesiredLevel(currentDegree).size()) {
+                    this.currentCommand = getCommandsAtDesiredLevel(currentDegree).get(currentIndex);
                 } else {
                     this.currentCommand = null; // No more commands to execute
                 }
@@ -414,7 +414,6 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
                }
            }
        }
-
        return commandsAtLevel;
     }
 
