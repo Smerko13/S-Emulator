@@ -16,7 +16,7 @@
             <TableColumn fx:id="instructionColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="300.0" sortable="false" text="Instruction" />
          </columns>
          <columnResizePolicy>
-            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+            <TableView fx:constant="UNCONSTRAINED_RESIZE_POLICY" />
          </columnResizePolicy>
       </TableView>
       <TextFlow fx:id="SummaryLineTextBox" />

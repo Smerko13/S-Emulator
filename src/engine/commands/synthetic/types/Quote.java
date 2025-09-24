@@ -163,12 +163,12 @@ public class Quote extends SyntheticCommand implements Cloneable {
                                         break;
                                     }
                                 }
-                            } else if (arg.charAt(0) == '(') {
-                                Variable funcCallVar = handleFunctionCall(arg);
-                                funcCallVar.setName(arg);
-                                this.ExpandedCommands.add(new Assignment(newWorkVar,"   ", funcCallVar, this, this.associatedEngine));
-                            } else {
-                                throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
+//                            } else if (arg.charAt(0) == '(') {
+//                                Variable funcCallVar = handleFunctionCall(arg);
+//                                funcCallVar.setName(arg);
+//                                this.ExpandedCommands.add(new Assignment(newWorkVar,"   ", funcCallVar, this, this.associatedEngine));
+//                            } else {
+                                //throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                             }
                         }
                     }

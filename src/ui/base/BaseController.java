@@ -111,72 +111,15 @@ public class BaseController {
         headerComponentController.updateFunctionSelector(functionNames);
     }
 
+    // Java
     public String getCurrentDegree() {
-        return s_emulator.getCurrentDegree() + "";
+        Engine engine = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
+        return String.valueOf(engine.getCurrentDegree());
     }
 
     public String getMaxDegree() {
-        return String.valueOf(s_emulator.getMaxExpansionDepth());
-    }
-
-    public void expandProgram() {
-        s_emulator.increaseDegree();
-        int currExpansionLvl = s_emulator.getCurrentDegree();
-        List<Command> displayedCommands = s_emulator.getCommandsAtDesiredLevel(currExpansionLvl);
-        instructionTableComponentController.displayInstructions(displayedCommands);
-
-        Set<Variable> displayedVars = new LinkedHashSet<>();
-        Set<Variable> inputVars = new LinkedHashSet<>();
-        for (Command cmd : displayedCommands) {
-            Set<Variable> cmdVars = cmd.getAllVariables();
-            if (cmdVars != null) {
-                for (Variable v : cmdVars) {
-                    if (v instanceof WorkVariable || v instanceof OutputVariable) {
-                        displayedVars.add(v);
-                    }
-                    if (v instanceof engine.arguments.types.InputVariable) {
-                        inputVars.add(v);
-                    }
-                }
-            }
-        }
-        s_emulator.getVariables().forEach(v -> {
-            if (v instanceof OutputVariable) {
-                displayedVars.add(v);
-            }
-        });
-        executionPanelComponentController.displayAllVars(displayedVars);
-        executionPanelComponentController.displayInputVars(inputVars, null);
-    }
-
-    public void collapseProgram() {
-        s_emulator.decreaseDegree();
-        int currExpansionLvl = s_emulator.getCurrentDegree();
-        List<Command> displayedCommands = s_emulator.getCommandsAtDesiredLevel(currExpansionLvl);
-        instructionTableComponentController.displayInstructions(displayedCommands);
-
-        Set<Variable> displayedVars = new LinkedHashSet<>();
-        Set<Variable> inputVars = new LinkedHashSet<>();
-        for (Command cmd : displayedCommands) {
-            Set<Variable> cmdVars = cmd.getAllVariables();
-            if (cmdVars != null) {
-                for (Variable v : cmdVars) {
-                    if (v instanceof WorkVariable || v instanceof OutputVariable) {
-                        displayedVars.add(v);
-                    }
-                    if (v instanceof engine.arguments.types.InputVariable) {
-                        inputVars.add(v);
-                    }
-                }
-            }
-        }
-        s_emulator.getVariables().forEach(v -> {
-            if (v instanceof OutputVariable) {
-                displayedVars.add(v);
-            }
-        });
-        executionPanelComponentController.displayAllVars(displayedVars);
-        executionPanelComponentController.displayInputVars(inputVars, null);
+        Engine engine = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
+        return String.valueOf(engine.getMaxExpansionDepth());
     }
 
     public void setMonitors() {
@@ -459,6 +402,94 @@ public class BaseController {
                 }
             });
 
+            executionPanelComponentController.displayAllVars(displayedVars);
+            executionPanelComponentController.displayInputVars(inputVars, null);
+        }
+    }
+
+    public void expandProgram(String functionName) {
+        Engine engineToExpand;
+        if (functionName.equals(s_emulator.getCurrentProgramName())) {
+            engineToExpand = (Engine) s_emulator;
+        } else {
+            engineToExpand = null;
+            for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+                if (functionName.equals(sub.getUserString())) {
+                    engineToExpand = sub;
+                    break;
+                }
+            }
+        }
+        if (engineToExpand != null) {
+            engineToExpand.increaseDegree();
+            int currExpansionLvl = engineToExpand.getCurrentDegree();
+            List<Command> displayedCommands = engineToExpand.getCommandsAtDesiredLevel(currExpansionLvl);
+
+            Set<Variable> displayedVars = new LinkedHashSet<>();
+            Set<Variable> inputVars = new LinkedHashSet<>();
+            for (Command cmd : displayedCommands) {
+                Set<Variable> cmdVars = cmd.getAllVariables();
+                if (cmdVars != null) {
+                    for (Variable v : cmdVars) {
+                        if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                            displayedVars.add(v);
+                        }
+                        if (v instanceof engine.arguments.types.InputVariable) {
+                            inputVars.add(v);
+                        }
+                    }
+                }
+            }
+            engineToExpand.getVariables().forEach(v -> {
+                if (v instanceof OutputVariable) {
+                    displayedVars.add(v);
+                }
+            });
+            instructionTableComponentController.displayInstructions(displayedCommands);
+            executionPanelComponentController.displayAllVars(displayedVars);
+            executionPanelComponentController.displayInputVars(inputVars, null);
+        }
+    }
+
+    public void collapseProgram(String functionName) {
+        Engine engineToCollapse;
+        if (functionName.equals(s_emulator.getCurrentProgramName())) {
+            engineToCollapse = (Engine) s_emulator;
+        } else {
+            engineToCollapse = null;
+            for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+                if (functionName.equals(sub.getUserString())) {
+                    engineToCollapse = sub;
+                    break;
+                }
+            }
+        }
+        if (engineToCollapse != null) {
+            engineToCollapse.decreaseDegree();
+            int currExpansionLvl = engineToCollapse.getCurrentDegree();
+            List<Command> displayedCommands = engineToCollapse.getCommandsAtDesiredLevel(currExpansionLvl);
+
+            Set<Variable> displayedVars = new LinkedHashSet<>();
+            Set<Variable> inputVars = new LinkedHashSet<>();
+            for (Command cmd : displayedCommands) {
+                Set<Variable> cmdVars = cmd.getAllVariables();
+                if (cmdVars != null) {
+                    for (Variable v : cmdVars) {
+                        if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                            displayedVars.add(v);
+                        }
+                        if (v instanceof engine.arguments.types.InputVariable) {
+                            inputVars.add(v);
+                        }
+                    }
+                }
+            }
+            engineToCollapse.getVariables().forEach(v -> {
+                if (v instanceof OutputVariable) {
+                    displayedVars.add(v);
+                }
+            });
+            instructionTableComponentController.displayInstructions(displayedCommands);
             executionPanelComponentController.displayAllVars(displayedVars);
             executionPanelComponentController.displayInputVars(inputVars, null);
         }

@@ -37,6 +37,13 @@ public class HeaderController {
                 mainController.onFunctionSelectionChanged(newVal.toString());
             }
         });
+        // Java
+        FunctionAndProgramSelector.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (mainController != null && newVal != null) {
+                mainController.onFunctionSelectionChanged(newVal.toString());
+                DegreeLabel.setText("Degree: " + mainController.getCurrentDegree() + "/" + mainController.getMaxDegree());
+            }
+        });
     }
 
     public void loadFileButtonPressed(ActionEvent actionEvent) throws InterruptedException {
@@ -57,15 +64,20 @@ public class HeaderController {
     }
 
     public void CollapseProgram(ActionEvent actionEvent) {
-        mainController.collapseProgram();
-        DegreeLabel.setText("Degree: " + mainController.getCurrentDegree() + "/" + mainController.getMaxDegree());
+        Object selected = FunctionAndProgramSelector.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            mainController.collapseProgram(selected.toString());
+            DegreeLabel.setText("Degree: " + mainController.getCurrentDegree() + "/" + mainController.getMaxDegree());
+        }
     }
 
     public void ExpandProgram(ActionEvent actionEvent) {
-        mainController.expandProgram();
-        DegreeLabel.setText("Degree: " + mainController.getCurrentDegree() + "/" + mainController.getMaxDegree());
+        Object selected = FunctionAndProgramSelector.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            mainController.expandProgram(selected.toString());
+            DegreeLabel.setText("Degree: " + mainController.getCurrentDegree() + "/" + mainController.getMaxDegree());
+        }
     }
-
     public void setHeaderMonitors(Set<String> labels, Set<Variable> variables) {
         highLightSelector.getItems().clear();
         highLightSelector.getItems().add("None");
