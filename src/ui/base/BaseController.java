@@ -99,7 +99,7 @@ public class BaseController {
             executionPanelComponentController.displayAllVars(displayedVars);
             executionPanelComponentController.displayInputVars(inputVars, null);
         } else {
-            System.out.println("WRONG FILE");
+            System.out.println("INVALID FILE");
         }
         this.executionPanelComponentController.enableAllButtons();
         List<String> functionNames = new ArrayList<>();

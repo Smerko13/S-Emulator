@@ -84,5 +84,4 @@ public abstract class SyntheticCommand extends Command implements Serializable {
     public int getExpansionDepth() {
         return this.levelOfExpansion;
     }
-
 }

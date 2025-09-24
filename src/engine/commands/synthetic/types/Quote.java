@@ -3,16 +3,16 @@ package engine.commands.synthetic.types;
 import engine.Engine;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
+import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
+import engine.commands.Command;
+import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
 import schema.SInstruction;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-public class Quote extends SyntheticCommand {
+public class Quote extends SyntheticCommand implements Cloneable {
     String functionName;
     String functionArguments;
     List<String> argumentList;
@@ -21,8 +21,8 @@ public class Quote extends SyntheticCommand {
         super(instruction, engine);
         this.commandName = "QUOTE";
         String name = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
-        for(Engine e : this.associatedEngine.subFunctions) {
-            if(e.getCurrentProgramName().equals(name)) {
+        for (Engine e : this.associatedEngine.subFunctions) {
+            if (e.getCurrentProgramName().equals(name)) {
                 this.functionName = e.getUserString();
                 break;
             }
@@ -35,15 +35,26 @@ public class Quote extends SyntheticCommand {
         initializeAssociatedVariables();
     }
 
+    public Quote(Variable assignedVariable, String functionName, List<String> functionArguments, String label, Command parentCommand, Engine engine) {
+        super(assignedVariable, label, parentCommand, engine);
+        this.commandName = "QUOTE";
+        this.functionName = functionName;
+        this.argumentList = functionArguments;
+        this.functionArguments = String.join(",", functionArguments);
+        initializeAssociatedVariables();
+    }
+
     private void initializeAssociatedVariables() {
-        List <String> tempList = new ArrayList<>(List.of(this.functionArguments.split(",")));
-        if(functionArguments.isEmpty()) {return;}
+        List<String> tempList = new ArrayList<>(List.of(this.functionArguments.split(",")));
+        if (functionArguments.isEmpty()) {
+            return;
+        }
         tempList.removeIf(s -> s.charAt(0) == '('); //remove function calls
         for (String arg : tempList) {
-            if(arg.startsWith("x") || arg.startsWith("z") || arg.startsWith("y")) {
+            if (arg.startsWith("x") || arg.startsWith("z") || arg.startsWith("y")) {
                 int index = 0;
-                for(char c: arg.toCharArray()) {
-                    if(c == 'x' || c == 'y' || c == 'z' || Character.isDigit(c)) {
+                for (char c : arg.toCharArray()) {
+                    if (c == 'x' || c == 'y' || c == 'z' || Character.isDigit(c)) {
                         index++;
                     } else {
                         break;
@@ -67,30 +78,20 @@ public class Quote extends SyntheticCommand {
         }
     }
 
-    public Quote(String arg, Engine associatedEngine, Variable tempVar) {
-        super(tempVar, "", null, associatedEngine);
-        this.commandName = "QUOTE";
-        String name = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
-        for(Engine e : this.associatedEngine.subFunctions) {
-            if (e.getCurrentProgramName().equals(name)) {
-                this.functionName = e.getUserString();
-                break;
-            }
-        }
-        this.functionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
-        this.argumentList = initializeArgumentList(this.functionArguments);
-    }
-
     private List<String> initializeArgumentList(String functionArguments) {
         List<String> returnList = new ArrayList<String>();
         int i = 0;
-        if(functionArguments.isEmpty()) {
+        if (functionArguments.isEmpty()) {
             return returnList;
         } else {
             StringBuilder sb = new StringBuilder();
-            for(char c : functionArguments.toCharArray()) {
-                if (c == '(') { i++; }
-                if (c == ')') { i--; }
+            for (char c : functionArguments.toCharArray()) {
+                if (c == '(') {
+                    i++;
+                }
+                if (c == ')') {
+                    i--;
+                }
                 if (c == ',' && i == 0) {
                     returnList.add(sb.toString());
                     sb.setLength(0);
@@ -103,25 +104,133 @@ public class Quote extends SyntheticCommand {
         }
     }
 
-    public Quote(WorkVariable newWorkVariable, String functionName, List<String> functionArguments, String label, JumpEqualFunction jumpEqualFunction, Engine associatedEngine) {
-        super(newWorkVariable, label, jumpEqualFunction, associatedEngine);
-    }
-
     @Override
     public void initializeExpandedCommands() {
+        String newOutputVarName = null;
 
+        if(!this.label.trim().isEmpty()) {
+            this.ExpandedCommands.add(new Neutral(this.associatedEngine.getOutputVar(),this.label,this, this.associatedEngine));
+        }
+
+        for(Engine e : this.associatedEngine.subFunctions) {
+            String userString = e.getUserString();
+            boolean exitLabelRequired = false;
+            String exitLabel = null;
+            if(userString.equals(functionName)) {
+                Engine clonedSubFunction = e.clone();
+                List<Command> subFunctionCommands = clonedSubFunction.getCommands();
+
+                for (String lbl : clonedSubFunction.labels) {
+                    if (lbl.equals("EXIT")) continue;
+                    if (!this.associatedEngine.labels.contains(lbl)) {
+                        this.associatedEngine.labels.add(lbl);
+                    } else {
+                        String newLabel = generateNewLabel();
+                        for (Command cmd : subFunctionCommands) {
+                            cmd.replaceLabel(lbl, newLabel);
+                        }
+                        this.associatedEngine.labels.add(newLabel);
+                    }
+                }
+
+                for(Variable v : clonedSubFunction.getVariables()) {
+                    if(v instanceof WorkVariable) {
+                        String newWorkVarName = generateNewWorkVariableName();
+                        WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
+                        this.associatedEngine.getVariables().add(newWorkVar);
+                        for(Command cmd : subFunctionCommands) {
+                            cmd.replaceVariable(v, newWorkVar);
+                        }
+                    } else if (v instanceof OutputVariable) {
+                        newOutputVarName = generateNewWorkVariableName();
+                        WorkVariable newWorkVar = new WorkVariable(newOutputVarName);
+                        this.associatedEngine.getVariables().add(newWorkVar);
+                        for(Command cmd : subFunctionCommands) {
+                            cmd.replaceVariable(v, newWorkVar);
+                        }
+                    } else if (v instanceof InputVariable) {
+                        String newWorkVarName = generateNewWorkVariableName();
+                        WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
+                        this.associatedEngine.getVariables().add(newWorkVar);
+                        for(Command cmd : subFunctionCommands) {
+                            cmd.replaceVariable(v, newWorkVar);
+                        }
+                        for(String arg : argumentList) {
+                            if(arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
+                                for(Variable var : this.associatedEngine.getVariables()) {
+                                    if(var.getName().equals(arg)) {
+                                        this.ExpandedCommands.add(new Assignment(newWorkVar,"   ", var, this, this.associatedEngine));
+                                        break;
+                                    }
+                                }
+                            } else if (arg.charAt(0) == '(') {
+                                Variable funcCallVar = handleFunctionCall(arg);
+                                funcCallVar.setName(arg);
+                                this.ExpandedCommands.add(new Assignment(newWorkVar,"   ", funcCallVar, this, this.associatedEngine));
+                            } else {
+                                throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
+                            }
+                        }
+                    }
+                }
+
+                for (Command cmd : subFunctionCommands) {// might cause some  (last two line)
+                    String targetLabel = cmd.getTargetLabel();
+                    if (targetLabel != null && targetLabel.equals("EXIT")){
+                        exitLabel = this.generateNewLabel()+"END";
+                        this.associatedEngine.labels.add(exitLabel);
+                        cmd.replaceLabel("EXIT", exitLabel);
+                        exitLabelRequired = true;
+                    }
+                    cmd.setParent(this);
+                    cmd.setAssociatedEngine(this.associatedEngine);
+                }
+
+                this.ExpandedCommands.addAll(subFunctionCommands);
+
+                for(Variable v: this.associatedEngine.getVariables()) {
+                    if(v.getName().equals(newOutputVarName)) {
+                        if(!exitLabelRequired) {
+                            this.ExpandedCommands.add(new Assignment(this.variable, "   ", v, this, this.associatedEngine));
+                        } else {
+                            this.ExpandedCommands.add(new Assignment(this.variable, exitLabel, v, this, this.associatedEngine));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        expandFurther();
+    }
+
+    private boolean nameExistsInCurrentEngine(String name) {
+        for (Variable v : this.associatedEngine.getVariables()) {
+            if (v.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkIfNameExists(String name) {
+        for (Variable v : this.associatedEngine.getVariables()) {
+            if (v.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public String execute() {
         int result = 0;
-        for(Engine e : this.associatedEngine.subFunctions) {
-            if(e.getUserString().equals(functionName)) {
+        for (Engine e : this.associatedEngine.subFunctions) {
+            if (e.getUserString().equals(functionName)) {
                 List<Variable> varsToPass = new ArrayList<Variable>();
-                for(String arg : argumentList) {
-                    if(arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
+                for (String arg : argumentList) {
+                    if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
                         for (Variable v : this.associatedEngine.getVariables()) {
-                            if(v.getName().equals(arg)) {
+                            if (v.getName().equals(arg)) {
                                 varsToPass.add(v);
                                 break;
                             }
@@ -194,7 +303,7 @@ public class Quote extends SyntheticCommand {
 
     @Override
     public Collection<String> getAssociatedLabels() {
-        return List.of();
+        return List.of(this.label);
     }
 
     @Override
@@ -204,10 +313,34 @@ public class Quote extends SyntheticCommand {
 
     @Override
     public String toString() {
-        if(functionArguments.isEmpty()) {
+        if (functionArguments.isEmpty()) {
             return variable.getName() + " <- (" + functionName + ")";
         } else {
             return variable.getName() + " <- (" + functionName + "," + functionArguments + ")";
         }
+    }
+
+    @Override
+    public int getExpansionDepth() {
+        int maxDepth = 1; // Start with 1 for the current command
+        for (Command cmd : this.getExpandedCommands()) {
+            if (cmd.getExpansionDepth() > maxDepth) {
+                maxDepth = cmd.getExpansionDepth() + 1; // Add 1 for the current command
+            }
+        }
+        return maxDepth;
+    }
+
+    // Java
+    @Override
+    public Quote clone() {
+        Quote cloned = (Quote) super.clone();
+        // Deep copy mutable fields
+        cloned.argumentList = new ArrayList<>(this.argumentList);
+        // Strings are immutable, so direct assignment is fine
+        cloned.functionName = this.functionName;
+        cloned.functionArguments = this.functionArguments;
+        // Associated variables and other fields are handled by SyntheticCommand's clone
+        return cloned;
     }
 }

@@ -256,13 +256,7 @@ public abstract class Command implements Serializable, Cloneable {
         this.parentCommand = parent;
     }
 
-    public Engine getAssociatedEngineEngine() {
-        return associatedEngine;
-    }
-
     public void setAssociatedEngine(Engine engine) {
         this.associatedEngine = engine;
     }
-
-
 }
