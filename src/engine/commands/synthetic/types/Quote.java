@@ -124,7 +124,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
             String SubFunctionName = e.getCurrentProgramName();
             boolean exitLabelRequired = false;
             String exitLabel = null;
-            if(SubFunctionName.equals(functionName) /*|| this.functionName.equals(functionName1)*/) {
+            if(SubFunctionName.equals(functionName)) {
                 Engine clonedSubFunction = e.clone();
                 List<Command> subFunctionCommands = clonedSubFunction.getCommands();
 
@@ -325,9 +325,9 @@ public class Quote extends SyntheticCommand implements Cloneable {
     @Override
     public String toString() {
         if (functionArguments.isEmpty()) {
-            return variable.getName() + " <- (" + functionName + ")";
+            return variable.getName() + " <- (" + userString + ")";
         } else {
-            return variable.getName() + " <- (" + functionName + "," + functionArguments + ")";
+            return variable.getName() + " <- (" + userString + "," + functionArguments + ")";
         }
     }
 
