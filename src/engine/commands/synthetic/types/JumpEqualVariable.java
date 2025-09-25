@@ -228,11 +228,13 @@ public class JumpEqualVariable extends SyntheticCommand implements Serializable 
     public void replaceLabel(String lbl, String newLabel) {
         if (this.label.equals(lbl)) {
             this.label = newLabel;
+            this.associatedLabels.remove(lbl);
+            this.associatedLabels.add(newLabel);
         }
         if (this.JEVariableLabel.equals(lbl)) {
             this.JEVariableLabel = newLabel;
+            this.associatedLabels.remove(lbl);
+            this.associatedLabels.add(newLabel);
         }
-        this.associatedLabels.remove(lbl);
-        this.associatedLabels.add(newLabel);
     }
 }

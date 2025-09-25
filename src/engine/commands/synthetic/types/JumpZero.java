@@ -107,11 +107,13 @@ public class JumpZero extends SyntheticCommand implements Serializable {
     public void replaceLabel(String lbl, String newLabel) {
         if (this.label.equals(lbl)) {
             this.label = newLabel;
+            this.associatedLabels.remove(lbl);
+            this.associatedLabels.add(newLabel);
         }
         if (this.JZLabel.equals(lbl)) {
             this.JZLabel = newLabel;
+            this.associatedLabels.remove(lbl);
+            this.associatedLabels.add(newLabel);
         }
-        this.associatedLabels.remove(lbl);
-        this.associatedLabels.add(newLabel);
     }
 }

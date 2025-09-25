@@ -108,11 +108,13 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
     public void replaceLabel(String lbl, String newLabel) {
         if (this.label.equals(lbl)) {
             this.label = newLabel;
+            this.associatedLabels.remove(lbl);
+            this.associatedLabels.add(newLabel);
         }
         if (this.gototLabel.equals(lbl)) {
             this.gototLabel = newLabel;
+            this.associatedLabels.remove(lbl);
+            this.associatedLabels.add(newLabel);
         }
-        this.associatedLabels.remove(lbl);
-        this.associatedLabels.add(newLabel);
     }
 }
