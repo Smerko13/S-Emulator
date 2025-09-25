@@ -214,30 +214,13 @@ public class Quote extends SyntheticCommand implements Cloneable {
         expandFurther();
     }
 
-    private boolean nameExistsInCurrentEngine(String name) {
-        for (Variable v : this.associatedEngine.getVariables()) {
-            if (v.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean checkIfNameExists(String name) {
-        for (Variable v : this.associatedEngine.getVariables()) {
-            if (v.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public String execute() {
         int result = 0;
+        Set<Variable> variables = takeValueSnapshot(this.associatedEngine.variables);
         for (Engine e : this.associatedEngine.subFunctions) {
             if (e.getCurrentProgramName().equals(functionName)) {
-                List<Variable> varsToPass = new ArrayList<Variable>();
+                List<Variable> varsToPass = new ArrayList<Variable>();;
                 for (String arg : argumentList) {
                     if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
                         for (Variable v : this.associatedEngine.getVariables()) {
@@ -256,9 +239,37 @@ public class Quote extends SyntheticCommand implements Cloneable {
                 break;
             }
         }
+        for (Variable var : this.associatedEngine.variables) {
+            for (Variable snapshotVar : variables) {
+                if (var.getName().equals(snapshotVar.getName())) {
+                    var.setValue(snapshotVar.getValue());
+                    break;
+                }
+            }
+        }
         this.variable.setValue(result);
         return null;
     }
+
+    private Set<Variable> takeValueSnapshot(Set<Variable> variables) {
+        Set<Variable> snapshot = new HashSet<>();
+        for (Variable var : variables) {
+            Variable varCopy;
+            if (var instanceof InputVariable) {
+                varCopy = var.clone();
+            } else if (var instanceof OutputVariable) {
+                varCopy = var.clone();
+            } else if (var instanceof WorkVariable) {
+                varCopy = var.clone();
+            } else {
+                throw new IllegalArgumentException("Unknown variable type: " + var.getClass().getName());
+            }
+            varCopy.setValue(var.getValue());
+            snapshot.add(varCopy);
+        }
+        return snapshot;
+    }
+
 
     private Variable handleFunctionCall(String arg) {
         //handle function calls inside arguments
