@@ -142,9 +142,6 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
                     }
                 }
                 for (Command cmd : subEngine.commands) {
-                    if (cmd instanceof SyntheticCommand) {
-                        ((SyntheticCommand) cmd).initializeExpandedCommands();
-                    }
                     subEngine.variables.addAll(List.of(cmd.getAssociatedVariables()));
                 }
                 this.subFunctions.add(subEngine);
@@ -160,17 +157,8 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
             }
         }
         for(Command cmd : this.commands) {
-            if(cmd instanceof SyntheticCommand) {
+            if (cmd instanceof SyntheticCommand) {
                 ((SyntheticCommand) cmd).initializeExpandedCommands();
-            }
-        }
-        if(!this.subFunctions.isEmpty()) {
-            for(Engine e : this.subFunctions) {
-                for(Command cmd : e.commands) {
-                    if(cmd instanceof SyntheticCommand) {
-                        ((SyntheticCommand) cmd).initializeExpandedCommands();
-                    }
-                }
             }
         }
     }
