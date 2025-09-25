@@ -99,21 +99,19 @@ public class BaseController {
 
                     executionPanelComponentController.displayAllVars(displayedVars);
                     executionPanelComponentController.displayInputVars(inputVars, null);
-                } else {
-                    showErrorDialog("Invalid file format.");
+                    this.executionPanelComponentController.enableAllButtons();
+                    List<String> functionNames = new ArrayList<>();
+                    functionNames.add(s_emulator.getCurrentProgramName());
+                    for (Engine sub : s_emulator.getSunFunctions()) {
+                        functionNames.add(sub.getUserString());
+                    }
+                    // Call a method in HeaderController to update the selector
+                    headerComponentController.updateFunctionSelector(functionNames);
                 }
             } catch (IllegalArgumentException ex) {
                 showErrorDialog(ex.getMessage());
             }
         }));
-        this.executionPanelComponentController.enableAllButtons();
-        List<String> functionNames = new ArrayList<>();
-        functionNames.add(s_emulator.getCurrentProgramName());
-        for (Engine sub : s_emulator.getSunFunctions()) {
-            functionNames.add(sub.getUserString());
-        }
-        // Call a method in HeaderController to update the selector
-        headerComponentController.updateFunctionSelector(functionNames);
     }
 
     // Java
