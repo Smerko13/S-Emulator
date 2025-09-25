@@ -87,7 +87,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
     }
 
     private List<String> initializeArgumentList(String functionArguments) {
-        List<String> returnList = new ArrayList<String>();
+        List<String> returnList = new ArrayList<>();
         int i = 0;
         if (functionArguments.isEmpty()) {
             return returnList;
@@ -220,7 +220,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
         Set<Variable> variables = takeValueSnapshot(this.associatedEngine.variables);
         for (Engine e : this.associatedEngine.subFunctions) {
             if (e.getCurrentProgramName().equals(functionName)) {
-                List<Variable> varsToPass = new ArrayList<Variable>();;
+                List<Variable> varsToPass = new ArrayList<>();
                 for (String arg : argumentList) {
                     if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
                         for (Variable v : this.associatedEngine.getVariables()) {
@@ -274,11 +274,11 @@ public class Quote extends SyntheticCommand implements Cloneable {
     private Variable handleFunctionCall(String arg) {
         //handle function calls inside arguments
         Variable var = null;
-        List<Variable> subVarsToPass = null;
+        List<Variable> subVarsToPass;
         for (Engine subE : this.associatedEngine.subFunctions) {
             String name = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
             if (subE.getCurrentProgramName().equals(name)) {
-                subVarsToPass = new ArrayList<Variable>();
+                subVarsToPass = new ArrayList<>();
                 String subFunctionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
                 List<String> subArgumentList = initializeArgumentList(subFunctionArguments);
                 for (String subArg : subArgumentList) {

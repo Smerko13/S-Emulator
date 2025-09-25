@@ -67,40 +67,45 @@ public class BaseController {
         executionPanelComponentController.clearAllVars();
         s_emulator = new Engine(true);
         programHistory.add(s_emulator);
-        showLoadingProgress(() -> Platform.runLater(() -> {}));
-        boolean fileLoadedSuccessfully = s_emulator.readProgramFromXml(selectedFile.toString());
-        if (fileLoadedSuccessfully) {
-            isFileLoaded = true;
-            isDebuggingEnabled = false;
-            List<Command> displayedCommands = s_emulator.getCommands();
-            instructionTableComponentController.displayInstructions(displayedCommands);
+        showLoadingProgress(() -> Platform.runLater(() -> {
+            try {
+                boolean fileLoadedSuccessfully = s_emulator.readProgramFromXml(selectedFile.toString());
+                if (fileLoadedSuccessfully) {
+                    isFileLoaded = true;
+                    isDebuggingEnabled = false;
+                    List<Command> displayedCommands = s_emulator.getCommands();
+                    instructionTableComponentController.displayInstructions(displayedCommands);
 
-            Set<Variable> displayedVars = new LinkedHashSet<>();
-            Set<Variable> inputVars = new LinkedHashSet<>();
-            for (Command cmd : displayedCommands) {
-                Set<Variable> cmdVars = cmd.getAllVariables();
-                if (cmdVars != null) {
-                    for (Variable v : cmdVars) {
-                        if (v instanceof WorkVariable || v instanceof OutputVariable) {
-                            displayedVars.add(v);
-                        }
-                        if (v instanceof engine.arguments.types.InputVariable) {
-                            inputVars.add(v);
+                    Set<Variable> displayedVars = new LinkedHashSet<>();
+                    Set<Variable> inputVars = new LinkedHashSet<>();
+                    for (Command cmd : displayedCommands) {
+                        Set<Variable> cmdVars = cmd.getAllVariables();
+                        if (cmdVars != null) {
+                            for (Variable v : cmdVars) {
+                                if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                                    displayedVars.add(v);
+                                }
+                                if (v instanceof engine.arguments.types.InputVariable) {
+                                    inputVars.add(v);
+                                }
+                            }
                         }
                     }
-                }
-            }
-            s_emulator.getVariables().forEach(v -> {
-                if (v instanceof OutputVariable) {
-                    displayedVars.add(v);
-                }
-            });
+                    s_emulator.getVariables().forEach(v -> {
+                        if (v instanceof OutputVariable) {
+                            displayedVars.add(v);
+                        }
+                    });
 
-            executionPanelComponentController.displayAllVars(displayedVars);
-            executionPanelComponentController.displayInputVars(inputVars, null);
-        } else {
-            System.out.println("INVALID FILE");
-        }
+                    executionPanelComponentController.displayAllVars(displayedVars);
+                    executionPanelComponentController.displayInputVars(inputVars, null);
+                } else {
+                    showErrorDialog("Invalid file format.");
+                }
+            } catch (IllegalArgumentException ex) {
+                showErrorDialog(ex.getMessage());
+            }
+        }));
         this.executionPanelComponentController.enableAllButtons();
         List<String> functionNames = new ArrayList<>();
         functionNames.add(s_emulator.getCurrentProgramName());
@@ -494,5 +499,15 @@ public class BaseController {
             executionPanelComponentController.displayAllVars(displayedVars);
             executionPanelComponentController.displayInputVars(inputVars, null);
         }
+    }
+
+    private void showErrorDialog(String message) {
+        Platform.runLater(() -> {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+            alert.setTitle("Program Load Error");
+            alert.setHeaderText("The program is not valid.");
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
 }
