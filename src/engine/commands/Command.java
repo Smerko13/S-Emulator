@@ -258,4 +258,8 @@ public abstract class Command implements Serializable, Cloneable {
     public void setAssociatedEngine(Engine engine) {
         this.associatedEngine = engine;
     }
+
+    public int getId() {
+        return id;
+    }
 }

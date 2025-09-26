@@ -43,15 +43,6 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
         OutputVariable outputVar = new OutputVariable(true);
     }
 
-    public void arrangeIDs(int expansionLevel) {
-        List<Command> commands = getCommandsAtDesiredLevel(expansionLevel);
-        int id = 1;
-        for(Command cmd : commands) {
-            cmd.setID(id);
-            id++;
-        }
-    }
-
     public String getCurrentProgramName() {
         return currentProgramName;
     }
@@ -425,6 +416,12 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
                }
            }
        }
+
+       int id = 1;
+       for(Command cmd : commandsAtLevel) {
+           cmd.setID(id++);
+       }
+
        return commandsAtLevel;
     }
 
