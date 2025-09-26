@@ -509,4 +509,16 @@ public class BaseController {
             alert.showAndWait();
         });
     }
+
+    public String getProgramSummary() {
+        Engine engineToSummarize = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
+        if(engineToSummarize == null) {
+            return "No program currently loaded.";
+        }
+        String summary = "Program Name: " + engineToSummarize.getCurrentProgramName() + "\nCurrent expansion level: " + engineToSummarize.getCurrentDegree()+"\n";
+        summary += "Number of Commands: " + engineToSummarize.getCommandsAtDesiredLevel(engineToSummarize.getCurrentDegree()).size() + "\n";
+        summary += "Number of Basic Commands: " + engineToSummarize.countBasicCommands() + "\n";
+        summary += "Number of Synthetic Commands: " + engineToSummarize.countSyntheticCommands() + "\n";
+        return summary;
+    }
 }

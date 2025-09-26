@@ -1,22 +1,22 @@
 package ui.instructionTable;
 
+import engine.Engine;
 import engine.commands.Command;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
+import javafx.scene.control.*;
 
-import javafx.scene.control.TableView;
 import javafx.scene.text.TextFlow;
 import ui.base.BaseController;
 import java.util.List;
 
 
 public class InstructionTableController {
+    public Button SummaryButton;
     @FXML
     private TextFlow SummaryLineTextBox;
     private BaseController mainController;
@@ -161,5 +161,16 @@ public class InstructionTableController {
         this.selectedCommand = null;
         this.debugHighlight = null;
         SummaryLineTextBox.getChildren().clear();
+    }
+
+    public void ShowProgramSummary(ActionEvent actionEvent) {
+        if (mainController != null) {
+            String summary = mainController.getProgramSummary();
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Program Summary");
+            alert.setHeaderText("Program Summary");
+            alert.setContentText(summary);
+            alert.showAndWait();
+        }
     }
 }

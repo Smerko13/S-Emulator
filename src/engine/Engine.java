@@ -5,6 +5,7 @@ import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
+import engine.commands.base.BaseCommand;
 import engine.commands.base.types.*;
 import engine.commands.synthetic.SyntheticCommand;
 import engine.commands.synthetic.types.*;
@@ -278,6 +279,28 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
             funcs.addAll(Arrays.asList(subFunction.getSunFunctions()));
         }
         return funcs.toArray(new Engine[0]);
+    }
+
+    @Override
+    public String countBasicCommands() {
+        int i = 0;
+        for(Command cmd : this.getCommandsAtDesiredLevel(currentDegree)) {
+            if(cmd instanceof BaseCommand) {
+                i++;
+            }
+        }
+        return String.valueOf(i);
+    }
+
+    @Override
+    public String countSyntheticCommands() {
+        int i = 0;
+        for(Command cmd : this.getCommandsAtDesiredLevel(currentDegree)) {
+            if(cmd instanceof SyntheticCommand) {
+                i++;
+            }
+        }
+        return String.valueOf(i);
     }
 
 

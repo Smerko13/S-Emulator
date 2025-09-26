@@ -52,4 +52,8 @@ public interface S_Emulator {
     Command getCurrentDebugCommand();
 
     Engine[] getSunFunctions();
+
+    String countBasicCommands();
+
+    String countSyntheticCommands();
 }
