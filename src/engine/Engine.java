@@ -531,4 +531,12 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     public void setVariables(ArrayList<Variable> variables) {
         this.variables.addAll(variables);
     }
+
+    public void expandCommands() {
+        for(Command cmd : this.commands) {
+            if(cmd instanceof SyntheticCommand) {
+                ((SyntheticCommand) cmd).initializeExpandedCommands();
+            }
+        }
+    }
 }

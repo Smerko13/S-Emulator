@@ -376,13 +376,14 @@ public class BaseController {
             for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
                 if (selectedName.equals(sub.getUserString())) {
                     engineToShow = sub;
+                    engineToShow.expandCommands();
                     break;
                 }
             }
         }
         if (engineToShow != null) {
             selectedEngine = engineToShow; // Track the selected engine
-            List<Command> displayedCommands = selectedEngine.getCommands();
+            List<Command> displayedCommands = selectedEngine.getCommandsAtDesiredLevel(selectedEngine.getCurrentDegree());
             instructionTableComponentController.displayInstructions(displayedCommands);
 
             Set<Variable> displayedVars = new LinkedHashSet<>();
