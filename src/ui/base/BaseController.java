@@ -559,4 +559,53 @@ public class BaseController {
             executionPanelComponentController.displayInputVars(inputVars, null);
         }
     }
+
+    public void newRunButtonPressed() {
+        Object selected = this.headerComponentController.getSelectedFunction();
+        if (selected != null) {
+            Engine engineToExpand;
+            if (selected.toString().equals(s_emulator.getCurrentProgramName())) {
+                engineToExpand = (Engine) s_emulator;
+            } else {
+                engineToExpand = null;
+                for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+                    if (selected.toString().equals(sub.getUserString())) {
+                        engineToExpand = sub;
+                        break;
+                    }
+                }
+            }
+            if (engineToExpand != null) {
+                int currExpansionLvl = engineToExpand.getCurrentDegree();
+                List<Command> displayedCommands = engineToExpand.getCommandsAtDesiredLevel(currExpansionLvl);
+
+                Set<Variable> displayedVars = new LinkedHashSet<>();
+                Set<Variable> inputVars = new LinkedHashSet<>();
+                for (Command cmd : displayedCommands) {
+                    Set<Variable> cmdVars = cmd.getAllVariables();
+                    if (cmdVars != null) {
+                        for (Variable v : cmdVars) {
+                            if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                                v.setValue(0);
+                                displayedVars.add(v);
+                            }
+                            if (v instanceof engine.arguments.types.InputVariable) {
+                                v.setValue(0);
+                                inputVars.add(v);
+                            }
+                        }
+                    }
+                }
+                engineToExpand.getVariables().forEach(v -> {
+                    if (v instanceof OutputVariable) {
+                        displayedVars.add(v);
+                    }
+                });
+                executionPanelComponentController.clearAllVars();
+                executionPanelComponentController.displayAllVars(displayedVars, null);
+                executionPanelComponentController.displayInputVars(inputVars, null);
+            }
+
+        }
+    }
 }

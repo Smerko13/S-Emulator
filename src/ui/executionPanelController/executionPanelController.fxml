@@ -29,6 +29,11 @@
                      <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
                   </HBox.margin>
                  </Button>
+               <Button fx:id="newRunButton" mnemonicParsing="false" onAction="#newRunButtonPressed" text="New Run">
+                  <HBox.margin>
+                     <Insets left="5.0" right="5.0" />
+                  </HBox.margin>
+               </Button>
             </children>
          </HBox>
           <HBox alignment="CENTER" fillHeight="false">

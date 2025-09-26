@@ -25,6 +25,9 @@ public class HeaderController {
     @FXML public Label DegreeLabel;
     @FXML public ComboBox highLightSelector;
 
+    public Object getSelectedFunction() {
+        return FunctionAndProgramSelector.getSelectionModel().getSelectedItem();
+    }
 
     public void setMainController(BaseController mainController) {
         this.mainController = mainController;

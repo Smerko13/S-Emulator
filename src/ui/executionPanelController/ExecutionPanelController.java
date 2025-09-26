@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 public class ExecutionPanelController {
+    @FXML private Button newRunButton;
     @FXML private Button stepOverButton;
     @FXML private TableView inputVarsTable;
     @FXML private TableView allVarsTable;
@@ -134,7 +135,7 @@ public class ExecutionPanelController {
             @Override
             protected void updateItem(Variable item, boolean empty) {
                 super.updateItem(item, empty);
-                if (!empty && item != null && changedVarNames.contains(item.getName())) {
+                if (!empty && item != null && changedVarNames != null && !changedVarNames.isEmpty() && changedVarNames.contains(item.getName())) {
                     setStyle("-fx-background-color: lightgreen;");
                 } else {
                     setStyle("");
@@ -146,6 +147,8 @@ public class ExecutionPanelController {
                     this.changedVarNames = Set.of();
                     allVarsTable.refresh();
         }
+        allVarsTable.refresh();
+        inputVarsTable.refresh();
     }
 
     public void displayVarsForCurrentInstructions(Set<Variable> variables, List<Command> currentCommands) {
@@ -217,7 +220,7 @@ public class ExecutionPanelController {
             @Override
             protected void updateItem(Variable item, boolean empty) {
                 super.updateItem(item, empty);
-                if (!empty && item != null && changedVarNames != null && changedVarNames.contains(item.getName())) {
+                if (!empty && item != null && changedVarNames != null && !changedVarNames.isEmpty() && changedVarNames.contains(item.getName())) {
                     setStyle("-fx-background-color: lightgreen;");
                 } else {
                     setStyle("");
@@ -228,5 +231,11 @@ public class ExecutionPanelController {
         if (changedVarNames != null && !changedVarNames.isEmpty()) {
             inputVarsTable.refresh();
         }
+        allVarsTable.refresh();
+        inputVarsTable.refresh();
+    }
+
+    public void newRunButtonPressed(ActionEvent actionEvent) {
+        this.mainController.newRunButtonPressed();
     }
 }
