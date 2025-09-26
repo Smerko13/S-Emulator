@@ -196,17 +196,16 @@ public abstract class Command implements Serializable, Cloneable {
     }
 
     public String generateNewWorkVariableName() {
-        int workArgIndex = 1;
-        boolean found = false;
-        while (!found) {
-            String currentWorkVarName = "z" + workArgIndex;
-            if (!this.associatedEngine.getVariables().stream().anyMatch(var -> var.getName().equals(currentWorkVarName))) {
-                found = true;
-            } else {
-                workArgIndex++;
-            }
+        Set<String> existingNames = new HashSet<>();
+        for (Variable var : this.associatedEngine.getVariables()) {
+            existingNames.add(var.getName());
         }
-        return "z" + workArgIndex;
+        int workArgIndex = 1;
+        String currentWorkVarName;
+        do {
+            currentWorkVarName = "z" + workArgIndex++;
+        } while (existingNames.contains(currentWorkVarName));
+        return currentWorkVarName;
     }
 
     public Object getVar() {
