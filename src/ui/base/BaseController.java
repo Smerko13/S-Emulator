@@ -521,4 +521,42 @@ public class BaseController {
         summary += "Number of Synthetic Commands: " + engineToSummarize.countSyntheticCommands() + "\n";
         return summary;
     }
+
+    public void setCurrentDegree(String string, int degree) {
+        Engine engineToSet = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
+        if(engineToSet != null) {
+            while (engineToSet.getCurrentDegree() < degree) {
+                engineToSet.increaseDegree();
+            }
+            while (engineToSet.getCurrentDegree() > degree) {
+                engineToSet.decreaseDegree();
+            }
+            List<Command> displayedCommands = engineToSet.getCommandsAtDesiredLevel(engineToSet.getCurrentDegree());
+            instructionTableComponentController.displayInstructions(displayedCommands);
+
+            Set<Variable> displayedVars = new LinkedHashSet<>();
+            Set<Variable> inputVars = new LinkedHashSet<>();
+            for (Command cmd : displayedCommands) {
+                Set<Variable> cmdVars = cmd.getAllVariables();
+                if (cmdVars != null) {
+                    for (Variable v : cmdVars) {
+                        if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                            displayedVars.add(v);
+                        }
+                        if (v instanceof engine.arguments.types.InputVariable) {
+                            inputVars.add(v);
+                        }
+                    }
+                }
+            }
+            engineToSet.getVariables().forEach(v -> {
+                if (v instanceof OutputVariable) {
+                    displayedVars.add(v);
+                }
+            });
+
+            executionPanelComponentController.displayAllVars(displayedVars);
+            executionPanelComponentController.displayInputVars(inputVars, null);
+        }
+    }
 }

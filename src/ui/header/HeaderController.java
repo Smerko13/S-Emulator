@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 public class HeaderController {
+    public TextField currentDegreeTextField;
     @FXML private ComboBox FunctionAndProgramSelector;
     private BaseController mainController;
     @FXML private Button loadFileButton;
@@ -41,7 +42,8 @@ public class HeaderController {
         FunctionAndProgramSelector.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (mainController != null && newVal != null) {
                 mainController.onFunctionSelectionChanged(newVal.toString());
-                DegreeLabel.setText("Degree: " + mainController.getCurrentDegree() + "/" + mainController.getMaxDegree());
+                DegreeLabel.setText("/" + mainController.getMaxDegree());
+                this.currentDegreeTextField.setText(mainController.getCurrentDegree());
             }
         });
     }
@@ -60,14 +62,16 @@ public class HeaderController {
             mainController.loadFile(selectedFile);
         }
 
-        DegreeLabel.setText("Degree: " + mainController.getCurrentDegree() + "/" + mainController.getMaxDegree());
+        DegreeLabel.setText("/" + mainController.getMaxDegree());
+        this.currentDegreeTextField.setText(mainController.getCurrentDegree());
     }
 
     public void CollapseProgram(ActionEvent actionEvent) {
         Object selected = FunctionAndProgramSelector.getSelectionModel().getSelectedItem();
         if (selected != null) {
             mainController.collapseProgram(selected.toString());
-            DegreeLabel.setText("Degree: " + mainController.getCurrentDegree() + "/" + mainController.getMaxDegree());
+            this.currentDegreeTextField.setText(mainController.getCurrentDegree());
+            DegreeLabel.setText("/" + mainController.getMaxDegree());
         }
     }
 
@@ -75,7 +79,8 @@ public class HeaderController {
         Object selected = FunctionAndProgramSelector.getSelectionModel().getSelectedItem();
         if (selected != null) {
             mainController.expandProgram(selected.toString());
-            DegreeLabel.setText("Degree: " + mainController.getCurrentDegree() + "/" + mainController.getMaxDegree());
+            this.currentDegreeTextField.setText(mainController.getCurrentDegree());
+            DegreeLabel.setText("/" + mainController.getMaxDegree());
         }
     }
     public void setHeaderMonitors(Set<String> labels, Set<Variable> variables) {
@@ -97,6 +102,28 @@ public class HeaderController {
         FunctionAndProgramSelector.getItems().clear();
         FunctionAndProgramSelector.getItems().addAll(functionNames);
         FunctionAndProgramSelector.getSelectionModel().selectFirst();
+    }
+
+    public void degreeInserted(ActionEvent actionEvent) {
+        if(!mainController.isFileLoaded()) { currentDegreeTextField.clear();return;}
+        String degreeText = currentDegreeTextField.getText();
+        try {
+            int degree = Integer.parseInt(degreeText);
+            int maxDegree = Integer.parseInt(mainController.getMaxDegree());
+            if (degree >= 0 && degree <= maxDegree) {
+                Object selected = FunctionAndProgramSelector.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    mainController.setCurrentDegree(selected.toString(), degree);
+                    this.currentDegreeTextField.setText(mainController.getCurrentDegree());
+                }
+            } else {
+                // Reset to current degree if out of bounds
+                this.currentDegreeTextField.setText(mainController.getCurrentDegree());
+            }
+        } catch (NumberFormatException e) {
+            // Reset to current degree if input is invalid
+            this.currentDegreeTextField.setText(mainController.getCurrentDegree());
+        }
     }
 }
 
