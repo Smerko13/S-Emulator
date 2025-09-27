@@ -47,6 +47,7 @@ public class HeaderController {
                 mainController.onFunctionSelectionChanged(newVal.toString());
                 DegreeLabel.setText("/" + mainController.getMaxDegree());
                 this.currentDegreeTextField.setText(mainController.getCurrentDegree());
+                this.mainController.newRunButtonPressed();
             }
         });
     }

@@ -25,13 +25,7 @@ public class Stats implements Serializable, Cloneable {
                 execution.outputVariable = new OutputVariable((OutputVariable) variable);
             }
         }
-        for (Variable variable : extraInputVariables) {
-
-            execution.inputVariables.add(new InputVariable((InputVariable) variable));
-
-        }
         execution.cycleCount = cycleSum;
-
         this.executionHistory.add(execution);
     }
 
@@ -95,6 +89,10 @@ public class Stats implements Serializable, Cloneable {
             } catch (CloneNotSupportedException e) {
                 throw new AssertionError();
             }
+        }
+
+        public List<Variable> getInputVars() {
+            return inputVariables;
         }
     }
 

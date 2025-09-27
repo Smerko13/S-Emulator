@@ -130,6 +130,58 @@ public class statsPanelController {
     }
 
     public void reRunButtonPressed(ActionEvent actionEvent) {
+        // 1. Get the selected execution record from the stats table
+        ui.statPanel.statsPanelController.ExecutionRecord execRecord = (ui.statPanel.statsPanelController.ExecutionRecord) statsTable.getSelectionModel().getSelectedItem();
+        if (execRecord == null) return;
+
+        // 2. Update the degree in the header controller (and update instructions table)
+        String functionName = mainController.getheaderComponentController().getSelectedFunction().toString();
+        int expansionLevel = execRecord.getExpansionLevel();
+        mainController.setCurrentDegree(functionName, expansionLevel);
+
+        // 3. Zero all variables (reset state)
+        mainController.newRunButtonPressed();
+
+        // 4. Set input variable values from the selected execution
+        List<Variable> inputVars = execRecord.getInputVars(); // or exec.getInputVariables() if private
+        if (inputVars != null) {
+            // Find the current engine and set input variable values
+            Engine engine = (Engine) mainController.getEngine();
+            if(!functionName.equals(engine.getCurrentProgramName())) {
+                for(Engine sub : engine.getSunFunctions()) {
+                    if(functionName.equals(sub.getUserString())) {
+                        engine = sub;
+                        break;
+                    }
+                }
+            }
+            for (Variable var : inputVars) {
+                if (var instanceof InputVariable) {
+                    InputVariable inputVar = (InputVariable) var;
+                    for (Variable engVar : engine.getVariables()) {
+                        if (engVar instanceof InputVariable && engVar.getName().equals(inputVar.getName())) {
+                            ((InputVariable) engVar).setOriginalValue(inputVar.getValue());
+                            engVar.setValue(inputVar.getValue());
+                            break;
+                        }
+                    }
+                }
+            }
+
+            List<Command> commandsAtLevel = engine.getCommandsAtDesiredLevel(engine.getCurrentDegree());
+
+            Set<Variable> varsToShow = new LinkedHashSet<>();
+            for (Command cmd : commandsAtLevel) {
+                for(Variable v : cmd.getAssociatedVariables()) {
+                    if(v instanceof InputVariable) {
+                        varsToShow.add(v);
+                    }
+                }
+            }
+
+            // Update the input variable table in the execution panel
+            mainController.getExecutuionPanelComponent().displayInputVars(varsToShow, null);
+        }
     }
 
     public void updateStats(Stats executionHistory) {
@@ -139,8 +191,9 @@ public class statsPanelController {
             int execNum = getExecutionNumber(record);
             int expansion = getExpansionLevel(record);
             int cycles = getCycleCount(record);
+            List<Variable> inputVars = record.getInputVars();
             String output = getOutputValue(record);
-            records.add(new ExecutionRecord(execNum, expansion, cycles, output));
+            records.add(new ExecutionRecord(execNum, expansion, cycles, output, inputVars));
         }
         statsTable.setItems(records);
     }
@@ -185,18 +238,24 @@ public class statsPanelController {
         private final int expansionLevel;
         private final int cycles;
         private final String output;
+        private final List<Variable> inputVars;
 
-        public ExecutionRecord(int executionNumber, int expansionLevel, int cycles, String output) {
+        public ExecutionRecord(int executionNumber, int expansionLevel, int cycles, String output, List<Variable> inputVars) {
             this.executionNumber = executionNumber;
             this.expansionLevel = expansionLevel;
             this.cycles = cycles;
             this.output = output;
+            this.inputVars = inputVars;
         }
 
         public int getExecutionNumber() { return executionNumber; }
         public int getExpansionLevel() { return expansionLevel; }
         public int getCycles() { return cycles; }
         public String getOutput() { return output; }
+
+        public List<Variable> getInputVars() {
+            return inputVars;
+        }
     }
 }
 

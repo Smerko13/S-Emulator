@@ -764,4 +764,8 @@ public class BaseController {
     public S_Emulator getEngine() {
         return this.s_emulator;
     }
+
+    public ExecutionPanelController getExecutuionPanelComponent() {
+        return this.executionPanelComponentController;
+    }
 }
