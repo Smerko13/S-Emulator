@@ -429,13 +429,13 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
         return userString;
     }
 
-    public void setUserString(String userString) {
-        this.userString = userString;
-    }
-
     public int executeFunction(List<Variable> variables) {
-        resetWorkAndOutputVariables();
         assignVarsToCommands(variables);
+        Set<Variable> snapshot = new LinkedHashSet<>();
+        for (Variable var : this.variables) {
+            snapshot.add(var.clone());
+        }
+        resetWorkAndOutputVariables();
         int index = 0;
         this.cycleSum = 0;
         List<Command> commands = getCommandsAtDesiredLevel(0);
@@ -473,6 +473,16 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
         for(Variable var : this.variables) {
             if(var instanceof OutputVariable) {
                 result = var.getValue();
+                break;
+            }
+        }
+
+        for(Variable var : snapshot) {
+            for(Variable currentVar : this.variables) {
+                if(var.getName().equals(currentVar.getName())) {
+                    currentVar.setValue(var.getValue());
+                    break;
+                }
             }
         }
 
@@ -480,13 +490,17 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     }
 
     private void assignVarsToCommands(List<Variable> variables) {
-        if(variables.isEmpty()) {return;}
-        Variable currentVar = variables.getFirst();
-        for(Variable v : this.variables) {
-            if(v instanceof InputVariable) {
-                v.setValue(currentVar.getValue());
-                if(variables.indexOf(currentVar) + 1 < variables.size()) {
-                    currentVar = variables.get(variables.indexOf(currentVar) + 1);
+        List<Integer> values = new ArrayList<>();
+        for(Variable var : variables) {
+            values.add(var.getValue());
+        }
+        int index = 0;
+        for(Variable var : this.variables) {
+            if (var instanceof InputVariable) {
+                if (index < values.size()) {
+                    var.setValue(values.get(index++));
+                } else {
+                    var.setValue(0);
                 }
             }
         }

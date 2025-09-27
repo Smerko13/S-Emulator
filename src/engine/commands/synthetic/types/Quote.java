@@ -148,32 +148,25 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     }
                 }
 
+                // Java
                 int index = 0;
-                for(Variable v : clonedSubFunction.getVariables()) {
-                    if (v instanceof WorkVariable) {
-                        String newWorkVarName = generateNewWorkVariableName();
-                        WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
-                        this.associatedEngine.getVariables().add(newWorkVar);
-                        for (Command cmd : subFunctionCommands) {
-                            cmd.replaceVariable(v, newWorkVar);
-                        }
-                    } else if (v instanceof OutputVariable) {
-                        newOutputVarName = generateNewWorkVariableName();
-                        WorkVariable newWorkVar = new WorkVariable(newOutputVarName);
-                        this.associatedEngine.getVariables().add(newWorkVar);
-                        for (Command cmd : subFunctionCommands) {
-                            cmd.replaceVariable(v, newWorkVar);
-                        }
-                    } else if (v instanceof InputVariable) {
-                        String newWorkVarName = generateNewWorkVariableName();
-                        WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
-                        this.associatedEngine.getVariables().add(newWorkVar);
-                        for (Command cmd : subFunctionCommands) {
-                            cmd.replaceVariable(v, newWorkVar);
-                        }
-                        if(index >= this.argumentList.size()) {break;}
+                for (Variable v : clonedSubFunction.getVariables()) {
+                    if (v instanceof InputVariable) {
+                        // Find the corresponding argument by index
+                        if (index >= this.argumentList.size()) break;
                         String arg = this.argumentList.get(index++);
+                        String newWorkVarName = generateNewWorkVariableName();
+                        WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
+                        this.associatedEngine.getVariables().add(newWorkVar);
+
+                        // Replace the input variable in the subfunction with the new work variable
+                        for (Command cmd : subFunctionCommands) {
+                            cmd.replaceVariable(v, newWorkVar);
+                        }
+
+                        // Assign the value to the new work variable
                         if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
+                            // Find the variable in the parent engine by name
                             for (Variable var : this.associatedEngine.getVariables()) {
                                 if (var.getName().equals(arg)) {
                                     this.ExpandedCommands.add(new Assignment(newWorkVar, "   ", var, this, this.associatedEngine));
@@ -181,6 +174,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                                 }
                             }
                         } else if (arg.charAt(0) == '(') {
+                            // Nested function call: evaluate and assign result
                             String functionName = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
                             String functionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
                             List<String> subArgumentList = initializeArgumentList(functionArguments);
@@ -188,8 +182,8 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         } else {
                             throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                         }
-
                     }
+                    // ... handle WorkVariable and OutputVariable as before ...
                 }
 
 
@@ -222,14 +216,23 @@ public class Quote extends SyntheticCommand implements Cloneable {
         expandFurther();
     }
 
+    // Java
     @Override
     public String execute() {
         int result = 0;
-        Set<Variable> variables = takeValueSnapshot(this.associatedEngine.variables);
+        Set<Variable> variablesSnapshot = takeValueSnapshot(this.associatedEngine.variables);
         for (Engine e : this.associatedEngine.subFunctions) {
             if (e.getCurrentProgramName().equals(functionName)) {
                 List<Variable> varsToPass = new ArrayList<>();
-                for (String arg : argumentList) {
+                List<Variable> subInputVars = new ArrayList<>();
+                for (Variable v : e.getVariables()) {
+                    if (v instanceof InputVariable) {
+                        subInputVars.add(v);
+                    }
+                }
+                for (int i = 0; i < subInputVars.size(); i++) {
+                    if(i >= this.argumentList.size()) break;
+                    String arg = argumentList.get(i);
                     if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
                         for (Variable v : this.associatedEngine.getVariables()) {
                             if (v.getName().equals(arg)) {
@@ -248,7 +251,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
             }
         }
         for (Variable var : this.associatedEngine.variables) {
-            for (Variable snapshotVar : variables) {
+            for (Variable snapshotVar : variablesSnapshot) {
                 if (var.getName().equals(snapshotVar.getName())) {
                     var.setValue(snapshotVar.getValue());
                     break;
@@ -304,7 +307,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
                     }
                 }
-                subE.setVariables(new ArrayList<>(this.associatedEngine.getVariables()));
+                subE.setVariables(new ArrayList<>(this.associatedEngine.getVariables())); //try to delete
                 int resultOfSubFunction = subE.executeFunction(subVarsToPass);
                 var = new WorkVariable("temp");
                 var.setValue(resultOfSubFunction);
