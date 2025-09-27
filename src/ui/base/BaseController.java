@@ -19,7 +19,6 @@ import ui.executionPanelController.ExecutionPanelController;
 import ui.header.HeaderController;
 import ui.historyPanel.HistoryPanelController;
 import ui.instructionTable.InstructionTableController;
-import ui.statPanel.StatPanelController;
 
 import java.io.File;
 import java.util.*;
@@ -31,7 +30,6 @@ public class BaseController {
     @FXML private InstructionTableController instructionTableComponentController;
     @FXML private ExecutionPanelController executionPanelComponentController;
     @FXML private HistoryPanelController historyPanelComponentController;
-    @FXML private StatPanelController statPanelComponentController;
     S_Emulator s_emulator;
     List<S_Emulator> programHistory;
     private boolean isFileLoaded = false;
@@ -50,13 +48,11 @@ public class BaseController {
         if(headerComponentController != null
                 && instructionTableComponentController != null
                 && executionPanelComponentController != null
-                && historyPanelComponentController != null
-            && statPanelComponentController != null) {
+                && historyPanelComponentController != null) {
             executionPanelComponentController.setMainController(this);
             headerComponentController.setMainController(this);
             instructionTableComponentController.setMainController(this);
             historyPanelComponentController.setMainController(this);
-            statPanelComponentController.setMainController(this);
         }
         programHistory = new ArrayList<>();
     }
@@ -244,7 +240,6 @@ public class BaseController {
         executionPanelComponentController.displayAllVars(displayedVars, changedVars);
         executionPanelComponentController.displayInputVars(inputVars, changedVars);
         executionPanelComponentController.setCyclesLabel(engineToRun.getCycleSum());
-        statPanelComponentController.refreshExecutionNumbers(engineToRun.getExecutionHistory());
     }
 
     // Java
@@ -393,7 +388,6 @@ public class BaseController {
                 executionPanelComponentController.displayAllVars(displayedVars, changedVars);
                 executionPanelComponentController.displayInputVars(inputVars, changedVars);
                 executionPanelComponentController.setCyclesLabel(engineToStepOver.getCycleSum());
-                statPanelComponentController.refreshExecutionNumbers(engineToStepOver.getExecutionHistory());
             }
         }
     }
@@ -439,7 +433,6 @@ public class BaseController {
                 executionPanelComponentController.displayAllVars(displayedVars, null);
                 executionPanelComponentController.displayInputVars(inputVars, null);
                 executionPanelComponentController.setCyclesLabel(engineToStepOver.getCycleSum());
-                statPanelComponentController.refreshExecutionNumbers(engineToStepOver.getExecutionHistory());
                 executionPanelComponentController.setCyclesLabel(0);
                 executionPanelComponentController.updateDebugButtons();
                 isDebuggingEnabled = false;
@@ -507,7 +500,6 @@ public class BaseController {
                 executionPanelComponentController.displayAllVars(displayedVars, changedVars);
                 executionPanelComponentController.displayInputVars(inputVars, changedVars);
                 executionPanelComponentController.setCyclesLabel(engineToContinue.getCycleSum());
-                statPanelComponentController.refreshExecutionNumbers(engineToContinue.getExecutionHistory());
             }
         }
         // Disable debugging
