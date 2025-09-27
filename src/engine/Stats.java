@@ -12,9 +12,11 @@ import java.util.Set;
 
 public class Stats implements Serializable, Cloneable {
     List<Execution> executionHistory;
+    private int executionCounter = 0;
 
     public void updateStatEntry(int expansionLevel, Set<Variable> variables, Set<Variable> extraInputVariables, int cycleSum) {
-        Execution execution = new Execution();
+        executionCounter++; // Increment per program/subfunction
+        Execution execution = new Execution(executionCounter);
         execution.expansionLevel = expansionLevel;
         for (Variable variable : variables) {
             if (variable instanceof InputVariable) {
@@ -37,28 +39,27 @@ public class Stats implements Serializable, Cloneable {
         return executionHistory;
     }
 
+
     public class Execution implements Serializable {
-        private static int id = 0;
-        private final int currentId;
+        private int executionNumber;
         private int expansionLevel;
         private List<Variable> inputVariables;
         private int cycleCount;
         private OutputVariable outputVariable;
 
-        public Execution() {
+        public Execution(int executionNumber) {
+            this.executionNumber = executionNumber;
             this.inputVariables = new ArrayList<>();
-            id++;
-            this.currentId = id;
         }
 
-        private static void resetId() {
-            id = 0;
+        public int getExecutionNumber() {
+            return executionNumber;
         }
 
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            sb.append("Execution #").append(currentId).append("\n");
+            sb.append("Execution #").append(this.executionNumber).append("\n");
             sb.append("    Expansion Level: ").append(expansionLevel).append("\n");
             sb.append("    Input Variables: ");
             for (Variable var : inputVariables) {
@@ -103,7 +104,7 @@ public class Stats implements Serializable, Cloneable {
 
     public void reset() {
         this.executionHistory.clear();
-        Execution.resetId();
+        executionCounter = 0; // Reset per program/subfunction
     }
 
     @Override

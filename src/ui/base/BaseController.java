@@ -19,6 +19,7 @@ import ui.executionPanelController.ExecutionPanelController;
 import ui.header.HeaderController;
 import ui.historyPanel.HistoryPanelController;
 import ui.instructionTable.InstructionTableController;
+import ui.statPanel.statsPanelController;
 
 import java.io.File;
 import java.util.*;
@@ -30,6 +31,7 @@ public class BaseController {
     @FXML private InstructionTableController instructionTableComponentController;
     @FXML private ExecutionPanelController executionPanelComponentController;
     @FXML private HistoryPanelController historyPanelComponentController;
+    @FXML private statsPanelController statsComponentController;
     S_Emulator s_emulator;
     List<S_Emulator> programHistory;
     private boolean isFileLoaded = false;
@@ -48,11 +50,13 @@ public class BaseController {
         if(headerComponentController != null
                 && instructionTableComponentController != null
                 && executionPanelComponentController != null
-                && historyPanelComponentController != null) {
+                && historyPanelComponentController != null
+        && statsComponentController != null) {
             executionPanelComponentController.setMainController(this);
             headerComponentController.setMainController(this);
             instructionTableComponentController.setMainController(this);
             historyPanelComponentController.setMainController(this);
+            statsComponentController.setMainController(this);
         }
         programHistory = new ArrayList<>();
     }
@@ -240,6 +244,7 @@ public class BaseController {
         executionPanelComponentController.displayAllVars(displayedVars, changedVars);
         executionPanelComponentController.displayInputVars(inputVars, changedVars);
         executionPanelComponentController.setCyclesLabel(engineToRun.getCycleSum());
+        statsComponentController.updateStats(engineToRun.getExecutionHistory());
     }
 
     // Java
@@ -548,6 +553,7 @@ public class BaseController {
 
             executionPanelComponentController.displayAllVars(displayedVars);
             executionPanelComponentController.displayInputVars(inputVars, null);
+            statsComponentController.updateStats(selectedEngine.getExecutionHistory());
         }
     }
 
