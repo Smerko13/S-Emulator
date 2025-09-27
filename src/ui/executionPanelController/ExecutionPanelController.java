@@ -4,6 +4,7 @@ import engine.arguments.Variable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
+import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -11,6 +12,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.util.Duration;
 import javafx.util.converter.IntegerStringConverter;
 import ui.base.BaseController;
 
@@ -130,22 +132,20 @@ public class ExecutionPanelController {
             nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
             valueCol.setCellValueFactory(new PropertyValueFactory<>("value"));
         }
+        // Row factory uses the field, not the parameter
         allVarsTable.setRowFactory(tv -> new TableRow<Variable>() {
             @Override
             protected void updateItem(Variable item, boolean empty) {
                 super.updateItem(item, empty);
-                if (!empty && item != null && changedVarNames != null && !changedVarNames.isEmpty() && changedVarNames.contains(item.getName())) {
+                if (!empty && item != null && ExecutionPanelController.this.changedVarNames != null
+                        && !ExecutionPanelController.this.changedVarNames.isEmpty()
+                        && ExecutionPanelController.this.changedVarNames.contains(item.getName())) {
                     setStyle("-fx-background-color: lightgreen;");
                 } else {
                     setStyle("");
                 }
             }
         });
-        // Remove highlight after 2 seconds
-        if (!this.changedVarNames.isEmpty()) {
-                    this.changedVarNames = Set.of();
-                    allVarsTable.refresh();
-        }
         allVarsTable.refresh();
         inputVarsTable.refresh();
     }

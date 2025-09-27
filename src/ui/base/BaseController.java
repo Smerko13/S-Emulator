@@ -338,29 +338,65 @@ public class BaseController {
         executionPanelComponentController.updateDebugButtons();
     }
 
+    // Java
     public void stepOver() {
-        s_emulator.stepOver();
-        Command currentDebugCommand = s_emulator.getCurrentDebugCommand();
-        instructionTableComponentController.setDebugHighlight(currentDebugCommand);
-        Set<Variable> allVars = s_emulator.getVariables();
-        Set<Variable> displayedVars = new LinkedHashSet<>();
-        Set<Variable> inputVars = new LinkedHashSet<>();
-        for (Variable v : allVars) {
-            if (v instanceof WorkVariable || v instanceof OutputVariable) {
-                displayedVars.add(v);
+        Object selected = this.headerComponentController.getSelectedFunction();
+        if (selected != null) {
+            Engine engineToStepOver;
+            if (selected.toString().equals(s_emulator.getCurrentProgramName())) {
+                engineToStepOver = (Engine) s_emulator;
+            } else {
+                engineToStepOver = null;
+                for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+                    if (selected.toString().equals(sub.getUserString())) {
+                        engineToStepOver = sub;
+                        break;
+                    }
+                }
             }
-            if (v instanceof engine.arguments.types.InputVariable) {
-                inputVars.add(v);
+            if (engineToStepOver != null) {
+                Map<String, Integer> prevValues = new HashMap<>();
+                for (Variable v : engineToStepOver.getVariables()) {
+                    prevValues.put(v.getName(), v.getValue());
+                }
+
+                engineToStepOver.stepOver();
+                Command currentDebugCommand = engineToStepOver.getCurrentDebugCommand();
+                instructionTableComponentController.setDebugHighlight(currentDebugCommand);
+                int currExpansionLvl = engineToStepOver.getCurrentDegree();
+                List<Command> displayedCommands = engineToStepOver.getCommandsAtDesiredLevel(currExpansionLvl);
+
+                Set<Variable> displayedVars = new LinkedHashSet<>();
+                Set<Variable> inputVars = new LinkedHashSet<>();
+                for (Command cmd : displayedCommands) {
+                    Set<Variable> cmdVars = cmd.getAllVariables();
+                    if (cmdVars != null) {
+                        for (Variable v : cmdVars) {
+                            if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                                displayedVars.add(v);
+                            }
+                            if (v instanceof engine.arguments.types.InputVariable) {
+                                inputVars.add(v);
+                            }
+                        }
+                    }
+                }
+                sortAllVars(displayedVars);
+
+                Set<String> changedVars = new HashSet<>();
+                for (Variable v : engineToStepOver.getVariables()) {
+                    Integer prev = prevValues.get(v.getName());
+                    if (prev != null && prev != v.getValue()) {
+                        changedVars.add(v.getName());
+                    }
+                }
+
+                executionPanelComponentController.displayAllVars(displayedVars, changedVars);
+                executionPanelComponentController.displayInputVars(inputVars, changedVars);
+                executionPanelComponentController.setCyclesLabel(engineToStepOver.getCycleSum());
+                statPanelComponentController.refreshExecutionNumbers(engineToStepOver.getExecutionHistory());
             }
         }
-        //sortAllVars(displayedVars);
-        executionPanelComponentController.displayVarsForCurrentInstructions(
-                s_emulator.getVariables(),
-                s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
-        );
-        executionPanelComponentController.displayInputVars(inputVars, null);
-        executionPanelComponentController.setCyclesLabel(s_emulator.getCycleSum());
-        statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
     }
 
     public void stopDebugging() {
@@ -645,6 +681,8 @@ public class BaseController {
                         displayedVars.add(v);
                     }
                 });
+                sortAllVars(displayedVars);
+                stopDebugging();
                 executionPanelComponentController.clearAllVars();
                 executionPanelComponentController.displayAllVars(displayedVars, null);
                 executionPanelComponentController.displayInputVars(inputVars, null);
