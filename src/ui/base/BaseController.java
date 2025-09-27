@@ -247,8 +247,7 @@ public class BaseController {
         statsComponentController.updateStats(engineToRun.getExecutionHistory());
     }
 
-    // Java
-    private void sortAllVars(Set<Variable> displayedVars) {
+    public void sortAllVars(Set<Variable> displayedVars) {
         List<Variable> sorted = new ArrayList<>(displayedVars);
         sorted.sort((v1, v2) -> {
             // 1. OutputVariable named "y" first
@@ -756,5 +755,13 @@ public class BaseController {
             }
 
         }
+    }
+
+    public HeaderController getheaderComponentController() {
+        return this.headerComponentController;
+    }
+
+    public S_Emulator getEngine() {
+        return this.s_emulator;
     }
 }

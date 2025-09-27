@@ -1,17 +1,27 @@
 package ui.statPanel;
 
+import engine.Engine;
 import engine.Stats;
+import engine.arguments.Variable;
+import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
+import engine.arguments.types.WorkVariable;
+import engine.commands.Command;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import ui.base.BaseController;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 public class statsPanelController {
     @FXML private TableView<ExecutionRecord> statsTable;
@@ -22,6 +32,7 @@ public class statsPanelController {
     @FXML private Button showStatusButton;
     @FXML private Button reRunButton;
     private BaseController mainController;
+    private Stats lastStats;
 
     public void setMainController(BaseController baseController) {
         this.mainController = baseController;
@@ -35,13 +46,94 @@ public class statsPanelController {
         outputColumn.setCellValueFactory(cd -> new ReadOnlyStringWrapper(cd.getValue().getOutput()));
     }
 
+
     public void showStatusButtonPressed(ActionEvent actionEvent) {
+        ExecutionRecord selected = statsTable.getSelectionModel().getSelectedItem();
+        if (selected == null || lastStats == null) return;
+
+        Stats.Execution exec = lastStats.getExecutionHistory().stream()
+                .filter(e -> e.getExecutionNumber() == selected.getExecutionNumber())
+                .findFirst().orElse(null);
+
+        if (exec == null) return;
+
+        int expansionLevel = selected.getExpansionLevel();
+        StringBuilder sb = new StringBuilder();
+        sb.append("Variables at Expansion Level ").append(expansionLevel).append(":\n");
+
+        try {
+            // Input variables from execution record
+            var inputVarsField = exec.getClass().getDeclaredField("inputVariables");
+            inputVarsField.setAccessible(true);
+
+            // Find the correct engine for this execution
+            Engine engineToExpand = null;
+            if (mainController != null) {
+                Object rtEngine = mainController.getheaderComponentController().getSelectedFunction();
+                if (rtEngine != null) {
+                    if (rtEngine.toString().equals(mainController.getEngine().getCurrentProgramName())) {
+                        engineToExpand = (Engine) mainController.getEngine();
+                    } else {
+                        for (Engine sub : mainController.getEngine().getSunFunctions()) {
+                            if (rtEngine.toString().equals(sub.getUserString())) {
+                                engineToExpand = sub;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            List<Command> displayedCommands = engineToExpand.getCommandsAtDesiredLevel(expansionLevel);
+
+            Set<Variable> displayedVars = new LinkedHashSet<>();
+            Set<Variable> inputVars = new LinkedHashSet<>();
+            for (Command cmd : displayedCommands) {
+                Set<Variable> cmdVars = cmd.getAllVariables();
+                if (cmdVars != null) {
+                    for (Variable v : cmdVars) {
+                        if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                            displayedVars.add(v);
+                        }
+                        if (v instanceof engine.arguments.types.InputVariable) {
+                            inputVars.add(v);
+                        }
+                    }
+                }
+            }
+
+
+            // Show only input variables relevant to this expansion level
+            for (Variable var : inputVars) {
+                    sb.append("Input Variables at the start of the execution:\n[Input] ").append(var.getName()).append(" = ").append(((InputVariable)var).getOriginalValue()).append("\n\nWork and Output Variables after the execution:\n");
+            }
+
+            this.mainController.sortAllVars(displayedVars);
+            // Show only work variables relevant to this expansion level
+            for (var v : displayedVars) {
+                if (v.getClass().getSimpleName().equals("WorkVariable")) {
+                    sb.append("[Work] ").append(v.getName()).append(" = ").append(v.getValue()).append("\n");
+                } else if (v.getClass().getSimpleName().equals("OutputVariable")) {
+                    sb.append("[Output] ").append(v.getName()).append(" = ").append(v.getValue()).append("\n");
+                }
+            }
+
+        } catch (Exception e) {
+            sb.append("Error retrieving variables.");
+        }
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Execution Status");
+        alert.setHeaderText("Variables for Execution #" + exec.getExecutionNumber());
+        alert.setContentText(sb.toString());
+        alert.showAndWait();
     }
 
     public void reRunButtonPressed(ActionEvent actionEvent) {
     }
 
     public void updateStats(Stats executionHistory) {
+        this.lastStats = executionHistory; // Store for later use
         ObservableList<ExecutionRecord> records = FXCollections.observableArrayList();
         for (Stats.Execution record : executionHistory.getExecutionHistory()) {
             int execNum = getExecutionNumber(record);
