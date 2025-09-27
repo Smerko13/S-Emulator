@@ -428,23 +428,72 @@ public class BaseController {
     }
 
     public void continueDebugging() {
-        while (isDebuggingEnabled && s_emulator.getCurrentDebugCommand() != null) {
-            s_emulator.stepOver();
+        Object selected = this.headerComponentController.getSelectedFunction();
+        if (selected != null) {
+            Engine engineToContinue;
+            if (selected.toString().equals(s_emulator.getCurrentProgramName())) {
+                engineToContinue = (Engine) s_emulator;
+            } else {
+                engineToContinue = null;
+                for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+                    if (selected.toString().equals(sub.getUserString())) {
+                        engineToContinue = sub;
+                        break;
+                    }
+                }
+            }
+            if (engineToContinue != null) {
+                Map<String, Integer> prevValues = new HashMap<>();
+                for (Variable v : engineToContinue.getVariables()) {
+                    prevValues.put(v.getName(), v.getValue());
+                }
+                while (isDebuggingEnabled && engineToContinue.getCurrentDebugCommand() != null) {
+                    engineToContinue.stepOver();
+                }
+                // Clear highlight and update UI
+                instructionTableComponentController.setDebugHighlight(null);
+                executionPanelComponentController.updateDebugButtons();
+                // Update variable tables
+                Command currentDebugCommand = engineToContinue.getCurrentDebugCommand();
+                instructionTableComponentController.setDebugHighlight(currentDebugCommand);
+                int currExpansionLvl = engineToContinue.getCurrentDegree();
+                List<Command> displayedCommands = engineToContinue.getCommandsAtDesiredLevel(currExpansionLvl);
+
+                Set<Variable> displayedVars = new LinkedHashSet<>();
+                Set<Variable> inputVars = new LinkedHashSet<>();
+                for (Command cmd : displayedCommands) {
+                    Set<Variable> cmdVars = cmd.getAllVariables();
+                    if (cmdVars != null) {
+                        for (Variable v : cmdVars) {
+                            if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                                displayedVars.add(v);
+                            }
+                            if (v instanceof engine.arguments.types.InputVariable) {
+                                inputVars.add(v);
+                            }
+                        }
+                    }
+                }
+                sortAllVars(displayedVars);
+
+                Set<String> changedVars = new HashSet<>();
+                for (Variable v : engineToContinue.getVariables()) {
+                    Integer prev = prevValues.get(v.getName());
+                    if (prev != null && prev != v.getValue()) {
+                        changedVars.add(v.getName());
+                    }
+                }
+
+                executionPanelComponentController.displayAllVars(displayedVars, changedVars);
+                executionPanelComponentController.displayInputVars(inputVars, changedVars);
+                executionPanelComponentController.setCyclesLabel(engineToContinue.getCycleSum());
+                statPanelComponentController.refreshExecutionNumbers(engineToContinue.getExecutionHistory());
+            }
         }
-        // Clear highlight and update UI
-        instructionTableComponentController.setDebugHighlight(null);
-        executionPanelComponentController.updateDebugButtons();
-        // Update variable tables
-        executionPanelComponentController.displayVarsForCurrentInstructions(
-                s_emulator.getVariables(),
-                s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
-        );
-        executionPanelComponentController.displayInputVars(s_emulator.getVariables(),null);
-        executionPanelComponentController.setCyclesLabel(s_emulator.getCycleSum());
-        statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
         // Disable debugging
         isDebuggingEnabled = false;
     }
+
 
     public void onFunctionSelectionChanged(String selectedName) {
         Engine engineToShow = null;
