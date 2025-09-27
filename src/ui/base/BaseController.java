@@ -97,6 +97,7 @@ public class BaseController {
                         }
                     });
 
+                    sortAllVars(displayedVars);
                     executionPanelComponentController.displayAllVars(displayedVars);
                     executionPanelComponentController.displayInputVars(inputVars, null);
                     this.executionPanelComponentController.enableAllButtons();
@@ -237,10 +238,50 @@ public class BaseController {
                 displayedVars.add(v);
             }
         });
+
+        sortAllVars(displayedVars);
+
         executionPanelComponentController.displayAllVars(displayedVars, changedVars);
         executionPanelComponentController.displayInputVars(inputVars, changedVars);
         executionPanelComponentController.setCyclesLabel(engineToRun.getCycleSum());
         statPanelComponentController.refreshExecutionNumbers(engineToRun.getExecutionHistory());
+    }
+
+    // Java
+    private void sortAllVars(Set<Variable> displayedVars) {
+        List<Variable> sorted = new ArrayList<>(displayedVars);
+        sorted.sort((v1, v2) -> {
+            // 1. OutputVariable named "y" first
+            boolean v1IsY = v1 instanceof OutputVariable && "y".equals(v1.getName());
+            boolean v2IsY = v2 instanceof OutputVariable && "y".equals(v2.getName());
+            if (v1IsY && !v2IsY) return -1;
+            if (!v1IsY && v2IsY) return 1;
+            if (v1IsY && v2IsY) return 0;
+
+            // 2. z[0-9]+ variables (WorkVariable, OutputVariable, InputVariable)
+            String zPattern = "z(\\d+)";
+            boolean v1IsZ = v1.getName().matches(zPattern) &&
+                    (v1 instanceof WorkVariable || v1 instanceof OutputVariable || v1 instanceof engine.arguments.types.InputVariable);
+            boolean v2IsZ = v2.getName().matches(zPattern) &&
+                    (v2 instanceof WorkVariable || v2 instanceof OutputVariable || v2 instanceof engine.arguments.types.InputVariable);
+
+            if (v1IsZ && !v2IsZ) return -1;
+            if (!v1IsZ && v2IsZ) return 1;
+            if (v1IsZ && v2IsZ) {
+                // Sort by value descending, then by number after z descending
+                int cmp = Integer.compare(v2.getValue(), v1.getValue());
+                if (cmp != 0) return cmp;
+                int n1 = Integer.parseInt(v1.getName().substring(1));
+                int n2 = Integer.parseInt(v2.getName().substring(1));
+                return Integer.compare(n2, n1); // Descending by number after z
+            }
+
+            // 3. All others: sort by name
+            return v1.getName().compareTo(v2.getName());
+        });
+
+        displayedVars.clear();
+        displayedVars.addAll(sorted);
     }
 
     public Stats getStats() {
@@ -299,7 +340,7 @@ public class BaseController {
 
     public void stepOver() {
         s_emulator.stepOver();
-        Command currentDebugCommand = s_emulator.getCurrentDebugCommand(); // You may need to add this getter
+        Command currentDebugCommand = s_emulator.getCurrentDebugCommand();
         instructionTableComponentController.setDebugHighlight(currentDebugCommand);
         Set<Variable> allVars = s_emulator.getVariables();
         Set<Variable> displayedVars = new LinkedHashSet<>();
@@ -312,6 +353,7 @@ public class BaseController {
                 inputVars.add(v);
             }
         }
+        //sortAllVars(displayedVars);
         executionPanelComponentController.displayVarsForCurrentInstructions(
                 s_emulator.getVariables(),
                 s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
@@ -450,6 +492,7 @@ public class BaseController {
                     displayedVars.add(v);
                 }
             });
+            sortAllVars(displayedVars);
             instructionTableComponentController.displayInstructions(displayedCommands);
             executionPanelComponentController.displayAllVars(displayedVars);
             executionPanelComponentController.displayInputVars(inputVars, null);
@@ -494,6 +537,7 @@ public class BaseController {
                     displayedVars.add(v);
                 }
             });
+            sortAllVars(displayedVars);
             instructionTableComponentController.displayInstructions(displayedCommands);
             executionPanelComponentController.displayAllVars(displayedVars);
             executionPanelComponentController.displayInputVars(inputVars, null);
