@@ -338,7 +338,6 @@ public class BaseController {
         executionPanelComponentController.updateDebugButtons();
     }
 
-    // Java
     public void stepOver() {
         Object selected = this.headerComponentController.getSelectedFunction();
         if (selected != null) {
@@ -400,31 +399,52 @@ public class BaseController {
     }
 
     public void stopDebugging() {
-        // Reset engine state to initial values
-        if (s_emulator instanceof Engine engine) {
-            engine.reset();
-        }
-        // Refresh UI
-        instructionTableComponentController.setDebugHighlight(null);
-        executionPanelComponentController.updateDebugButtons();
-        isDebuggingEnabled = false;
+        Object selected = this.headerComponentController.getSelectedFunction();
+        if (selected != null) {
+            Engine engineToStepOver;
+            if (selected.toString().equals(s_emulator.getCurrentProgramName())) {
+                engineToStepOver = (Engine) s_emulator;
+            } else {
+                engineToStepOver = null;
+                for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+                    if (selected.toString().equals(sub.getUserString())) {
+                        engineToStepOver = sub;
+                        break;
+                    }
+                }
+            }
+            if (engineToStepOver != null) {
 
-        // Update variable tables and stats
-        // Update variable tables and stats
-        Set<Variable> allVars = s_emulator.getVariables();
-        Set<Variable> inputVars = new LinkedHashSet<>();
-        for (Variable v : allVars) {
-            if (v instanceof engine.arguments.types.InputVariable) {
-                inputVars.add(v);
+                engineToStepOver.reset();
+                int currExpansionLvl = engineToStepOver.getCurrentDegree();
+                List<Command> displayedCommands = engineToStepOver.getCommandsAtDesiredLevel(currExpansionLvl);
+
+                Set<Variable> displayedVars = new LinkedHashSet<>();
+                Set<Variable> inputVars = new LinkedHashSet<>();
+                for (Command cmd : displayedCommands) {
+                    Set<Variable> cmdVars = cmd.getAllVariables();
+                    if (cmdVars != null) {
+                        for (Variable v : cmdVars) {
+                            if (v instanceof WorkVariable || v instanceof OutputVariable) {
+                                displayedVars.add(v);
+                            }
+                            if (v instanceof engine.arguments.types.InputVariable) {
+                                inputVars.add(v);
+                            }
+                        }
+                    }
+                }
+                sortAllVars(displayedVars);
+
+                executionPanelComponentController.displayAllVars(displayedVars, null);
+                executionPanelComponentController.displayInputVars(inputVars, null);
+                executionPanelComponentController.setCyclesLabel(engineToStepOver.getCycleSum());
+                statPanelComponentController.refreshExecutionNumbers(engineToStepOver.getExecutionHistory());
+                executionPanelComponentController.setCyclesLabel(0);
+                executionPanelComponentController.updateDebugButtons();
+                isDebuggingEnabled = false;
             }
         }
-        executionPanelComponentController.displayVarsForCurrentInstructions(
-                allVars,
-                s_emulator.getCommandsAtDesiredLevel(s_emulator.getCurrentDegree())
-        );
-        executionPanelComponentController.displayInputVars(inputVars, null);
-        executionPanelComponentController.setCyclesLabel(0);
-        statPanelComponentController.refreshExecutionNumbers(s_emulator.getExecutionHistory());
     }
 
     public void continueDebugging() {
