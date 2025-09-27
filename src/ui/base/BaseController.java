@@ -79,7 +79,7 @@ public class BaseController {
                     Set<Variable> displayedVars = new LinkedHashSet<>();
                     Set<Variable> inputVars = new LinkedHashSet<>();
                     for (Command cmd : displayedCommands) {
-                        Set<Variable> cmdVars = cmd.getAllVariables();
+                        Variable[] cmdVars = cmd.getAssociatedVariables();
                         if (cmdVars != null) {
                             for (Variable v : cmdVars) {
                                 if (v instanceof WorkVariable || v instanceof OutputVariable) {
@@ -221,7 +221,7 @@ public class BaseController {
         Set<Variable> displayedVars = new LinkedHashSet<>();
         Set<Variable> inputVars = new LinkedHashSet<>();
         for (Command cmd : displayedCommands) {
-            Set<Variable> cmdVars = cmd.getAllVariables();
+            Variable[] cmdVars = cmd.getAssociatedVariables();
             if (cmdVars != null) {
                 for (Variable v : cmdVars) {
                     if (v instanceof WorkVariable || v instanceof OutputVariable) {
@@ -367,7 +367,7 @@ public class BaseController {
                 Set<Variable> displayedVars = new LinkedHashSet<>();
                 Set<Variable> inputVars = new LinkedHashSet<>();
                 for (Command cmd : displayedCommands) {
-                    Set<Variable> cmdVars = cmd.getAllVariables();
+                    Variable[] cmdVars = cmd.getAssociatedVariables();
                     if (cmdVars != null) {
                         for (Variable v : cmdVars) {
                             if (v instanceof WorkVariable || v instanceof OutputVariable) {
@@ -420,7 +420,7 @@ public class BaseController {
                 Set<Variable> displayedVars = new LinkedHashSet<>();
                 Set<Variable> inputVars = new LinkedHashSet<>();
                 for (Command cmd : displayedCommands) {
-                    Set<Variable> cmdVars = cmd.getAllVariables();
+                    Variable[] cmdVars = cmd.getAssociatedVariables();
                     if (cmdVars != null) {
                         for (Variable v : cmdVars) {
                             if (v instanceof WorkVariable || v instanceof OutputVariable) {
@@ -479,7 +479,7 @@ public class BaseController {
                 Set<Variable> displayedVars = new LinkedHashSet<>();
                 Set<Variable> inputVars = new LinkedHashSet<>();
                 for (Command cmd : displayedCommands) {
-                    Set<Variable> cmdVars = cmd.getAllVariables();
+                    Variable[] cmdVars = cmd.getAssociatedVariables();
                     if (cmdVars != null) {
                         for (Variable v : cmdVars) {
                             if (v instanceof WorkVariable || v instanceof OutputVariable) {
@@ -532,7 +532,7 @@ public class BaseController {
             Set<Variable> displayedVars = new LinkedHashSet<>();
             Set<Variable> inputVars = new LinkedHashSet<>();
             for (Command cmd : displayedCommands) {
-                Set<Variable> cmdVars = cmd.getAllVariables();
+                Variable[] cmdVars = cmd.getAssociatedVariables();
                 if (cmdVars != null) {
                     for (Variable v : cmdVars) {
                         if (v instanceof WorkVariable || v instanceof OutputVariable) {
@@ -577,7 +577,7 @@ public class BaseController {
             Set<Variable> displayedVars = new LinkedHashSet<>();
             Set<Variable> inputVars = new LinkedHashSet<>();
             for (Command cmd : displayedCommands) {
-                Set<Variable> cmdVars = cmd.getAllVariables();
+                Variable[] cmdVars = cmd.getAssociatedVariables();
                 if (cmdVars != null) {
                     for (Variable v : cmdVars) {
                         if (v instanceof WorkVariable || v instanceof OutputVariable) {
@@ -622,7 +622,7 @@ public class BaseController {
             Set<Variable> displayedVars = new LinkedHashSet<>();
             Set<Variable> inputVars = new LinkedHashSet<>();
             for (Command cmd : displayedCommands) {
-                Set<Variable> cmdVars = cmd.getAllVariables();
+                Variable[] cmdVars = cmd.getAssociatedVariables();
                 if (cmdVars != null) {
                     for (Variable v : cmdVars) {
                         if (v instanceof WorkVariable || v instanceof OutputVariable) {
@@ -683,7 +683,7 @@ public class BaseController {
             Set<Variable> displayedVars = new LinkedHashSet<>();
             Set<Variable> inputVars = new LinkedHashSet<>();
             for (Command cmd : displayedCommands) {
-                Set<Variable> cmdVars = cmd.getAllVariables();
+                Variable[] cmdVars = cmd.getAssociatedVariables();
                 if (cmdVars != null) {
                     for (Variable v : cmdVars) {
                         if (v instanceof WorkVariable || v instanceof OutputVariable) {
@@ -728,7 +728,7 @@ public class BaseController {
                 Set<Variable> displayedVars = new LinkedHashSet<>();
                 Set<Variable> inputVars = new LinkedHashSet<>();
                 for (Command cmd : displayedCommands) {
-                    Set<Variable> cmdVars = cmd.getAllVariables();
+                    Variable[] cmdVars = cmd.getAssociatedVariables();
                     if (cmdVars != null) {
                         for (Variable v : cmdVars) {
                             if (v instanceof WorkVariable || v instanceof OutputVariable) {

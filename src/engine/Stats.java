@@ -34,7 +34,7 @@ public class Stats implements Serializable, Cloneable {
     }
 
 
-    public class Execution implements Serializable {
+    public class Execution implements Serializable, Cloneable {
         private int executionNumber;
         private int expansionLevel;
         private List<Variable> inputVariables;

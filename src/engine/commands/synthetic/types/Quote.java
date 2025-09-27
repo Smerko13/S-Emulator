@@ -171,6 +171,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
                         }
+                        if(index >= this.argumentList.size()) {break;}
                         String arg = this.argumentList.get(index++);
                         if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
                             for (Variable var : this.associatedEngine.getVariables()) {

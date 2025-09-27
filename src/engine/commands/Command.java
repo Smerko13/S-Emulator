@@ -247,10 +247,6 @@ public abstract class Command implements Serializable, Cloneable {
 
     public abstract void replaceLabel(String lbl, String newLabel);
 
-    public Command getParent() {
-        return parentCommand;
-    }
-
     public void setParent(Command parent) {
         this.parentCommand = parent;
     }
