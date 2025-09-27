@@ -344,6 +344,13 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
     @Override
     public String toString() {
+        if(userString == null) {
+            if (functionArguments.isEmpty()) {
+                return variable.getName() + " <- (" + this.functionName + ")";
+            } else {
+                return variable.getName() + " <- (" + this.functionName + "," + functionArguments + ")";
+            }
+        }
         if (functionArguments.isEmpty()) {
             return variable.getName() + " <- (" + userString + ")";
         } else {
