@@ -785,4 +785,43 @@ public class BaseController {
             }
         });
     }
+
+    private boolean animationsEnabled = true; // default: enabled
+
+    public void setAnimationsEnabled(boolean enabled) {
+        this.animationsEnabled = enabled;
+    }
+    public boolean isAnimationsEnabled() {
+        return animationsEnabled;
+    }
+
+    public void playStartupAnimations(Scene scene) {
+        if (!animationsEnabled) return;
+
+        // Animation 1: Fade in the root node
+        javafx.animation.FadeTransition fade = new javafx.animation.FadeTransition(javafx.util.Duration.seconds(1), scene.getRoot());
+        fade.setFromValue(0);
+        fade.setToValue(1);
+
+        // Animation 2: Scale up the root node
+        javafx.animation.ScaleTransition scale = new javafx.animation.ScaleTransition(javafx.util.Duration.seconds(1), scene.getRoot());
+        scale.setFromX(0.8);
+        scale.setFromY(0.8);
+        scale.setToX(1);
+        scale.setToY(1);
+
+        // Animation 3: Rotate a logo or button (if exists)
+        javafx.scene.Node logo = scene.lookup("#logo"); // Add fx:id="logo" to your logo node in FXML
+        javafx.animation.RotateTransition rotate = null;
+        if (logo != null) {
+            rotate = new javafx.animation.RotateTransition(javafx.util.Duration.seconds(1), logo);
+            rotate.setFromAngle(-30);
+            rotate.setToAngle(0);
+        }
+
+        // Play animations in parallel
+        javafx.animation.ParallelTransition pt = new javafx.animation.ParallelTransition(fade, scale);
+        if (rotate != null) pt.getChildren().add(rotate);
+        pt.play();
+    }
 }

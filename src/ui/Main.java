@@ -35,6 +35,10 @@ public class Main extends Application {
         Scene scene = new Scene(root, 800, 500);
         primaryStage.setScene(scene);
         primaryStage.setTitle("S-Emulator");
+        primaryStage.setMaximized(true);
         primaryStage.show();
+        // Play startup animations (only once)
+        BaseController baseController = fxmlLoader.getController();
+        baseController.playStartupAnimations(scene);
     }
 }
