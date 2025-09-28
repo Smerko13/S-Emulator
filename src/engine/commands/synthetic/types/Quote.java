@@ -35,6 +35,16 @@ public class Quote extends SyntheticCommand implements Cloneable {
         this.functionArguments = instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue();
         this.argumentList = initializeArgumentList(this.functionArguments);
         initializeAssociatedVariables();
+        this.cycles = 5 + calculateSubFunctionCycles(this.functionName);
+    }
+
+    private int calculateSubFunctionCycles(String functionName) {
+        for (Engine e : this.associatedEngine.subFunctions) {
+            if (e.getCurrentProgramName().equals(functionName)) {
+                return e.getTotalCycles();
+            }
+        }
+        return 0;
     }
 
     public Quote(Variable assignedVariable, String functionName, List<String> functionArguments, String label, Command parentCommand, Engine engine) {
@@ -50,6 +60,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
         this.argumentList = functionArguments;
         this.functionArguments = String.join(",", functionArguments);
         initializeAssociatedVariables();
+        this.cycles = 5 + calculateSubFunctionCycles(this.functionName);
     }
 
     private void initializeAssociatedVariables() {

@@ -47,6 +47,7 @@ public class statsPanelController {
     }
 
 
+    // Java
     public void showStatusButtonPressed(ActionEvent actionEvent) {
         ExecutionRecord selected = statsTable.getSelectionModel().getSelectedItem();
         if (selected == null || lastStats == null) return;
@@ -62,10 +63,6 @@ public class statsPanelController {
         sb.append("Variables at Expansion Level ").append(expansionLevel).append(":\n");
 
         try {
-            // Input variables from execution record
-            var inputVarsField = exec.getClass().getDeclaredField("inputVariables");
-            inputVarsField.setAccessible(true);
-
             // Find the correct engine for this execution
             Engine engineToExpand = null;
             if (mainController != null) {
@@ -95,25 +92,30 @@ public class statsPanelController {
                         if (v instanceof WorkVariable || v instanceof OutputVariable) {
                             displayedVars.add(v);
                         }
-                        if (v instanceof engine.arguments.types.InputVariable) {
+                        if (v instanceof InputVariable) {
                             inputVars.add(v);
                         }
                     }
                 }
             }
 
-
             // Show only input variables relevant to this expansion level
-            for (Variable var : inputVars) {
-                    sb.append("Input Variables at the start of the execution:\n[Input] ").append(var.getName()).append(" = ").append(((InputVariable)var).getOriginalValue()).append("\n\nWork and Output Variables after the execution:\n");
+            sb.append("Input Variables at the start of the execution:");
+            List<Variable> execInputVars = selected.getInputVars();
+            if (execInputVars != null) {
+                for (Variable var : execInputVars) {
+                    if (var instanceof InputVariable) {
+                        sb.append("\n[Input] ").append(var.getName()).append(" = ").append(var.getValue());
+                    }
+                }
             }
 
             this.mainController.sortAllVars(displayedVars);
-            // Show only work variables relevant to this expansion level
+            sb.append("\nWork and Output Variables after the execution:\n");
             for (var v : displayedVars) {
-                if (v.getClass().getSimpleName().equals("WorkVariable")) {
+                if (v.getName().startsWith("z")) {
                     sb.append("[Work] ").append(v.getName()).append(" = ").append(v.getValue()).append("\n");
-                } else if (v.getClass().getSimpleName().equals("OutputVariable")) {
+                } else if (v.getName().startsWith("y")) {
                     sb.append("[Output] ").append(v.getName()).append(" = ").append(v.getValue()).append("\n");
                 }
             }

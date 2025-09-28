@@ -83,6 +83,7 @@ public class ExecutionPanelController {
 
     public void executeButtonPressed(ActionEvent actionEvent) {
         this.mainController.executeProgram();
+        playActionCompleteAnimation();
     }
 
     public void debugButtonPressed(ActionEvent actionEvent) {
@@ -95,6 +96,7 @@ public class ExecutionPanelController {
 
     public void continueButtonPressed(ActionEvent actionEvent) {
         this.mainController.continueDebugging();
+        playActionCompleteAnimation();
     }
 
     public void displayAllVars(Set<Variable> variables) {
@@ -236,5 +238,17 @@ public class ExecutionPanelController {
 
     public void newRunButtonPressed(ActionEvent actionEvent) {
         this.mainController.newRunButtonPressed();
+    }
+
+    private void playActionCompleteAnimation() {
+        if (mainController != null && !mainController.isAnimationsEnabled()) return;
+        javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.seconds(0.3), cyclesLabel);
+        st.setFromX(1.0);
+        st.setFromY(1.0);
+        st.setToX(1.3);
+        st.setToY(1.3);
+        st.setAutoReverse(true);
+        st.setCycleCount(2);
+        st.play();
     }
 }

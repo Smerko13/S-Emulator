@@ -3,10 +3,7 @@ package ui.header;
 import engine.arguments.Variable;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import ui.base.BaseController;
 
@@ -16,6 +13,8 @@ import java.util.Set;
 
 public class HeaderController {
     public TextField currentDegreeTextField;
+    @FXML private CheckBox animationToggle;
+    @FXML private ComboBox themeSelector;
     @FXML private ComboBox FunctionAndProgramSelector;
     private BaseController mainController;
     @FXML private Button loadFileButton;
@@ -29,11 +28,29 @@ public class HeaderController {
         return FunctionAndProgramSelector.getSelectionModel().getSelectedItem();
     }
 
+    @FXML
+    public void initialize() {
+        themeSelector.getItems().addAll("Default", "Dark", "Blue");
+        themeSelector.getSelectionModel().selectFirst();
+        themeSelector.setOnAction(e -> {
+            if (mainController != null) {
+                mainController.switchTheme((String) themeSelector.getValue());
+            }
+        });
+        animationToggle.setSelected(true);
+        animationToggle.setOnAction(e -> {
+            if (mainController != null) {
+                mainController.setAnimationsEnabled(animationToggle.isSelected());
+            }
+        });
+    }
+
     public void setMainController(BaseController mainController) {
         this.mainController = mainController;
         highLightSelector.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (mainController != null) {
                 mainController.onHighlightSelectionChanged(newVal);
+                playHighlightSelectorAnimation();
             }
         });
         FunctionAndProgramSelector.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
@@ -128,6 +145,16 @@ public class HeaderController {
             // Reset to current degree if input is invalid
             this.currentDegreeTextField.setText(mainController.getCurrentDegree());
         }
+    }
+
+    private void playHighlightSelectorAnimation() {
+        if (mainController != null && !mainController.isAnimationsEnabled()) return;
+        javafx.animation.FadeTransition ft = new javafx.animation.FadeTransition(javafx.util.Duration.seconds(0.6), highLightSelector);
+        ft.setFromValue(1.0);
+        ft.setToValue(0.1); // More visible fade
+        ft.setAutoReverse(true);
+        ft.setCycleCount(2);
+        ft.play();
     }
 }
 

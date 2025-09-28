@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.text.TextFlow?>
 
-<SplitPane dividerPositions="0.9" orientation="VERTICAL" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.instructionTable.InstructionTableController">
+<SplitPane dividerPositions="0.9" styleClass="root" orientation="VERTICAL" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.instructionTable.InstructionTableController">
     <items>
         <TableView fx:id="instructionTableView" editable="true" minWidth="0.0">
             <columns>
