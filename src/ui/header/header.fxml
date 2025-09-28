@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="headerComponent" alignment="CENTER" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.header.HeaderController">
+<VBox fx:id="headerComponent" styleClass="root" alignment="CENTER" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.header.HeaderController">
     <padding>
         <Insets bottom="5.0" top="5.0" />
     </padding>
@@ -69,6 +69,7 @@
                   <Insets left="5.0" right="5.0" />
               </HBox.margin>
           </ComboBox>
+            <ComboBox fx:id="themeSelector" promptText="Theme" />
         </children>
         <padding>
           <Insets bottom="5.0" top="5.0" />

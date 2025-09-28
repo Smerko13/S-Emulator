@@ -16,6 +16,7 @@ import java.util.Set;
 
 public class HeaderController {
     public TextField currentDegreeTextField;
+    @FXML private ComboBox themeSelector;
     @FXML private ComboBox FunctionAndProgramSelector;
     private BaseController mainController;
     @FXML private Button loadFileButton;
@@ -27,6 +28,17 @@ public class HeaderController {
 
     public Object getSelectedFunction() {
         return FunctionAndProgramSelector.getSelectionModel().getSelectedItem();
+    }
+
+    @FXML
+    public void initialize() {
+        themeSelector.getItems().addAll("Default", "Dark", "Blue");
+        themeSelector.getSelectionModel().selectFirst();
+        themeSelector.setOnAction(e -> {
+            if (mainController != null) {
+                mainController.switchTheme((String) themeSelector.getValue());
+            }
+        });
     }
 
     public void setMainController(BaseController mainController) {

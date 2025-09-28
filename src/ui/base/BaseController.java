@@ -768,4 +768,21 @@ public class BaseController {
     public ExecutionPanelController getExecutuionPanelComponent() {
         return this.executionPanelComponentController;
     }
+
+    public void switchTheme(String themeName) {
+        Platform.runLater(() -> {
+            Scene scene = headerComponentController.CollapseButton.getScene();
+            scene.getStylesheets().clear();
+            switch (themeName) {
+                case "Dark":
+                    scene.getStylesheets().add(getClass().getResource("../../utils/programs/EX02/dark-theme.css").toExternalForm());
+                    break;
+                case "Blue":
+                    scene.getStylesheets().add(getClass().getResource("../../utils/programs/EX02/blue-theme.css").toExternalForm());
+                    break;
+                default:
+                    scene.getStylesheets().add(getClass().getResource("../../utils/programs/EX02/default-theme.css").toExternalForm());
+            }
+        });
+    }
 }
