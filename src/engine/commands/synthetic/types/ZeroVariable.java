@@ -30,12 +30,14 @@ public class ZeroVariable extends SyntheticCommand implements Serializable {
         this.levelOfExpansion = 1;
     }
 
-    @Override
     public void initializeExpandedCommands() {
-        if(!this.didInitialize) {
+        if(this.didInitialize) {
+            this.getExpandedCommands().clear();
             expansionLogic();
-            this.didInitialize = true;
+            return;
         }
+        expansionLogic();
+        this.didInitialize = true;
     }
 
     private void expansionLogic() {

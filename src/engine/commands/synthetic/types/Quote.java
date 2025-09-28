@@ -125,13 +125,6 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
     @Override
     public void initializeExpandedCommands() {
-        if(!this.didInitialize) {
-            expansionLogic();
-            this.didInitialize = true;
-        }
-    }
-
-    private void expansionLogic() {
         String newOutputVarName = null;
 
         if(!this.label.trim().isEmpty()) {
