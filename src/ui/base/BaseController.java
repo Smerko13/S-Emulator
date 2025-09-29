@@ -7,6 +7,7 @@ import engine.arguments.Variable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
+import engine.commands.synthetic.types.GotoLabel;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -577,6 +578,7 @@ public class BaseController {
             Set<Variable> displayedVars = new LinkedHashSet<>();
             Set<Variable> inputVars = new LinkedHashSet<>();
             for (Command cmd : displayedCommands) {
+                if(cmd instanceof GotoLabel) { continue;}
                 Variable[] cmdVars = cmd.getAssociatedVariables();
                 if (cmdVars != null) {
                     for (Variable v : cmdVars) {
