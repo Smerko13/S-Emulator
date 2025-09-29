@@ -16,6 +16,7 @@ import schema.*;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Engine implements S_Emulator , Serializable, Cloneable {
     private List<Command> commands;
@@ -436,10 +437,19 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
 
          for(Engine e : associatedEngine.subFunctions) {
             if(e.getCurrentProgramName().equals(functionName)) {
+                Set<Variable> snapshot = associatedEngine.getVariables().stream()
+                        .map(v -> v.clone())
+                        .collect(Collectors.toSet());
                 e.assignVarsToCommands(varsCopy);
                 e.executeProgram(0);
                 int returnValue = e.getReturnValue();
-                e.reset();
+                for(Variable var : snapshot) {
+                    for(Variable originalVar : associatedEngine.getVariables()) {
+                        if(var.getName().equals(originalVar.getName())) {
+                            originalVar.setValue(var.getValue());
+                        }
+                    }
+                }
                 return returnValue;
             }
         }
