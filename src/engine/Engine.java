@@ -433,50 +433,26 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
         this.userString = userString;
     }
 
-    public int executeFunction(List<Variable> variables) {
-        resetWorkAndOutputVariables();
-        assignVarsToCommands(variables);
-        int index = 0;
-        this.cycleSum = 0;
-        List<Command> commands = getCommandsAtDesiredLevel(0);
-        Command currentCommand = commands.get(index);
-        while (currentCommand != null) {
-            String executionLabel = currentCommand.execute();
-            this.cycleSum += currentCommand.getCycles();
-            if(executionLabel != null) {
-                if (executionLabel.length() == 2) {
-                    executionLabel = executionLabel + " "; // Ensure label has at least 3 characters
-                }
-                if (executionLabel.equals("EXIT")) {
-                    break; // End of program
-                }
-                for (Command command : commands) {
-                    String currentLabel = command.getLabel();
-                    if (currentLabel.equals(executionLabel)) {
-                        currentCommand = command;
-                        index = commands.indexOf(currentCommand);
-                        break;
-                    }
-                }
-            }
-            else {
-                index++;
-                if (index < commands.size()) {
-                    currentCommand = commands.get(index);
-                } else {
-                    currentCommand = null; // No more commands to execute
-                }
+    public int executeFunction(List<Variable> variables,String functionName, Engine associatedEngine) {
+        LinkedList<Variable> varsCopy = new LinkedList<>();
+        for(Variable v : variables) {
+            Variable copy = new WorkVariable(v.getName());
+            copy.setValue(v.getValue());
+            varsCopy.add(copy);
+        }
+
+         for(Engine e : associatedEngine.subFunctions) {
+            if(e.getCurrentProgramName().equals(functionName)) {
+                e.assignVarsToCommands(varsCopy);
+                e.executeProgram(0);
+                int returnValue = e.getReturnValue();
+                e.reset();
+                return returnValue;
             }
         }
 
-        int result = 0;
-        for(Variable var : this.variables) {
-            if(var instanceof OutputVariable) {
-                result = var.getValue();
-            }
-        }
-
-        return result;
+         int returnValue = -1;
+         return -1;
     }
 
     private void assignVarsToCommands(List<Variable> variables) {

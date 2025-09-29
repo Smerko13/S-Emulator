@@ -254,7 +254,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                     }
                 }
-                result = e.executeFunction(varsToPass);
+                result = e.executeFunction(varsToPass, functionName, this.associatedEngine);
                 break;
             }
         }
@@ -315,8 +315,8 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
                     }
                 }
-                subE.setVariables(new ArrayList<>(this.associatedEngine.getVariables()));
-                int resultOfSubFunction = subE.executeFunction(subVarsToPass);
+                //subE.setVariables(new ArrayList<>(this.associatedEngine.getVariables()));
+                int resultOfSubFunction = subE.executeFunction(subVarsToPass, name, this.associatedEngine);
                 var = new WorkVariable("temp");
                 var.setValue(resultOfSubFunction);
                 break;

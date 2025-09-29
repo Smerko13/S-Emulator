@@ -85,7 +85,7 @@ public class JumpEqualFunction extends SyntheticCommand {
         for(Engine e : this.associatedEngine.subFunctions) {
             String userString = e.getUserString();
             if(userString.equals(functionName)) {
-                returnValue = e.executeFunction(variables);
+                returnValue = e.executeFunction(variables, functionName, this.associatedEngine);
                 setBackOriginalVariables(snapshot);
             }
         }
