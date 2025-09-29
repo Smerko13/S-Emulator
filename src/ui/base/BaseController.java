@@ -80,9 +80,11 @@ public class BaseController {
                     Set<Variable> displayedVars = new LinkedHashSet<>();
                     Set<Variable> inputVars = new LinkedHashSet<>();
                     for (Command cmd : displayedCommands) {
+                        if(cmd instanceof GotoLabel) { continue;}
                         Variable[] cmdVars = cmd.getAssociatedVariables();
                         if (cmdVars != null) {
                             for (Variable v : cmdVars) {
+                                if(cmd instanceof GotoLabel) { continue;}
                                 if (v instanceof WorkVariable || v instanceof OutputVariable) {
                                     displayedVars.add(v);
                                 }
@@ -224,6 +226,7 @@ public class BaseController {
         for (Command cmd : displayedCommands) {
             Variable[] cmdVars = cmd.getAssociatedVariables();
             if (cmdVars != null) {
+                if(cmd instanceof GotoLabel) { continue;}
                 for (Variable v : cmdVars) {
                     if (v instanceof WorkVariable || v instanceof OutputVariable) {
                         displayedVars.add(v);
@@ -370,6 +373,7 @@ public class BaseController {
                 for (Command cmd : displayedCommands) {
                     Variable[] cmdVars = cmd.getAssociatedVariables();
                     if (cmdVars != null) {
+                        if(cmd instanceof GotoLabel) { continue;}
                         for (Variable v : cmdVars) {
                             if (v instanceof WorkVariable || v instanceof OutputVariable) {
                                 displayedVars.add(v);
@@ -421,6 +425,7 @@ public class BaseController {
                 Set<Variable> displayedVars = new LinkedHashSet<>();
                 Set<Variable> inputVars = new LinkedHashSet<>();
                 for (Command cmd : displayedCommands) {
+                    if(cmd instanceof GotoLabel) { continue;}
                     Variable[] cmdVars = cmd.getAssociatedVariables();
                     if (cmdVars != null) {
                         for (Variable v : cmdVars) {
@@ -482,6 +487,7 @@ public class BaseController {
                 for (Command cmd : displayedCommands) {
                     Variable[] cmdVars = cmd.getAssociatedVariables();
                     if (cmdVars != null) {
+                        if(cmd instanceof GotoLabel) { continue;}
                         for (Variable v : cmdVars) {
                             if (v instanceof WorkVariable || v instanceof OutputVariable) {
                                 displayedVars.add(v);
@@ -536,6 +542,7 @@ public class BaseController {
                 Variable[] cmdVars = cmd.getAssociatedVariables();
                 if (cmdVars != null) {
                     for (Variable v : cmdVars) {
+                        if(cmd instanceof GotoLabel) { continue;}
                         if (v instanceof WorkVariable || v instanceof OutputVariable) {
                             displayedVars.add(v);
                         }
@@ -624,6 +631,7 @@ public class BaseController {
             Set<Variable> displayedVars = new LinkedHashSet<>();
             Set<Variable> inputVars = new LinkedHashSet<>();
             for (Command cmd : displayedCommands) {
+                if(cmd instanceof GotoLabel) { continue;}
                 Variable[] cmdVars = cmd.getAssociatedVariables();
                 if (cmdVars != null) {
                     for (Variable v : cmdVars) {
@@ -687,6 +695,7 @@ public class BaseController {
             for (Command cmd : displayedCommands) {
                 Variable[] cmdVars = cmd.getAssociatedVariables();
                 if (cmdVars != null) {
+                    if(cmd instanceof GotoLabel) { continue;}
                     for (Variable v : cmdVars) {
                         if (v instanceof WorkVariable || v instanceof OutputVariable) {
                             displayedVars.add(v);
@@ -732,6 +741,7 @@ public class BaseController {
                 for (Command cmd : displayedCommands) {
                     Variable[] cmdVars = cmd.getAssociatedVariables();
                     if (cmdVars != null) {
+                        if(cmd instanceof GotoLabel) { continue;}
                         for (Variable v : cmdVars) {
                             if (v instanceof WorkVariable || v instanceof OutputVariable) {
                                 v.setValue(0);
