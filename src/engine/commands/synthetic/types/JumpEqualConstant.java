@@ -110,15 +110,22 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
 
     @Override
     public void replaceLabel(String lbl, String newLabel) {
-        if (this.label.equals(lbl)) {
-            this.label = newLabel;
-            this.associatedLabels.remove(lbl);
-            this.associatedLabels.add(newLabel);
+        if (newLabel == null) {
+            return;
         }
-        if (this.JEConstantLabel.equals(lbl)) {
-            this.JEConstantLabel = newLabel;
-            this.associatedLabels.remove(lbl);
-            this.associatedLabels.add(newLabel);
+        if(this.label != null) {
+            if (this.label.equals(lbl)) {
+                this.label = newLabel;
+                this.associatedLabels.remove(lbl);
+                this.associatedLabels.add(newLabel);
+            }
+        }
+        if(this.JEConstantLabel != null) {
+            if (this.JEConstantLabel.equals(lbl)) {
+                this.JEConstantLabel = newLabel;
+                this.associatedLabels.remove(lbl);
+                this.associatedLabels.add(newLabel);
+            }
         }
     }
 }

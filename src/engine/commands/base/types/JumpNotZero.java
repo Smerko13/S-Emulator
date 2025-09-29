@@ -80,15 +80,22 @@ public class JumpNotZero extends BaseCommand implements Serializable {
 
     @Override
     public void replaceLabel(String lbl, String newLabel) {
-        if (this.label.equals(lbl)) {
-            this.label = newLabel;
-            this.associatedLabels.remove(lbl);
-            this.associatedLabels.add(newLabel);
+        if (newLabel == null) {
+            return;
         }
-        if (this.targetLabel.equals(lbl)) {
-            this.targetLabel = newLabel;
-            this.associatedLabels.remove(lbl);
-            this.associatedLabels.add(newLabel);
+        if(this.label != null) {
+            if (this.label.equals(lbl)) {
+                this.label = newLabel;
+                this.associatedLabels.remove(lbl);
+                this.associatedLabels.add(newLabel);
+            }
+        }
+        if(this.targetLabel != null) {
+            if (this.targetLabel.equals(lbl)) {
+                this.targetLabel = newLabel;
+                this.associatedLabels.remove(lbl);
+                this.associatedLabels.add(newLabel);
+            }
         }
     }
 

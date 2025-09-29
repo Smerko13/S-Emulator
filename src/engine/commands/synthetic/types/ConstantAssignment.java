@@ -83,6 +83,10 @@ public class ConstantAssignment extends SyntheticCommand implements Serializable
 
     @Override
     public void replaceLabel(String lbl, String newLabel) {
+        if (newLabel == null) {
+            return;
+        }
+        if(this.label == null) return;
         if (this.label.equals(lbl)) {
             this.label = newLabel;
             this.associatedLabels.remove(lbl);

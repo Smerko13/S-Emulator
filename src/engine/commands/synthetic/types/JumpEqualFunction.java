@@ -155,15 +155,22 @@ public class JumpEqualFunction extends SyntheticCommand {
 
     @Override
     public void replaceLabel(String lbl, String newLabel) {
-        if (this.label.equals(lbl)) {
-            this.label = newLabel;
-            this.associatedLabels.remove(lbl);
-            this.associatedLabels.add(newLabel);
+        if (newLabel == null) {
+            return;
         }
-        if (this.JEFunctionLabel.equals(lbl)) {
-            this.JEFunctionLabel = newLabel;
-            this.associatedLabels.remove(lbl);
-            this.associatedLabels.add(newLabel);
+        if(this.label != null) {
+            if (this.label.equals(lbl)) {
+                this.label = newLabel;
+                this.associatedLabels.remove(lbl);
+                this.associatedLabels.add(newLabel);
+            }
+        }
+        if(this.JEFunctionLabel != null) {
+            if (this.JEFunctionLabel.equals(lbl)) {
+                this.JEFunctionLabel = newLabel;
+                this.associatedLabels.remove(lbl);
+                this.associatedLabels.add(newLabel);
+            }
         }
     }
 

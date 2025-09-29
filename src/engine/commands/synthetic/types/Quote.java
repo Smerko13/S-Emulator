@@ -141,21 +141,42 @@ public class Quote extends SyntheticCommand implements Cloneable {
         for(Engine e : this.associatedEngine.subFunctions) {
             String SubFunctionName = e.getCurrentProgramName();
             boolean exitLabelRequired = false;
-            String exitLabel = null;
+            String exitLabel =  generateNewLabel() + "END";
             if(SubFunctionName.equals(functionName)) {
                 Engine clonedSubFunction = e.clone();
                 List<Command> subFunctionCommands = clonedSubFunction.getCommands();
 
-                for (String lbl : clonedSubFunction.labels) {
-                    if (lbl.equals("EXIT")) continue;
-                    if (!this.associatedEngine.labels.contains(lbl)) {
-                        this.associatedEngine.labels.add(lbl);
+                // 1. Gather all labels
+                Set<String> allLabels = new HashSet<>();
+                for (Command cmd : subFunctionCommands) {
+                    for(String lbl : cmd.getAssociatedLabels()) {
+                        allLabels.add(lbl.trim());
+                    }
+                }
+
+// 2. Map each label to a new label
+                Map<String, String> labelMap = new HashMap<>();
+                for (String lbl : allLabels) {
+                    if ("EXIT".equals(lbl)) {
+                        labelMap.put(lbl, exitLabel);
+                        exitLabelRequired = true;
+                    } else if (lbl.trim().isEmpty()) {
+                        labelMap.put(lbl, lbl); // Keep neutral label as is
                     } else {
-                        String newLabel = generateNewLabel();
-                        for (Command cmd : subFunctionCommands) {
-                            cmd.replaceLabel(lbl, newLabel);
-                        }
-                        this.associatedEngine.labels.add(newLabel);
+                        String newLbl = generateNewLabel();
+                        this.associatedEngine.labels.add(newLbl);
+                        labelMap.put(lbl, newLbl);
+                    }
+                }
+
+// 3. Replace labels in commands
+                for (Command cmd : subFunctionCommands) {
+                    if(labelMap.containsKey(cmd.getLabel().trim())) {
+                        cmd.replaceLabel(cmd.getLabel(), labelMap.get(cmd.getLabel().trim()));
+                    }
+                    if(cmd.getTargetLabel() == null) {continue;}
+                    if (labelMap.containsKey(cmd.getTargetLabel().trim())) {
+                        cmd.replaceLabel(cmd.getTargetLabel(), labelMap.get(cmd.getTargetLabel().trim()));
                     }
                 }
 
@@ -205,13 +226,13 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
 
                 for (Command cmd : subFunctionCommands) {// might cause some  (last two line)
-                    String targetLabel = cmd.getTargetLabel();
-                    if (targetLabel != null && targetLabel.equals("EXIT")){
-                        exitLabel = this.generateNewLabel()+"END";
-                        this.associatedEngine.labels.add(exitLabel);
-                        cmd.replaceLabel("EXIT", exitLabel);
-                        exitLabelRequired = true;
-                    }
+//                    String targetLabel = cmd.getTargetLabel();
+//                    if (targetLabel != null && targetLabel.equals("EXIT")){
+//                        exitLabel = this.generateNewLabel()+"END";
+//                        this.associatedEngine.labels.add(exitLabel);
+//                        cmd.replaceLabel("EXIT", exitLabel);
+//                        exitLabelRequired = true;
+//                    }
                     cmd.setParent(this);
                     cmd.setAssociatedEngine(this.associatedEngine);
                 }
@@ -347,10 +368,15 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
     @Override
     public void replaceLabel(String lbl, String newLabel) {
-        if (this.label.equals(lbl)) {
-            this.label = newLabel;
-            this.associatedLabels.remove(lbl);
-            this.associatedLabels.add(newLabel);
+        if (newLabel == null) {
+            return;
+        }
+        if(this.label != null) {
+            if (this.label.equals(lbl)) {
+                this.label = newLabel;
+                this.associatedLabels.remove(lbl);
+                this.associatedLabels.add(newLabel);
+            }
         }
     }
 
