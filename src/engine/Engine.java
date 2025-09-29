@@ -30,6 +30,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     public  List<Engine> subFunctions;
     private String userString = null;
     boolean isOriginal = false;
+    private Engine assosciatedEngine = null;
 
 
     public Engine(boolean isOriginal) {
@@ -123,6 +124,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
         if(program.getSFunctions() != null) {
             for (SFunction function : program.getSFunctions().getSFunction()) {
                 Engine subEngine = new Engine(false);
+                subEngine.assosciatedEngine = this;
                 subEngine.currentProgramName = function.getName();
                 subEngine.userString = function.getUserString();
                 SInstructions funcInstructions = function.getSInstructions();
@@ -334,9 +336,17 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     }
 
     private void resetWorkAndOutputVariables() {
-        for(Variable variable : variables) {
-            if(variable instanceof WorkVariable || variable instanceof OutputVariable) {
-                variable.setValue(0);
+        if(this.assosciatedEngine != null) {
+            for (Variable variable : this.assosciatedEngine.variables) {
+                if (variable instanceof WorkVariable || variable instanceof OutputVariable) {
+                    variable.setValue(0);
+                }
+            }
+        } else {
+            for (Variable variable : variables) {
+                if (variable instanceof WorkVariable || variable instanceof OutputVariable) {
+                    variable.setValue(0);
+                }
             }
         }
     }
@@ -355,23 +365,6 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
                 variable.setValue(0);
             }
         }
-//        List<Variable> varsToRemove = new ArrayList<>();
-//        for(Variable variable : variables) {
-//            if(variable instanceof OutputVariable) {
-//                variable.setValue(0);
-//            } else if (variable instanceof InputVariable) {
-//                if(!((InputVariable) variable).isOriginal()) {
-//                    varsToRemove.add(variable);
-//                } else {
-//                    variable.setValue(0);
-//                }
-//            } else if (variable instanceof WorkVariable) {
-//                varsToRemove.add(variable);
-//            }
-//        }
-//        varsToRemove.forEach(variables::remove);
-//        extraInputVariables.clear();
-//        subFunctions.clear();
     }
 
     @Override

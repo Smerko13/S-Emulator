@@ -445,6 +445,7 @@ public class BaseController {
                 executionPanelComponentController.setCyclesLabel(engineToStepOver.getCycleSum());
                 executionPanelComponentController.setCyclesLabel(0);
                 executionPanelComponentController.updateDebugButtons();
+                instructionTableComponentController.setDebugHighlight(null);
                 isDebuggingEnabled = false;
             }
         }
