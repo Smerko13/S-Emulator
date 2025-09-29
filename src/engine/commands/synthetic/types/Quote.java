@@ -257,7 +257,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
     @Override
     public String execute() {
         int result = 0;
-        Set<Variable> variables = takeValueSnapshot(this.associatedEngine.variables);
+        Set<Variable> snapshot = takeValueSnapshot(this.associatedEngine.getVariables());
         for (Engine e : this.associatedEngine.subFunctions) {
             if (e.getCurrentProgramName().equals(functionName)) {
                 List<Variable> varsToPass = new ArrayList<>();
@@ -271,6 +271,15 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         }
                     } else if (arg.charAt(0) == '(') {
                         varsToPass.add(handleFunctionCall(arg));
+                        for (Variable var : this.associatedEngine.variables) {
+                            for (Variable snapshotVar : snapshot) {
+                                if (var.getName().equals(snapshotVar.getName())) {
+                                    var.setValue(snapshotVar.getValue());
+                                    break;
+                                }
+                            }
+                        }
+
                     } else {
                         throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                     }
@@ -280,7 +289,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
             }
         }
         for (Variable var : this.associatedEngine.variables) {
-            for (Variable snapshotVar : variables) {
+            for (Variable snapshotVar : snapshot) {
                 if (var.getName().equals(snapshotVar.getName())) {
                     var.setValue(snapshotVar.getValue());
                     break;
@@ -314,6 +323,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
     private Variable handleFunctionCall(String arg) {
         //handle function calls inside arguments
         Variable var = null;
+        Set<Variable> snapshot = takeValueSnapshot(this.associatedEngine.getVariables());
         List<Variable> subVarsToPass;
         for (Engine subE : this.associatedEngine.subFunctions) {
             String name = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
@@ -331,6 +341,14 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         }
                     } else if (subArg.charAt(0) == '(') {
                         subVarsToPass.add(handleFunctionCall(subArg));
+                        for (Variable varz : this.associatedEngine.variables) {
+                            for (Variable snapshotVar : snapshot) {
+                                if (varz.getName().equals(snapshotVar.getName())) {
+                                    varz.setValue(snapshotVar.getValue());
+                                    break;
+                                }
+                            }
+                        }
 
                     } else {
                         throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
