@@ -438,6 +438,7 @@ public class BaseController {
                         }
                     }
                 }
+                engineToStepOver.reset();
                 sortAllVars(displayedVars);
 
                 executionPanelComponentController.displayAllVars(displayedVars, null);
@@ -782,22 +783,39 @@ public class BaseController {
         return this.executionPanelComponentController;
     }
 
+    // import java.util.Objects;
+
     public void switchTheme(String themeName) {
         Platform.runLater(() -> {
             Scene scene = headerComponentController.CollapseButton.getScene();
             scene.getStylesheets().clear();
+
             switch (themeName) {
-                case "Dark":
-                    scene.getStylesheets().add(getClass().getResource("../../utils/programs/EX02/dark-theme.css").toExternalForm());
-                    break;
-                case "Blue":
-                    scene.getStylesheets().add(getClass().getResource("../../utils/programs/EX02/blue-theme.css").toExternalForm());
-                    break;
-                default:
-                    scene.getStylesheets().add(getClass().getResource("../../utils/programs/EX02/default-theme.css").toExternalForm());
+                case "Dark" ->
+                        scene.getStylesheets().add(
+                                Objects.requireNonNull(
+                                        getClass().getResource("/utils/programs/EX02/dark-theme.css"),
+                                        "dark-theme.css not found"
+                                ).toExternalForm()
+                        );
+                case "Blue" ->
+                        scene.getStylesheets().add(
+                                Objects.requireNonNull(
+                                        getClass().getResource("/utils/programs/EX02/blue-theme.css"),
+                                        "blue-theme.css not found"
+                                ).toExternalForm()
+                        );
+                default ->
+                        scene.getStylesheets().add(
+                                Objects.requireNonNull(
+                                        getClass().getResource("/utils/programs/EX02/default-theme.css"),
+                                        "default-theme.css not found"
+                                ).toExternalForm()
+                        );
             }
         });
     }
+
 
     private boolean animationsEnabled = true; // default: enabled
 

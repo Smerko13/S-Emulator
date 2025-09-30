@@ -366,6 +366,8 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
                 variable.setValue(0);
             }
         }
+        this.cycleSum = 0;
+        this.currentCommand = null;
     }
 
     @Override
