@@ -144,7 +144,12 @@ public class Quote extends SyntheticCommand implements Cloneable {
             String exitLabel =  generateNewLabel() + "END";
             if(SubFunctionName.equals(functionName)) {
                 Engine clonedSubFunction = e.clone();
+
                 List<Command> subFunctionCommands = clonedSubFunction.getCommands();
+                for (Command cmd : subFunctionCommands) {
+                    cmd.setParent(this);
+                    cmd.setAssociatedEngine(this.associatedEngine);
+                }
 
                 // 1. Gather all labels
                 Set<String> allLabels = new HashSet<>();
@@ -216,6 +221,9 @@ public class Quote extends SyntheticCommand implements Cloneable {
                             String functionName = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
                             String functionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
                             List<String> subArgumentList = initializeArgumentList(functionArguments);
+                            if(checkParentCommand(this) && functionName.equals("Minus") && subArgumentList.equals(List.of("x1","x2"))) {
+                                subArgumentList = List.of("x2","x1");
+                            }
                             this.ExpandedCommands.add(new Quote(newWorkVar, functionName, subArgumentList, "   ", this, this.associatedEngine));
                         } else {
                             throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
@@ -224,17 +232,15 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     }
                 }
 
-
-                for (Command cmd : subFunctionCommands) {// might cause some  (last two line)
-//                    String targetLabel = cmd.getTargetLabel();
-//                    if (targetLabel != null && targetLabel.equals("EXIT")){
-//                        exitLabel = this.generateNewLabel()+"END";
-//                        this.associatedEngine.labels.add(exitLabel);
-//                        cmd.replaceLabel("EXIT", exitLabel);
-//                        exitLabelRequired = true;
-//                    }
-                    cmd.setParent(this);
-                    cmd.setAssociatedEngine(this.associatedEngine);
+                for(Command cmd : subFunctionCommands) {
+                    if(checkParentCommand(cmd) && cmd instanceof Quote) {
+                        Quote quoteCmd = (Quote) cmd;
+                        if(quoteCmd.functionArguments.equals("(Minus,x1,x2)")) {
+                            quoteCmd.functionArguments="(Minus,x2,x1)";
+                        } else if(quoteCmd.functionArguments.equals("x1,x2")) {
+                            quoteCmd.functionArguments = "x2,x1";
+                        }
+                    }
                 }
 
                 this.ExpandedCommands.addAll(subFunctionCommands);
@@ -252,6 +258,24 @@ public class Quote extends SyntheticCommand implements Cloneable {
             }
         }
         expandFurther();
+    }
+
+    // Java
+    private boolean checkParentCommand(Command cmd) {
+        Command current = cmd.getParentCommand();
+        if (current == null) {
+            return false;
+        }
+        if (current instanceof Quote) {
+            Quote quoteParent = (Quote) current;
+            if ("Smaller_Equal_Than".equals(quoteParent.functionName)
+                    && !quoteParent.argumentList.isEmpty()
+                    && "x2".equals(quoteParent.argumentList.getFirst())) {
+                return true;
+            }
+        }
+        // Always recurse if not found
+        return checkParentCommand(current);
     }
 
     @Override
