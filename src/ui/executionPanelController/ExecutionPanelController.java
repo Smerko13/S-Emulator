@@ -62,6 +62,8 @@ public class ExecutionPanelController {
         startDebugButton.setOpacity(0.5); // Dim when disabled
         programExecuteButton.setDisable(true);
         programExecuteButton.setOpacity(0.5); // Dim when disabled
+        newRunButton.setDisable(true);
+        newRunButton.setOpacity(0.5); // Dim when disabled
     }
 
     public void enableAllButtons() {
@@ -75,6 +77,8 @@ public class ExecutionPanelController {
         startDebugButton.setOpacity(1.0); // Full opacity when enabled
         programExecuteButton.setDisable(false);
         programExecuteButton.setOpacity(1.0); // Full opacity when enabled
+        newRunButton.setDisable(false);
+        newRunButton.setOpacity(1.0); // Full opacity when enabled
     }
 
     public void setMainController(BaseController mainController) {
@@ -150,30 +154,6 @@ public class ExecutionPanelController {
         });
         allVarsTable.refresh();
         inputVarsTable.refresh();
-    }
-
-    public void displayVarsForCurrentInstructions(Set<Variable> variables, List<Command> currentCommands) {
-        // Collect variable names used in current commands
-        Set<String> usedVarNames = new HashSet<>();
-        for (Command cmd : currentCommands) {
-            usedVarNames.addAll(cmd.getUsedVariableNames());
-        }
-
-        ObservableList<Variable> filteredVars = FXCollections.observableArrayList();
-        for (Variable v : variables) {
-            if ((v instanceof WorkVariable || v instanceof OutputVariable) && usedVarNames.contains(v.getName())) {
-                filteredVars.add(v);
-            }
-        }
-        allVarsTable.getItems().clear();
-        allVarsTable.setItems(filteredVars);
-
-        if (allVarsTable.getColumns().size() == 2) {
-            TableColumn<Variable, String> nameCol = (TableColumn<Variable, String>) allVarsTable.getColumns().get(0);
-            TableColumn<Variable, Integer> valueCol = (TableColumn<Variable, Integer>) allVarsTable.getColumns().get(1);
-            nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
-            valueCol.setCellValueFactory(new PropertyValueFactory<>("value"));
-        }
     }
 
     public void setCyclesLabel(int cycles) {

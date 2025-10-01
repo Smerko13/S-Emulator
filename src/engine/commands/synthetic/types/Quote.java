@@ -139,6 +139,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
         }
 
         for(Engine e : this.associatedEngine.subFunctions) {
+            Set<Variable> functionHelpers = new LinkedHashSet<>();
             String SubFunctionName = e.getCurrentProgramName();
             boolean exitLabelRequired = false;
             String newLabel = generateNewLabel();
@@ -193,6 +194,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     if (v instanceof WorkVariable) {
                         String newWorkVarName = generateNewWorkVariableName();
                         WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
+                        functionHelpers.add(newWorkVar);
                         this.associatedEngine.getVariables().add(newWorkVar);
                         for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
@@ -200,6 +202,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     } else if (v instanceof OutputVariable) {
                         newOutputVarName = generateNewWorkVariableName();
                         WorkVariable newWorkVar = new WorkVariable(newOutputVarName);
+                        functionHelpers.add(newWorkVar);
                         this.associatedEngine.getVariables().add(newWorkVar);
                         for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
@@ -207,6 +210,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     } else if (v instanceof InputVariable) {
                         String newWorkVarName = generateNewWorkVariableName();
                         WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
+                        functionHelpers.add(newWorkVar);
                         this.associatedEngine.getVariables().add(newWorkVar);
                         for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
@@ -261,6 +265,10 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         }
                         break;
                     }
+                }
+
+                for(Variable v : functionHelpers) {
+                    this.ExpandedCommands.add(new ZeroVariable(v,"   ", this, this.associatedEngine));
                 }
             }
         }
@@ -385,7 +393,6 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
                     }
                 }
-                //subE.setVariables(new ArrayList<>(this.associatedEngine.getVariables()));
                 int resultOfSubFunction = subE.executeFunction(subVarsToPass, name, this.associatedEngine);
                 var = new WorkVariable("temp");
                 var.setValue(resultOfSubFunction);

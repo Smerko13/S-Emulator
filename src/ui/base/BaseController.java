@@ -107,7 +107,7 @@ public class BaseController {
                     List<String> functionNames = new ArrayList<>();
                     functionNames.add(s_emulator.getCurrentProgramName());
                     for (Engine sub : s_emulator.getSunFunctions()) {
-                        functionNames.add(sub.getUserString());
+                        functionNames.add(sub.getCurrentProgramName());
                     }
                     // Call a method in HeaderController to update the selector
                     headerComponentController.updateFunctionSelector(functionNames);
@@ -350,7 +350,7 @@ public class BaseController {
             } else {
                 engineToStepOver = null;
                 for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
-                    if (selected.toString().equals(sub.getUserString())) {
+                    if (selected.toString().equals(sub.getCurrentProgramName())) {
                         engineToStepOver = sub;
                         break;
                     }
@@ -397,6 +397,10 @@ public class BaseController {
                 executionPanelComponentController.displayAllVars(displayedVars, changedVars);
                 executionPanelComponentController.displayInputVars(inputVars, changedVars);
                 executionPanelComponentController.setCyclesLabel(engineToStepOver.getCycleSum());
+                if(currentDebugCommand == null) {
+                    isDebuggingEnabled = false;
+                }
+                executionPanelComponentController.updateDebugButtons();
             }
         }
     }
@@ -410,7 +414,7 @@ public class BaseController {
             } else {
                 engineToStepOver = null;
                 for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
-                    if (selected.toString().equals(sub.getUserString())) {
+                    if (selected.toString().equals(sub.getCurrentProgramName())) {
                         engineToStepOver = sub;
                         break;
                     }
@@ -445,9 +449,9 @@ public class BaseController {
                 executionPanelComponentController.displayInputVars(inputVars, null);
                 executionPanelComponentController.setCyclesLabel(engineToStepOver.getCycleSum());
                 executionPanelComponentController.setCyclesLabel(0);
-                executionPanelComponentController.updateDebugButtons();
                 instructionTableComponentController.setDebugHighlight(null);
                 isDebuggingEnabled = false;
+                executionPanelComponentController.updateDebugButtons();
             }
         }
     }
@@ -461,7 +465,7 @@ public class BaseController {
             } else {
                 engineToContinue = null;
                 for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
-                    if (selected.toString().equals(sub.getUserString())) {
+                    if (selected.toString().equals(sub.getCurrentProgramName())) {
                         engineToContinue = sub;
                         break;
                     }
@@ -517,6 +521,7 @@ public class BaseController {
         }
         // Disable debugging
         isDebuggingEnabled = false;
+        executionPanelComponentController.updateDebugButtons();
     }
 
 
@@ -527,7 +532,7 @@ public class BaseController {
             handleVarsForChangedFunction(engineToShow);
         } else {
             for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
-                if (selectedName.equals(sub.getUserString())) {
+                if (selectedName.equals(sub.getCurrentProgramName())) {
                     engineToShow = sub;
                     engineToShow.expandCommands();
                     handleVarsForChangedFunction(engineToShow);
@@ -593,7 +598,7 @@ public class BaseController {
         } else {
             engineToExpand = null;
             for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
-                if (functionName.equals(sub.getUserString())) {
+                if (functionName.equals(sub.getCurrentProgramName())) {
                     engineToExpand = sub;
                     handleVarsWhenChangingDegree(sub);
                     break;
@@ -642,7 +647,7 @@ public class BaseController {
         } else {
             engineToCollapse = null;
             for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
-                if (functionName.equals(sub.getUserString())) {
+                if (functionName.equals(sub.getCurrentProgramName())) {
                     engineToCollapse = sub;
                     handleVarsWhenChangingDegree(sub);
                     break;
@@ -753,7 +758,7 @@ public class BaseController {
                     displayedVars.add(v);
                 }
             });
-
+            sortAllVars(displayedVars);
             executionPanelComponentController.displayAllVars(displayedVars);
             executionPanelComponentController.displayInputVars(inputVars, null);
         }
@@ -768,7 +773,7 @@ public class BaseController {
             } else {
                 engineToExpand = null;
                 for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
-                    if (selected.toString().equals(sub.getUserString())) {
+                    if (selected.toString().equals(sub.getCurrentProgramName())) {
                         engineToExpand = sub;
                         break;
                     }
@@ -805,6 +810,7 @@ public class BaseController {
 
                 sortAllVars(displayedVars);
                 stopDebugging();
+                executionPanelComponentController.updateDebugButtons();
                 executionPanelComponentController.clearAllVars();
                 executionPanelComponentController.displayAllVars(displayedVars, null);
                 executionPanelComponentController.displayInputVars(inputVars, null);
