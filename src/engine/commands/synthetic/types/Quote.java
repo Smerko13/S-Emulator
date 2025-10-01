@@ -133,6 +133,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
     private void expansionLogic() {
         String newOutputVarName = null;
+        WorkVariable outputTempVar = null;  // <-- add this
 
         if(!this.label.trim().isEmpty()) {
             this.ExpandedCommands.add(new Neutral(this.associatedEngine.getOutputVar(),this.label,this, this.associatedEngine));
@@ -147,6 +148,8 @@ public class Quote extends SyntheticCommand implements Cloneable {
             String exitLabel = newLabel + SubFunctionName + "_EXIT";
             this.associatedEngine.labels.add(exitLabel);
             if(SubFunctionName.equals(functionName)) {
+                outputTempVar = null;
+                Map<String,String> inputBind = new HashMap<>(); // e.g. "x1" -> "z155"
                 Engine clonedSubFunction = e.clone();
 
                 List<Command> subFunctionCommands = clonedSubFunction.getCommands();
@@ -163,6 +166,15 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     }
                 }
 
+                boolean exitReferencedViaTarget = false;
+                for (Command cmd : subFunctionCommands) {
+                    String tgt = cmd.getTargetLabel();
+                    if (tgt != null && "EXIT".equals(tgt.trim())) {
+                        exitReferencedViaTarget = true;
+                        break;
+                    }
+                }
+
 // 2. Map each label to a new label
                 Map<String, String> labelMap = new HashMap<>();
                 for (String lbl : allLabels) {
@@ -176,6 +188,11 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         this.associatedEngine.labels.add(newLbl);
                         labelMap.put(lbl, newLbl);
                     }
+                }
+
+                if (exitReferencedViaTarget || allLabels.contains("EXIT")) {
+                    labelMap.put("EXIT", exitLabel);
+                    exitLabelRequired = true;
                 }
 
 // 3. Replace labels in commands
@@ -200,14 +217,28 @@ public class Quote extends SyntheticCommand implements Cloneable {
                             cmd.replaceVariable(v, newWorkVar);
                         }
                     } else if (v instanceof OutputVariable) {
-                        newOutputVarName = generateNewWorkVariableName();
+                        String freshName;
+                        boolean clash;
+                        do {
+                            freshName = generateNewWorkVariableName();
+                            clash = freshName.equals(this.variable.getName());
+                            if (!clash) {
+                                for (Variable vv : this.associatedEngine.getVariables()) {
+                                    if (vv.getName().equals(freshName)) { clash = true; break; }
+                                }
+                            }
+                        } while (clash);
+
+                        newOutputVarName = freshName;
                         WorkVariable newWorkVar = new WorkVariable(newOutputVarName);
+                        outputTempVar = newWorkVar;                    // <-- add this
                         functionHelpers.add(newWorkVar);
                         this.associatedEngine.getVariables().add(newWorkVar);
                         for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
                         }
                     } else if (v instanceof InputVariable) {
+                        String formalName = v.getName();           // "x1", "x2", ...
                         String newWorkVarName = generateNewWorkVariableName();
                         WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
                         functionHelpers.add(newWorkVar);
@@ -215,6 +246,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
                         }
+                        inputBind.put(formalName, newWorkVarName); // <-- ADD THIS
                         if(index >= this.argumentList.size()) {break;}
                         String arg = this.argumentList.get(index++);
                         if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
@@ -241,6 +273,18 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     }
                 }
 
+                for (Command cmd : subFunctionCommands) {
+                    if (cmd instanceof Quote q) {
+                        // rewrite list entries
+                        List<String> newArgs = new ArrayList<>(q.argumentList.size());
+                        for (String a : q.argumentList) newArgs.add(rewriteArgsWithBindings(a, inputBind));
+                        q.argumentList = newArgs;
+
+                        // keep functionArguments string in sync if you use it elsewhere
+                        q.functionArguments = rewriteArgsWithBindings(q.functionArguments, inputBind);
+                    }
+                }
+
                 for(Command cmd : subFunctionCommands) {
                     if(checkParentCommand(cmd) && cmd instanceof Quote) {
                         Quote quoteCmd = (Quote) cmd;
@@ -256,26 +300,27 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
                 this.ExpandedCommands.addAll(subFunctionCommands);
 
-                for(Variable v: this.associatedEngine.getVariables()) {
-                    if(v.getName().equals(newOutputVarName)) {
-                        if(!exitLabelRequired) {
-                            this.ExpandedCommands.add(new Assignment(this.variable, "   ", v, this, this.associatedEngine));
-                        } else {
-                            this.ExpandedCommands.add(new Assignment(this.variable, exitLabel, v, this, this.associatedEngine));
-                        }
-                        break;
-                    }
+                if (outputTempVar != null) {
+                    String anchor = exitLabelRequired ? exitLabel : "   ";
+                    this.ExpandedCommands.add(
+                            new Assignment(this.variable, anchor, outputTempVar, this, this.associatedEngine)
+                    );
                 }
 
-                for(Variable v : functionHelpers) {
-                    this.ExpandedCommands.add(new ZeroVariable(v,"   ", this, this.associatedEngine));
+
+                for (Variable v : functionHelpers) {
+                    // assign 0 directly instead of looping ZeroVariable
+                    this.ExpandedCommands.add(
+                            new ConstantAssignment(v, 0, "   ", this, this.associatedEngine)
+                    );
                 }
+
             }
         }
         expandFurther();
     }
 
-    // Java
+
     private boolean checkParentCommand(Command cmd) {
         Command current = cmd.getParentCommand();
         if (current == null) {
@@ -475,4 +520,45 @@ public class Quote extends SyntheticCommand implements Cloneable {
         // Associated variables and other fields are handled by SyntheticCommand's clone
         return cloned;
     }
+
+    private String rewriteArgsWithBindings(String s, Map<String, String> bind) {
+        if (s == null || s.isEmpty() || bind.isEmpty()) return s;
+
+        // Fast path for plain identifiers (no commas/parens)
+        String trimmed = s.trim();
+        if (!trimmed.contains(",") && !trimmed.contains("(") && !trimmed.contains(")")) {
+            return bind.getOrDefault(trimmed, trimmed);
+        }
+
+        StringBuilder out = new StringBuilder(s.length());
+        String[] parts = s.split(",");  // OK: we are only replacing identifiers, not parsing
+        for (int i = 0; i < parts.length; i++) {
+            String p = parts[i] == null ? "" : parts[i];
+            String t = p.trim();
+
+            // Count ALL leading '('
+            int openCount = 0;
+            while (openCount < t.length() && t.charAt(openCount) == '(') openCount++;
+            // Count ALL trailing ')'
+            int closeCount = 0;
+            while (closeCount < t.length() - openCount && t.charAt(t.length() - 1 - closeCount) == ')') closeCount++;
+
+            String core = t.substring(openCount, t.length() - closeCount).trim();
+            if (core.isEmpty()) {
+                // nothing meaningful—just rebuild parentheses
+                for (int k = 0; k < openCount; k++) out.append('(');
+                for (int k = 0; k < closeCount; k++) out.append(')');
+            } else {
+                // replace only exact identifier matches
+                String repl = bind.getOrDefault(core, core);
+                for (int k = 0; k < openCount; k++) out.append('(');
+                out.append(repl);
+                for (int k = 0; k < closeCount; k++) out.append(')');
+            }
+
+            if (i < parts.length - 1) out.append(',');
+        }
+        return out.toString();
+    }
+
 }

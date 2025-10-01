@@ -22,6 +22,14 @@ public class ConstantAssignment extends SyntheticCommand implements Serializable
         this.constantValue = Integer.parseInt(instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue());
     }
 
+    public ConstantAssignment(Variable v, int i, String spaces, Quote quote, Engine associatedEngine) {
+        super(v,spaces, quote, associatedEngine);
+        this.commandName = "CONSTANT_ASSIGNMENT";
+        this.cycles = 2;
+        this.levelOfExpansion = 2;
+        this.constantValue = i;
+    }
+
     @Override
     public void initializeExpandedCommands() {
         if(this.didInitialize) {

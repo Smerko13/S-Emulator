@@ -136,6 +136,19 @@ public class InstructionTableController {
         this.commands.setAll(commands == null ? List.of() : commands);
         instructionTableView.refresh();
         mainController.setMonitors();
+        // Somewhere after expansion:
+        System.out.println("=== Expanded Program ===");
+        int i = 1;
+        for (Command c : commands) {
+            // format: "# | B\\S | Cycles | Label | Instruction"
+            System.out.printf("%d | %s | %d | %s | %s%n",
+                    i++,
+                    c.getType(),
+                    c.getCycles(),
+                    c.getLabel() == null ? "" : c.getLabel(),
+                    c); // ensure toString prints the Instruction text as in UI
+        }
+
     }
 
 
