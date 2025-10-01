@@ -206,7 +206,7 @@ public class BaseController {
         }
 
         // 2. Execute
-        engineToRun.executeProgram(engineToRun.getCurrentDegree());
+        engineToRun.executeProgram(engineToRun.getCurrentDegree(),true);
 
         // 3. Find changed variables
         Set<String> changedVars = new HashSet<>();

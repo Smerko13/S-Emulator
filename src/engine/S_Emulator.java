@@ -21,7 +21,7 @@ public interface S_Emulator {
 
     Set<Variable> getVariables();
 
-    void executeProgram(int expansionLevel);
+    void executeProgram(int expansionLevel, boolean forHistory);
 
     int getCycleSum();
 

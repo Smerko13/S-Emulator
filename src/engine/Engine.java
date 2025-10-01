@@ -309,7 +309,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
 
 
     @Override
-    public void executeProgram(int expansionLevel) {
+    public void executeProgram(int expansionLevel,boolean forHistory) {
         resetWorkAndOutputVariables();
         int index = 0;
         this.cycleSum = 0;
@@ -343,7 +343,10 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
                 }
             }
         }
-        this.stats.updateStatEntry(expansionLevel, variables,extraInputVariables , cycleSum);
+
+        if(forHistory) {
+            this.stats.updateStatEntry(expansionLevel, variables, extraInputVariables, cycleSum);
+        }
     }
 
     public void resetWorkAndOutputVariables() {
@@ -453,7 +456,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
                         .map(v -> v.clone())
                         .collect(Collectors.toSet());
                 e.assignVarsToCommands(varsCopy);
-                e.executeProgram(0);
+                e.executeProgram(0,false);
                 int returnValue = e.getReturnValue();
                 for(Variable var : snapshot) {
                     for(Variable originalVar : associatedEngine.getVariables()) {
