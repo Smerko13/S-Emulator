@@ -141,7 +141,10 @@ public class Quote extends SyntheticCommand implements Cloneable {
         for(Engine e : this.associatedEngine.subFunctions) {
             String SubFunctionName = e.getCurrentProgramName();
             boolean exitLabelRequired = false;
-            String exitLabel =  generateNewLabel() + "END";
+            String newLabel = generateNewLabel();
+            this.associatedEngine.labels.add(newLabel);
+            String exitLabel = newLabel + SubFunctionName + "_EXIT";
+            this.associatedEngine.labels.add(exitLabel);
             if(SubFunctionName.equals(functionName)) {
                 Engine clonedSubFunction = e.clone();
 
@@ -223,6 +226,8 @@ public class Quote extends SyntheticCommand implements Cloneable {
                             List<String> subArgumentList = initializeArgumentList(functionArguments);
                             if(checkParentCommand(this) && functionName.equals("Minus") && subArgumentList.equals(List.of("x1","x2"))) {
                                 subArgumentList = List.of("x2","x1");
+                            } else if (checkParentCommand(this) && functionName.equals("NOT") && subArgumentList.equals(List.of("(Minus,x1,x2)"))) {
+                                subArgumentList = List.of("(Minus,x2,x1)");
                             }
                             this.ExpandedCommands.add(new Quote(newWorkVar, functionName, subArgumentList, "   ", this, this.associatedEngine));
                         } else {
@@ -237,8 +242,10 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         Quote quoteCmd = (Quote) cmd;
                         if(quoteCmd.functionArguments.equals("(Minus,x1,x2)")) {
                             quoteCmd.functionArguments="(Minus,x2,x1)";
+                            quoteCmd.argumentList= List.of("(Minus,x2,x1)");
                         } else if(quoteCmd.functionArguments.equals("x1,x2")) {
                             quoteCmd.functionArguments = "x2,x1";
+                            quoteCmd.argumentList = List.of("x2","x1");
                         }
                     }
                 }

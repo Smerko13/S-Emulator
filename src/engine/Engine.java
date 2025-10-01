@@ -31,7 +31,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     public  List<Engine> subFunctions;
     private String userString = null;
     boolean isOriginal = false;
-    private Engine assosciatedEngine = null;
+    public Engine assosciatedEngine = null;
 
 
     public Engine(boolean isOriginal) {
@@ -295,6 +295,18 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
             }
         }
         return String.valueOf(i);
+    }
+
+    @Override
+    public void hardReset() {
+        for(Variable variable : variables) {
+            if(variable instanceof InputVariable) {
+                variable.setValue(0);
+            }
+        }
+        this.cycleSum = 0;
+        this.currentDegree = 0;
+        this.currentCommand = null;
     }
 
 

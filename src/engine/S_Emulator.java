@@ -56,4 +56,6 @@ public interface S_Emulator {
     String countBasicCommands();
 
     String countSyntheticCommands();
+
+    void hardReset();
 }

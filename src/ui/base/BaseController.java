@@ -761,6 +761,8 @@ public class BaseController {
                         displayedVars.add(v);
                     }
                 });
+
+
                 sortAllVars(displayedVars);
                 stopDebugging();
                 executionPanelComponentController.clearAllVars();

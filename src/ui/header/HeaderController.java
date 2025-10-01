@@ -56,12 +56,6 @@ public class HeaderController {
         FunctionAndProgramSelector.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (mainController != null && newVal != null) {
                 mainController.onFunctionSelectionChanged(newVal.toString());
-            }
-        });
-        // Java
-        FunctionAndProgramSelector.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (mainController != null && newVal != null) {
-                mainController.onFunctionSelectionChanged(newVal.toString());
                 DegreeLabel.setText("/" + mainController.getMaxDegree());
                 this.currentDegreeTextField.setText(mainController.getCurrentDegree());
                 this.mainController.newRunButtonPressed();
