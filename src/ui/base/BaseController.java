@@ -524,16 +524,20 @@ public class BaseController {
         Engine engineToShow = null;
         if (selectedName.equals(s_emulator.getCurrentProgramName())) {
             engineToShow = (Engine) s_emulator;
+            handleVarsForChangedFunction(engineToShow);
         } else {
             for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
                 if (selectedName.equals(sub.getUserString())) {
                     engineToShow = sub;
                     engineToShow.expandCommands();
+                    handleVarsForChangedFunction(engineToShow);
                     break;
                 }
             }
         }
         if (engineToShow != null) {
+            handleVarsForChangedFunction(engineToShow);
+
             selectedEngine = engineToShow; // Track the selected engine
             List<Command> displayedCommands = selectedEngine.getCommandsAtDesiredLevel(selectedEngine.getCurrentDegree());
             instructionTableComponentController.displayInstructions(displayedCommands);
@@ -566,20 +570,38 @@ public class BaseController {
         }
     }
 
+    private void handleVarsForChangedFunction(Engine engineToShow) {
+        if(engineToShow.assosciatedEngine == null) {
+            engineToShow.hardReset();
+            for(Engine sub : engineToShow.getSunFunctions()) {
+                sub.hardReset();
+            }
+        } else {
+            engineToShow.hardReset();
+            engineToShow.assosciatedEngine.hardReset();
+            for(Engine sub : engineToShow.getSunFunctions()) {
+                sub.hardReset();
+            }
+        }
+    }
+
     public void expandProgram(String functionName) {
         Engine engineToExpand;
         if (functionName.equals(s_emulator.getCurrentProgramName())) {
             engineToExpand = (Engine) s_emulator;
+            handleVarsWhenChangingDegree(engineToExpand);
         } else {
             engineToExpand = null;
             for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
                 if (functionName.equals(sub.getUserString())) {
                     engineToExpand = sub;
+                    handleVarsWhenChangingDegree(sub);
                     break;
                 }
             }
         }
         if (engineToExpand != null) {
+            handleVarsWhenChangingDegree(engineToExpand);
             engineToExpand.increaseDegree();
             int currExpansionLvl = engineToExpand.getCurrentDegree();
             List<Command> displayedCommands = engineToExpand.getCommandsAtDesiredLevel(currExpansionLvl);
@@ -616,16 +638,19 @@ public class BaseController {
         Engine engineToCollapse;
         if (functionName.equals(s_emulator.getCurrentProgramName())) {
             engineToCollapse = (Engine) s_emulator;
+            handleVarsWhenChangingDegree(engineToCollapse);
         } else {
             engineToCollapse = null;
             for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
                 if (functionName.equals(sub.getUserString())) {
                     engineToCollapse = sub;
+                    handleVarsWhenChangingDegree(sub);
                     break;
                 }
             }
         }
         if (engineToCollapse != null) {
+            handleVarsWhenChangingDegree(engineToCollapse);
             engineToCollapse.decreaseDegree();
             int currExpansionLvl = engineToCollapse.getCurrentDegree();
             List<Command> displayedCommands = engineToCollapse.getCommandsAtDesiredLevel(currExpansionLvl);
@@ -655,6 +680,21 @@ public class BaseController {
             instructionTableComponentController.displayInstructions(displayedCommands);
             executionPanelComponentController.displayAllVars(displayedVars);
             executionPanelComponentController.displayInputVars(inputVars, null);
+        }
+    }
+
+    private void handleVarsWhenChangingDegree(Engine engineToCollapse) {
+        if(engineToCollapse.assosciatedEngine == null) {
+            engineToCollapse.resetWorkAndOutputVariables();
+            for(Engine sub : engineToCollapse.getSunFunctions()) {
+                sub.resetWorkAndOutputVariables();
+            }
+        } else {
+            engineToCollapse.resetWorkAndOutputVariables();
+            engineToCollapse.assosciatedEngine.resetWorkAndOutputVariables();
+            for(Engine sub : engineToCollapse.getSunFunctions()) {
+                sub.resetWorkAndOutputVariables();
+            }
         }
     }
 

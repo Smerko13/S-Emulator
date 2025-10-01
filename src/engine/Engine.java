@@ -300,9 +300,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     @Override
     public void hardReset() {
         for(Variable variable : variables) {
-            if(variable instanceof InputVariable) {
-                variable.setValue(0);
-            }
+            variable.setValue(0);
         }
         this.cycleSum = 0;
         this.currentDegree = 0;
@@ -348,7 +346,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
         this.stats.updateStatEntry(expansionLevel, variables,extraInputVariables , cycleSum);
     }
 
-    private void resetWorkAndOutputVariables() {
+    public void resetWorkAndOutputVariables() {
         if(this.assosciatedEngine != null) {
             for (Variable variable : this.assosciatedEngine.variables) {
                 if (variable instanceof WorkVariable || variable instanceof OutputVariable) {
