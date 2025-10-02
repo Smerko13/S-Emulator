@@ -451,7 +451,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
         }
 
          for(Engine e : associatedEngine.subFunctions) {
-            if(e.getCurrentProgramName().equals(functionName)) {
+            if(e.getCurrentProgramName().equals(functionName)  || e.getUserString().equals(functionName)) {
                 Set<Variable> snapshot = associatedEngine.getVariables().stream()
                         .map(v -> v.clone())
                         .collect(Collectors.toSet());

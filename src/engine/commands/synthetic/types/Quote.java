@@ -147,7 +147,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
             this.associatedEngine.labels.add(newLabel);
             String exitLabel = newLabel + SubFunctionName + "_EXIT";
             this.associatedEngine.labels.add(exitLabel);
-            if(SubFunctionName.equals(functionName)) {
+            if(SubFunctionName.equals(functionName) || e.getUserString().equals(functionName)) {
                 outputTempVar = null;
                 Map<String,String> inputBind = new HashMap<>(); // e.g. "x1" -> "z155"
                 Engine clonedSubFunction = e.clone();
@@ -343,7 +343,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
         int result = 0;
         Set<Variable> snapshot = takeValueSnapshot(this.associatedEngine.getVariables());
         for (Engine e : this.associatedEngine.subFunctions) {
-            if (e.getCurrentProgramName().equals(functionName)) {
+            if (e.getCurrentProgramName().equals(functionName)  || e.getUserString().equals(functionName)) {
                 List<Variable> varsToPass = new ArrayList<>();
                 for (String arg : argumentList) {
                     if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
