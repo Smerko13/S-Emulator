@@ -18,7 +18,7 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Engine implements S_Emulator , Serializable, Cloneable {
+public class Program implements S_Emulator , Serializable, Cloneable {
     private List<Command> commands;
     private String currentProgramName;
     public Set<Variable> variables;
@@ -28,13 +28,13 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     public  Set<String> labels;
     private int currentDegree = 0;
     private Command currentCommand;
-    public  List<Engine> subFunctions;
+    public  List<Program> subFunctions;
     private String userString = null;
     boolean isOriginal = false;
-    public Engine assosciatedEngine = null;
+    public Program assosciatedProgram = null;
 
 
-    public Engine(boolean isOriginal) {
+    public Program(boolean isOriginal) {
         this.isOriginal = isOriginal;
         this.commands = new ArrayList<>();
         variables = new LinkedHashSet<>();
@@ -124,22 +124,22 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
         this.currentProgramName = program.getName();
         if(program.getSFunctions() != null) {
             for (SFunction function : program.getSFunctions().getSFunction()) {
-                Engine subEngine = new Engine(false);
-                subEngine.assosciatedEngine = this;
-                subEngine.currentProgramName = function.getName();
-                subEngine.userString = function.getUserString();
+                Program subProgram = new Program(false);
+                subProgram.assosciatedProgram = this;
+                subProgram.currentProgramName = function.getName();
+                subProgram.userString = function.getUserString();
                 SInstructions funcInstructions = function.getSInstructions();
                 for (SInstruction instruction : funcInstructions.getSInstruction()) {
                     if (Objects.equals(instruction.getType(), "basic")) {
-                        subEngine.commands.add(createBaseCommandFromInstruction(instruction));
+                        subProgram.commands.add(createBaseCommandFromInstruction(instruction));
                     } else if (Objects.equals(instruction.getType(), "synthetic")) {
-                        subEngine.commands.add(createSyntheticCommandFromInstruction(instruction));
+                        subProgram.commands.add(createSyntheticCommandFromInstruction(instruction));
                     }
                 }
-                for (Command cmd : subEngine.commands) {
-                    subEngine.variables.addAll(List.of(cmd.getAssociatedVariables()));
+                for (Command cmd : subProgram.commands) {
+                    subProgram.variables.addAll(List.of(cmd.getAssociatedVariables()));
                 }
-                this.subFunctions.add(subEngine);
+                this.subFunctions.add(subProgram);
             }
         }
         SInstructions instructions = program.getSInstructions();
@@ -267,12 +267,12 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     }
 
     @Override
-    public Engine[] getSunFunctions() {
-        List<Engine> funcs = new ArrayList<>(this.subFunctions);
-        for(Engine subFunction : subFunctions) {
+    public Program[] getSunFunctions() {
+        List<Program> funcs = new ArrayList<>(this.subFunctions);
+        for(Program subFunction : subFunctions) {
             funcs.addAll(Arrays.asList(subFunction.getSunFunctions()));
         }
-        return funcs.toArray(new Engine[0]);
+        return funcs.toArray(new Program[0]);
     }
 
     @Override
@@ -350,8 +350,8 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     }
 
     public void resetWorkAndOutputVariables() {
-        if(this.assosciatedEngine != null) {
-            for (Variable variable : this.assosciatedEngine.variables) {
+        if(this.assosciatedProgram != null) {
+            for (Variable variable : this.assosciatedProgram.variables) {
                 if (variable instanceof WorkVariable || variable instanceof OutputVariable) {
                     variable.setValue(0);
                 }
@@ -442,7 +442,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
         this.userString = userString;
     }
 
-    public int executeFunction(List<Variable> variables,String functionName, Engine associatedEngine) {
+    public int executeFunction(List<Variable> variables,String functionName, Program associatedProgram) {
         LinkedList<Variable> varsCopy = new LinkedList<>();
         for(Variable v : variables) {
             Variable copy = new WorkVariable(v.getName());
@@ -450,16 +450,16 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
             varsCopy.add(copy);
         }
 
-         for(Engine e : associatedEngine.subFunctions) {
+         for(Program e : associatedProgram.subFunctions) {
             if(e.getCurrentProgramName().equals(functionName)  || e.getUserString().equals(functionName)) {
-                Set<Variable> snapshot = associatedEngine.getVariables().stream()
+                Set<Variable> snapshot = associatedProgram.getVariables().stream()
                         .map(v -> v.clone())
                         .collect(Collectors.toSet());
                 e.assignVarsToCommands(varsCopy);
                 e.executeProgram(0,false);
                 int returnValue = e.getReturnValue();
                 for(Variable var : snapshot) {
-                    for(Variable originalVar : associatedEngine.getVariables()) {
+                    for(Variable originalVar : associatedProgram.getVariables()) {
                         if(var.getName().equals(originalVar.getName())) {
                             originalVar.setValue(var.getValue());
                         }
@@ -495,9 +495,9 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
     }
 
     @Override
-    public Engine clone() {
+    public Program clone() {
         try {
-            Engine cloned = (Engine) super.clone();
+            Program cloned = (Program) super.clone();
             // Deep copy commands
             cloned.commands = new ArrayList<>();
             for (Command cmd : this.commands) {
@@ -519,7 +519,7 @@ public class Engine implements S_Emulator , Serializable, Cloneable {
             cloned.stats = this.stats != null ? this.stats.clone() : null;
             // Deep copy subFunctions
             cloned.subFunctions = new ArrayList<>();
-            for (Engine sub : this.subFunctions) {
+            for (Program sub : this.subFunctions) {
                 cloned.subFunctions.add(sub.clone());
             }
             // Strings and primitives are immutable, so no need to clone

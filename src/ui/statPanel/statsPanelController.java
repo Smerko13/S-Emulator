@@ -1,6 +1,6 @@
 package ui.statPanel;
 
-import engine.Engine;
+import engine.Program;
 import engine.Stats;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
@@ -64,16 +64,16 @@ public class statsPanelController {
 
         try {
             // Find the correct engine for this execution
-            Engine engineToExpand = null;
+            Program programToExpand = null;
             if (mainController != null) {
                 Object rtEngine = mainController.getheaderComponentController().getSelectedFunction();
                 if (rtEngine != null) {
                     if (rtEngine.toString().equals(mainController.getEngine().getCurrentProgramName())) {
-                        engineToExpand = (Engine) mainController.getEngine();
+                        programToExpand = (Program) mainController.getEngine();
                     } else {
-                        for (Engine sub : mainController.getEngine().getSunFunctions()) {
+                        for (Program sub : mainController.getEngine().getSunFunctions()) {
                             if (rtEngine.toString().equals(sub.getUserString())) {
-                                engineToExpand = sub;
+                                programToExpand = sub;
                                 break;
                             }
                         }
@@ -81,7 +81,7 @@ public class statsPanelController {
                 }
             }
 
-            List<Command> displayedCommands = engineToExpand.getCommandsAtDesiredLevel(expansionLevel);
+            List<Command> displayedCommands = programToExpand.getCommandsAtDesiredLevel(expansionLevel);
 
             Set<Variable> displayedVars = new LinkedHashSet<>();
             Set<Variable> inputVars = new LinkedHashSet<>();
@@ -147,12 +147,12 @@ public class statsPanelController {
         // 4. Set input variable values from the selected execution
         List<Variable> inputVars = execRecord.getInputVars(); // or exec.getInputVariables() if private
         if (inputVars != null) {
-            // Find the current engine and set input variable values
-            Engine engine = (Engine) mainController.getEngine();
-            if(!functionName.equals(engine.getCurrentProgramName())) {
-                for(Engine sub : engine.getSunFunctions()) {
+            // Find the current program and set input variable values
+            Program program = (Program) mainController.getEngine();
+            if(!functionName.equals(program.getCurrentProgramName())) {
+                for(Program sub : program.getSunFunctions()) {
                     if(functionName.equals(sub.getUserString())) {
-                        engine = sub;
+                        program = sub;
                         break;
                     }
                 }
@@ -160,7 +160,7 @@ public class statsPanelController {
             for (Variable var : inputVars) {
                 if (var instanceof InputVariable) {
                     InputVariable inputVar = (InputVariable) var;
-                    for (Variable engVar : engine.getVariables()) {
+                    for (Variable engVar : program.getVariables()) {
                         if (engVar instanceof InputVariable && engVar.getName().equals(inputVar.getName())) {
                             ((InputVariable) engVar).setOriginalValue(inputVar.getValue());
                             engVar.setValue(inputVar.getValue());
@@ -170,7 +170,7 @@ public class statsPanelController {
                 }
             }
 
-            List<Command> commandsAtLevel = engine.getCommandsAtDesiredLevel(engine.getCurrentDegree());
+            List<Command> commandsAtLevel = program.getCommandsAtDesiredLevel(program.getCurrentDegree());
 
             Set<Variable> varsToShow = new LinkedHashSet<>();
             for (Command cmd : commandsAtLevel) {

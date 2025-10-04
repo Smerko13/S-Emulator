@@ -31,9 +31,9 @@ public interface S_Emulator {
 
     void reset();
 
-    static Engine loadSavedProgram(String filePath) {
+    static Program loadSavedProgram(String filePath) {
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filePath))) {
-            return (Engine) in.readObject();
+            return (Program) in.readObject();
         } catch (Exception e) {
             throw new RuntimeException();
         }
@@ -51,7 +51,7 @@ public interface S_Emulator {
 
     Command getCurrentDebugCommand();
 
-    Engine[] getSunFunctions();
+    Program[] getSunFunctions();
 
     String countBasicCommands();
 

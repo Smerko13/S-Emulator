@@ -1,6 +1,6 @@
 package engine.commands.synthetic.types;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
@@ -11,34 +11,33 @@ import schema.SInstruction;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
 public class GotoLabel extends SyntheticCommand implements Serializable {
     private String gototLabel;
 
-    public GotoLabel(SInstruction instruction, Engine engine) {
-        super(instruction, engine);
+    public GotoLabel(SInstruction instruction, Program program) {
+        super(instruction, program);
         this.commandName = "GOTO_LABEL";
         this.cycles = 1;
         this.levelOfExpansion = 1;
         gototLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(gototLabel);
-        this.associatedEngine.labels.add(gototLabel);
+        this.associatedProgram.labels.add(gototLabel);
         this.variable = createNewWorkVariable();
         this.associatedVariables.add(variable);
         this.isJumpCommand = true;
     }
     
-    public GotoLabel(String gotoLabel, Command parentCommand, Engine engine) {
-        super(null,"   ", parentCommand, engine);
+    public GotoLabel(String gotoLabel, Command parentCommand, Program program) {
+        super(null,"   ", parentCommand, program);
         this.commandName = "GOTO_LABEL";
         this.cycles = 1;
         this.levelOfExpansion = 1;
         this.gototLabel = gotoLabel;
         this.associatedLabels.add(gototLabel);
-        this.associatedEngine.labels.add(gototLabel);
+        this.associatedProgram.labels.add(gototLabel);
         this.variable = createNewWorkVariable();
         this.associatedVariables.add(variable);
         this.isJumpCommand = true;
@@ -47,7 +46,7 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
     private Variable createNewWorkVariable() {
         String workVarName = generateNewWorkVariableName();
         WorkVariable workVariable = new WorkVariable(workVarName);
-        this.associatedEngine.getVariables().add(workVariable);
+        this.associatedProgram.getVariables().add(workVariable);
         workVariable.setForGotoLabel(true);
         return workVariable;
     }
@@ -64,8 +63,8 @@ public class GotoLabel extends SyntheticCommand implements Serializable {
     }
 
     private void expansionLogic() {
-        this.ExpandedCommands.add(new Increase(this.variable, this.label,this,this.associatedEngine));
-        this.ExpandedCommands.add(new JumpNotZero(this.variable,this.gototLabel, "   ",this, this.associatedEngine));
+        this.ExpandedCommands.add(new Increase(this.variable, this.label,this,this.associatedProgram));
+        this.ExpandedCommands.add(new JumpNotZero(this.variable,this.gototLabel, "   ",this, this.associatedProgram));
     }
 
         @Override

@@ -1,20 +1,12 @@
 package ui;
 
-import engine.Engine;
-import engine.S_Emulator;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import ui.base.BaseController;
-import ui.header.HeaderController;
-import ui.instructionTable.InstructionTableController;
 
-import javax.swing.text.TabableView;
 import java.net.URL;
 
 public class Main extends Application {

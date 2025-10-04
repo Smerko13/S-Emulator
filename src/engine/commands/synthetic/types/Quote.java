@@ -1,6 +1,6 @@
 package engine.commands.synthetic.types;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
@@ -18,11 +18,11 @@ public class Quote extends SyntheticCommand implements Cloneable {
     String functionArguments;
     List<String> argumentList;
 
-    public Quote(SInstruction instruction, Engine engine) {
-        super(instruction, engine);
+    public Quote(SInstruction instruction, Program program) {
+        super(instruction, program);
         this.commandName = "QUOTE";
         String name = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
-        for (Engine e : this.associatedEngine.subFunctions) {
+        for (Program e : this.associatedProgram.subFunctions) {
             if (e.getCurrentProgramName().equals(name)) {
                 this.userString = e.getUserString();
                 this.functionName = e.getCurrentProgramName();
@@ -39,7 +39,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
     }
 
     private int calculateSubFunctionCycles(String functionName) {
-        for (Engine e : this.associatedEngine.subFunctions) {
+        for (Program e : this.associatedProgram.subFunctions) {
             if (e.getCurrentProgramName().equals(functionName)) {
                 return e.getTotalCycles();
             }
@@ -47,11 +47,11 @@ public class Quote extends SyntheticCommand implements Cloneable {
         return 0;
     }
 
-    public Quote(Variable assignedVariable, String functionName, List<String> functionArguments, String label, Command parentCommand, Engine engine) {
-        super(assignedVariable, label, parentCommand, engine);
+    public Quote(Variable assignedVariable, String functionName, List<String> functionArguments, String label, Command parentCommand, Program program) {
+        super(assignedVariable, label, parentCommand, program);
         this.commandName = "QUOTE";
         this.functionName = functionName; // fix needed
-        for(Engine e : this.associatedEngine.subFunctions) {
+        for(Program e : this.associatedProgram.subFunctions) {
             if(e.getCurrentProgramName().equals(functionName)) {
                 this.userString = e.getUserString();
                 break;
@@ -81,7 +81,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                 }
                 String cleanedArg = arg.substring(0, index);
                 boolean found = false;
-                for (Variable v : this.associatedEngine.getVariables()) {
+                for (Variable v : this.associatedProgram.getVariables()) {
                     if (v.getName().equals(cleanedArg)) {
                         this.associatedVariables.add(v);
                         found = true;
@@ -90,7 +90,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                 }
                 if (!found) {
                     Variable var = new InputVariable(cleanedArg);
-                    this.associatedEngine.getVariables().add(var);
+                    this.associatedProgram.getVariables().add(var);
                     this.associatedVariables.add(var);
                 }
             }
@@ -136,26 +136,26 @@ public class Quote extends SyntheticCommand implements Cloneable {
         WorkVariable outputTempVar = null;  // <-- add this
 
         if(!this.label.trim().isEmpty()) {
-            this.ExpandedCommands.add(new Neutral(this.associatedEngine.getOutputVar(),this.label,this, this.associatedEngine));
+            this.ExpandedCommands.add(new Neutral(this.associatedProgram.getOutputVar(),this.label,this, this.associatedProgram));
         }
 
-        for(Engine e : this.associatedEngine.subFunctions) {
+        for(Program e : this.associatedProgram.subFunctions) {
             Set<Variable> functionHelpers = new LinkedHashSet<>();
             String SubFunctionName = e.getCurrentProgramName();
             boolean exitLabelRequired = false;
             String newLabel = generateNewLabel();
-            this.associatedEngine.labels.add(newLabel);
+            this.associatedProgram.labels.add(newLabel);
             String exitLabel = newLabel + SubFunctionName + "_EXIT";
-            this.associatedEngine.labels.add(exitLabel);
+            this.associatedProgram.labels.add(exitLabel);
             if(SubFunctionName.equals(functionName) || e.getUserString().equals(functionName)) {
                 outputTempVar = null;
                 Map<String,String> inputBind = new HashMap<>(); // e.g. "x1" -> "z155"
-                Engine clonedSubFunction = e.clone();
+                Program clonedSubFunction = e.clone();
 
                 List<Command> subFunctionCommands = clonedSubFunction.getCommands();
                 for (Command cmd : subFunctionCommands) {
                     cmd.setParent(this);
-                    cmd.setAssociatedEngine(this.associatedEngine);
+                    cmd.setAssociatedEngine(this.associatedProgram);
                 }
 
                 // 1. Gather all labels
@@ -185,7 +185,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         labelMap.put(lbl, lbl); // Keep neutral label as is
                     } else {
                         String newLbl = generateNewLabel();
-                        this.associatedEngine.labels.add(newLbl);
+                        this.associatedProgram.labels.add(newLbl);
                         labelMap.put(lbl, newLbl);
                     }
                 }
@@ -212,7 +212,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         String newWorkVarName = generateNewWorkVariableName();
                         WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
                         functionHelpers.add(newWorkVar);
-                        this.associatedEngine.getVariables().add(newWorkVar);
+                        this.associatedProgram.getVariables().add(newWorkVar);
                         for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
                         }
@@ -223,7 +223,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                             freshName = generateNewWorkVariableName();
                             clash = freshName.equals(this.variable.getName());
                             if (!clash) {
-                                for (Variable vv : this.associatedEngine.getVariables()) {
+                                for (Variable vv : this.associatedProgram.getVariables()) {
                                     if (vv.getName().equals(freshName)) { clash = true; break; }
                                 }
                             }
@@ -233,7 +233,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         WorkVariable newWorkVar = new WorkVariable(newOutputVarName);
                         outputTempVar = newWorkVar;                    // <-- add this
                         functionHelpers.add(newWorkVar);
-                        this.associatedEngine.getVariables().add(newWorkVar);
+                        this.associatedProgram.getVariables().add(newWorkVar);
                         for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
                         }
@@ -242,7 +242,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         String newWorkVarName = generateNewWorkVariableName();
                         WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
                         functionHelpers.add(newWorkVar);
-                        this.associatedEngine.getVariables().add(newWorkVar);
+                        this.associatedProgram.getVariables().add(newWorkVar);
                         for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
                         }
@@ -250,9 +250,9 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         if(index >= this.argumentList.size()) {break;}
                         String arg = this.argumentList.get(index++);
                         if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
-                            for (Variable var : this.associatedEngine.getVariables()) {
+                            for (Variable var : this.associatedProgram.getVariables()) {
                                 if (var.getName().equals(arg)) {
-                                    this.ExpandedCommands.add(new Assignment(newWorkVar, "   ", var, this, this.associatedEngine));
+                                    this.ExpandedCommands.add(new Assignment(newWorkVar, "   ", var, this, this.associatedProgram));
                                     break;
                                 }
                             }
@@ -265,7 +265,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                             } else if (checkParentCommand(this) && functionName.equals("NOT") && subArgumentList.equals(List.of("(Minus,x1,x2)"))) {
                                 subArgumentList = List.of("(Minus,x2,x1)");
                             }
-                            this.ExpandedCommands.add(new Quote(newWorkVar, functionName, subArgumentList, "   ", this, this.associatedEngine));
+                            this.ExpandedCommands.add(new Quote(newWorkVar, functionName, subArgumentList, "   ", this, this.associatedProgram));
                         } else {
                             throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                         }
@@ -303,7 +303,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                 if (outputTempVar != null) {
                     String anchor = exitLabelRequired ? exitLabel : "   ";
                     this.ExpandedCommands.add(
-                            new Assignment(this.variable, anchor, outputTempVar, this, this.associatedEngine)
+                            new Assignment(this.variable, anchor, outputTempVar, this, this.associatedProgram)
                     );
                 }
 
@@ -311,7 +311,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                 for (Variable v : functionHelpers) {
                     // assign 0 directly instead of looping ZeroVariable
                     this.ExpandedCommands.add(
-                            new ConstantAssignment(v, 0, "   ", this, this.associatedEngine)
+                            new ConstantAssignment(v, 0, "   ", this, this.associatedProgram)
                     );
                 }
 
@@ -341,13 +341,13 @@ public class Quote extends SyntheticCommand implements Cloneable {
     @Override
     public String execute() {
         int result = 0;
-        Set<Variable> snapshot = takeValueSnapshot(this.associatedEngine.getVariables());
-        for (Engine e : this.associatedEngine.subFunctions) {
+        Set<Variable> snapshot = takeValueSnapshot(this.associatedProgram.getVariables());
+        for (Program e : this.associatedProgram.subFunctions) {
             if (e.getCurrentProgramName().equals(functionName)  || e.getUserString().equals(functionName)) {
                 List<Variable> varsToPass = new ArrayList<>();
                 for (String arg : argumentList) {
                     if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
-                        for (Variable v : this.associatedEngine.getVariables()) {
+                        for (Variable v : this.associatedProgram.getVariables()) {
                             if (v.getName().equals(arg)) {
                                 varsToPass.add(v);
                                 break;
@@ -355,7 +355,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         }
                     } else if (arg.charAt(0) == '(') {
                         varsToPass.add(handleFunctionCall(arg));
-                        for (Variable var : this.associatedEngine.variables) {
+                        for (Variable var : this.associatedProgram.variables) {
                             for (Variable snapshotVar : snapshot) {
                                 if (var.getName().equals(snapshotVar.getName())) {
                                     var.setValue(snapshotVar.getValue());
@@ -368,11 +368,11 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                     }
                 }
-                result = e.executeFunction(varsToPass, functionName, this.associatedEngine);
+                result = e.executeFunction(varsToPass, functionName, this.associatedProgram);
                 break;
             }
         }
-        for (Variable var : this.associatedEngine.variables) {
+        for (Variable var : this.associatedProgram.variables) {
             for (Variable snapshotVar : snapshot) {
                 if (var.getName().equals(snapshotVar.getName())) {
                     var.setValue(snapshotVar.getValue());
@@ -407,9 +407,9 @@ public class Quote extends SyntheticCommand implements Cloneable {
     private Variable handleFunctionCall(String arg) {
         //handle function calls inside arguments
         Variable var = null;
-        Set<Variable> snapshot = takeValueSnapshot(this.associatedEngine.getVariables());
+        Set<Variable> snapshot = takeValueSnapshot(this.associatedProgram.getVariables());
         List<Variable> subVarsToPass;
-        for (Engine subE : this.associatedEngine.subFunctions) {
+        for (Program subE : this.associatedProgram.subFunctions) {
             String name = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
             if (subE.getCurrentProgramName().equals(name)) {
                 subVarsToPass = new ArrayList<>();
@@ -417,7 +417,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                 List<String> subArgumentList = initializeArgumentList(subFunctionArguments);
                 for (String subArg : subArgumentList) {
                     if (subArg.charAt(0) == 'x' || subArg.charAt(0) == 'y' || subArg.charAt(0) == 'z') {
-                        for (Variable v : this.associatedEngine.getVariables()) {
+                        for (Variable v : this.associatedProgram.getVariables()) {
                             if (v.getName().equals(subArg)) {
                                 subVarsToPass.add(v);
                                 break;
@@ -425,7 +425,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         }
                     } else if (subArg.charAt(0) == '(') {
                         subVarsToPass.add(handleFunctionCall(subArg));
-                        for (Variable varz : this.associatedEngine.variables) {
+                        for (Variable varz : this.associatedProgram.variables) {
                             for (Variable snapshotVar : snapshot) {
                                 if (varz.getName().equals(snapshotVar.getName())) {
                                     varz.setValue(snapshotVar.getValue());
@@ -438,7 +438,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
                     }
                 }
-                int resultOfSubFunction = subE.executeFunction(subVarsToPass, name, this.associatedEngine);
+                int resultOfSubFunction = subE.executeFunction(subVarsToPass, name, this.associatedProgram);
                 var = new WorkVariable("temp");
                 var.setValue(resultOfSubFunction);
                 break;

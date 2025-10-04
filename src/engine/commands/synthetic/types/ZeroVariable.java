@@ -1,6 +1,6 @@
 package engine.commands.synthetic.types;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
@@ -16,15 +16,15 @@ import java.util.*;
 
 public class ZeroVariable extends SyntheticCommand implements Serializable {
 
-    public ZeroVariable(SInstruction instruction, Engine engine) {
-        super(instruction, engine);
+    public ZeroVariable(SInstruction instruction, Program program) {
+        super(instruction, program);
         this.commandName = "ZERO_VARIABLE";
         this.cycles = 1;
         this.levelOfExpansion = 1;
     }
 
-    public ZeroVariable(Variable variable, String label, Command parentCommand, Engine engine) {
-        super(variable, label, parentCommand, engine);
+    public ZeroVariable(Variable variable, String label, Command parentCommand, Program program) {
+        super(variable, label, parentCommand, program);
         this.commandName = "ZERO_VARIABLE";
         this.cycles = 1;
         this.levelOfExpansion = 1;
@@ -43,14 +43,14 @@ public class ZeroVariable extends SyntheticCommand implements Serializable {
 
     private void expansionLogic() {
         String newLabel = generateNewLabel();
-        this.associatedEngine.labels.add(newLabel);
+        this.associatedProgram.labels.add(newLabel);
         if(this.label.equals("   ")) {
-            this.ExpandedCommands.add(new Decrease(this.variable,newLabel, this, this.associatedEngine));
+            this.ExpandedCommands.add(new Decrease(this.variable,newLabel, this, this.associatedProgram));
         } else {
-            this.ExpandedCommands.add(new Neutral(this.variable,this.label, this, this.associatedEngine));
-            this.ExpandedCommands.add(new Decrease(this.variable,newLabel, this, this.associatedEngine));
+            this.ExpandedCommands.add(new Neutral(this.variable,this.label, this, this.associatedProgram));
+            this.ExpandedCommands.add(new Decrease(this.variable,newLabel, this, this.associatedProgram));
         }
-        this.ExpandedCommands.add(new JumpNotZero(this.variable,newLabel,"   ", this, this.associatedEngine));
+        this.ExpandedCommands.add(new JumpNotZero(this.variable,newLabel,"   ", this, this.associatedProgram));
         expandFurther();
     }
 

@@ -1,6 +1,5 @@
 package ui.instructionTable;
 
-import engine.Engine;
 import engine.commands.Command;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;

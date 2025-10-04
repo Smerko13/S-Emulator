@@ -1,12 +1,9 @@
 package engine.commands.base.types;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
-import engine.arguments.types.InputVariable;
-import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
-import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
 import java.io.Serializable;
@@ -15,21 +12,21 @@ import java.util.*;
 public class JumpNotZero extends BaseCommand implements Serializable {
     String targetLabel;
 
-    public JumpNotZero(SInstruction instruction, Engine engine) {
-        super(instruction, engine);
+    public JumpNotZero(SInstruction instruction, Program program) {
+        super(instruction, program);
         this.commandName = "JUMP_NOT_ZERO";
         this.cycles = 2;
         this.targetLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
-        this.associatedEngine.labels.add(targetLabel);
+        this.associatedProgram.labels.add(targetLabel);
         this.isJumpCommand = true;
     }
 
-    public JumpNotZero(Variable variable, String targetLabel, String label, Command parentCommand, Engine engine) {
-        super(variable, label, parentCommand, engine);
+    public JumpNotZero(Variable variable, String targetLabel, String label, Command parentCommand, Program program) {
+        super(variable, label, parentCommand, program);
         this.commandName = "JUMP_NOT_ZERO";
         this.cycles = 2;
         this.targetLabel = targetLabel;
-        this.associatedEngine.labels.add(targetLabel);
+        this.associatedProgram.labels.add(targetLabel);
         this.isJumpCommand = true;
     }
 

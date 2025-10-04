@@ -1,13 +1,11 @@
 package engine.commands.synthetic;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
 import engine.commands.Command;
-import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
 import java.io.Serializable;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -15,15 +13,15 @@ public abstract class SyntheticCommand extends Command implements Serializable {
     protected List<Command> ExpandedCommands;
     protected boolean didInitialize = false;
 
-    public SyntheticCommand(SInstruction instruction,Engine engine) {
-        super(instruction,engine);
+    public SyntheticCommand(SInstruction instruction, Program program) {
+        super(instruction, program);
         this.commandType = 'S'; // SyntheticCommand type
         this.isExpandable = true; // SyntheticCommand is expandable
         this.ExpandedCommands = new java.util.ArrayList<>();
     }
 
-    public SyntheticCommand(Variable variable, String label, Command parentCommand, Engine engine) {
-        super(variable, label, parentCommand,engine);
+    public SyntheticCommand(Variable variable, String label, Command parentCommand, Program program) {
+        super(variable, label, parentCommand, program);
         this.commandType = 'S'; // SyntheticCommand type
         this.isExpandable = true; // SyntheticCommand is expandable
         this.ExpandedCommands = new java.util.ArrayList<>();
@@ -42,7 +40,7 @@ public abstract class SyntheticCommand extends Command implements Serializable {
         boolean found = false;
         while (!found) {
             String currentLabel = "L" + labelIndex;
-            if (!this.associatedEngine.labels.contains(currentLabel)) {
+            if (!this.associatedProgram.labels.contains(currentLabel)) {
                 found = true;
             } else {
                 labelIndex++;

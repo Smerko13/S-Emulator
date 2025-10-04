@@ -1,6 +1,6 @@
 package ui.base;
 
-import engine.Engine;
+import engine.Program;
 import engine.S_Emulator;
 import engine.Stats;
 import engine.arguments.Variable;
@@ -37,7 +37,7 @@ public class BaseController {
     List<S_Emulator> programHistory;
     private boolean isFileLoaded = false;
     private boolean isDebuggingEnabled = false;
-    private Engine selectedEngine = null;
+    private Program selectedProgram = null;
 
     public boolean isDebuggingEnabled() {
         return isDebuggingEnabled;
@@ -66,7 +66,7 @@ public class BaseController {
     public void loadFile(File selectedFile) throws InterruptedException {
         instructionTableComponentController.clearInstructions();
         executionPanelComponentController.clearAllVars();
-        s_emulator = new Engine(true);
+        s_emulator = new Program(true);
         programHistory.add(s_emulator);
         showLoadingProgress(() -> Platform.runLater(() -> {
             try {
@@ -106,7 +106,7 @@ public class BaseController {
                     this.executionPanelComponentController.enableAllButtons();
                     List<String> functionNames = new ArrayList<>();
                     functionNames.add(s_emulator.getCurrentProgramName());
-                    for (Engine sub : s_emulator.getSunFunctions()) {
+                    for (Program sub : s_emulator.getSunFunctions()) {
                         functionNames.add(sub.getCurrentProgramName());
                     }
                     // Call a method in HeaderController to update the selector
@@ -120,13 +120,13 @@ public class BaseController {
 
     // Java
     public String getCurrentDegree() {
-        Engine engine = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
-        return String.valueOf(engine.getCurrentDegree());
+        Program program = selectedProgram != null ? selectedProgram : (Program) s_emulator;
+        return String.valueOf(program.getCurrentDegree());
     }
 
     public String getMaxDegree() {
-        Engine engine = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
-        return String.valueOf(engine.getMaxExpansionDepth());
+        Program program = selectedProgram != null ? selectedProgram : (Program) s_emulator;
+        return String.valueOf(program.getMaxExpansionDepth());
     }
 
     public void setMonitors() {
@@ -200,25 +200,25 @@ public class BaseController {
 
     public void executeProgram() {
         Map<String, Integer> prevValues = new HashMap<>();
-        Engine engineToRun = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
-        for (Variable v : engineToRun.getVariables()) {
+        Program programToRun = selectedProgram != null ? selectedProgram : (Program) s_emulator;
+        for (Variable v : programToRun.getVariables()) {
             prevValues.put(v.getName(), v.getValue());
         }
 
         // 2. Execute
-        engineToRun.executeProgram(engineToRun.getCurrentDegree(),true);
+        programToRun.executeProgram(programToRun.getCurrentDegree(),true);
 
         // 3. Find changed variables
         Set<String> changedVars = new HashSet<>();
-        for (Variable v : engineToRun.getVariables()) {
+        for (Variable v : programToRun.getVariables()) {
             Integer prev = prevValues.get(v.getName());
             if (prev != null && prev != v.getValue()) {
                 changedVars.add(v.getName());
             }
         }
 
-        int currExpansionLvl = engineToRun.getCurrentDegree();
-        List<Command> displayedCommands = engineToRun.getCommandsAtDesiredLevel(currExpansionLvl);
+        int currExpansionLvl = programToRun.getCurrentDegree();
+        List<Command> displayedCommands = programToRun.getCommandsAtDesiredLevel(currExpansionLvl);
         instructionTableComponentController.displayInstructions(displayedCommands);
 
         Set<Variable> displayedVars = new LinkedHashSet<>();
@@ -237,7 +237,7 @@ public class BaseController {
                 }
             }
         }
-        engineToRun.getVariables().forEach(v -> {
+        programToRun.getVariables().forEach(v -> {
             if (v instanceof OutputVariable) {
                 displayedVars.add(v);
             }
@@ -247,8 +247,8 @@ public class BaseController {
 
         executionPanelComponentController.displayAllVars(displayedVars, changedVars);
         executionPanelComponentController.displayInputVars(inputVars, changedVars);
-        executionPanelComponentController.setCyclesLabel(engineToRun.getCycleSum());
-        statsComponentController.updateStats(engineToRun.getExecutionHistory());
+        executionPanelComponentController.setCyclesLabel(programToRun.getCycleSum());
+        statsComponentController.updateStats(programToRun.getExecutionHistory());
     }
 
     public void sortAllVars(Set<Variable> displayedVars) {
@@ -334,9 +334,9 @@ public class BaseController {
     public void startDebugging() {
         if (!isFileLoaded) return;
         isDebuggingEnabled = true;
-        Engine engineToDebug = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
-        engineToDebug.prepareForDebugging();
-        Command currentDebugCommand = engineToDebug.getCurrentDebugCommand();
+        Program programToDebug = selectedProgram != null ? selectedProgram : (Program) s_emulator;
+        programToDebug.prepareForDebugging();
+        Command currentDebugCommand = programToDebug.getCurrentDebugCommand();
         instructionTableComponentController.setDebugHighlight(currentDebugCommand);
         executionPanelComponentController.updateDebugButtons();
     }
@@ -344,29 +344,29 @@ public class BaseController {
     public void stepOver() {
         Object selected = this.headerComponentController.getSelectedFunction();
         if (selected != null) {
-            Engine engineToStepOver;
+            Program programToStepOver;
             if (selected.toString().equals(s_emulator.getCurrentProgramName())) {
-                engineToStepOver = (Engine) s_emulator;
+                programToStepOver = (Program) s_emulator;
             } else {
-                engineToStepOver = null;
-                for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+                programToStepOver = null;
+                for (Program sub : ((Program) s_emulator).getSunFunctions()) {
                     if (selected.toString().equals(sub.getCurrentProgramName())) {
-                        engineToStepOver = sub;
+                        programToStepOver = sub;
                         break;
                     }
                 }
             }
-            if (engineToStepOver != null) {
+            if (programToStepOver != null) {
                 Map<String, Integer> prevValues = new HashMap<>();
-                for (Variable v : engineToStepOver.getVariables()) {
+                for (Variable v : programToStepOver.getVariables()) {
                     prevValues.put(v.getName(), v.getValue());
                 }
 
-                engineToStepOver.stepOver();
-                Command currentDebugCommand = engineToStepOver.getCurrentDebugCommand();
+                programToStepOver.stepOver();
+                Command currentDebugCommand = programToStepOver.getCurrentDebugCommand();
                 instructionTableComponentController.setDebugHighlight(currentDebugCommand);
-                int currExpansionLvl = engineToStepOver.getCurrentDegree();
-                List<Command> displayedCommands = engineToStepOver.getCommandsAtDesiredLevel(currExpansionLvl);
+                int currExpansionLvl = programToStepOver.getCurrentDegree();
+                List<Command> displayedCommands = programToStepOver.getCommandsAtDesiredLevel(currExpansionLvl);
 
                 Set<Variable> displayedVars = new LinkedHashSet<>();
                 Set<Variable> inputVars = new LinkedHashSet<>();
@@ -387,7 +387,7 @@ public class BaseController {
                 sortAllVars(displayedVars);
 
                 Set<String> changedVars = new HashSet<>();
-                for (Variable v : engineToStepOver.getVariables()) {
+                for (Variable v : programToStepOver.getVariables()) {
                     Integer prev = prevValues.get(v.getName());
                     if (prev != null && prev != v.getValue()) {
                         changedVars.add(v.getName());
@@ -396,7 +396,7 @@ public class BaseController {
 
                 executionPanelComponentController.displayAllVars(displayedVars, changedVars);
                 executionPanelComponentController.displayInputVars(inputVars, changedVars);
-                executionPanelComponentController.setCyclesLabel(engineToStepOver.getCycleSum());
+                executionPanelComponentController.setCyclesLabel(programToStepOver.getCycleSum());
                 if(currentDebugCommand == null) {
                     isDebuggingEnabled = false;
                 }
@@ -408,23 +408,23 @@ public class BaseController {
     public void stopDebugging() {
         Object selected = this.headerComponentController.getSelectedFunction();
         if (selected != null) {
-            Engine engineToStepOver;
+            Program programToStepOver;
             if (selected.toString().equals(s_emulator.getCurrentProgramName())) {
-                engineToStepOver = (Engine) s_emulator;
+                programToStepOver = (Program) s_emulator;
             } else {
-                engineToStepOver = null;
-                for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+                programToStepOver = null;
+                for (Program sub : ((Program) s_emulator).getSunFunctions()) {
                     if (selected.toString().equals(sub.getCurrentProgramName())) {
-                        engineToStepOver = sub;
+                        programToStepOver = sub;
                         break;
                     }
                 }
             }
-            if (engineToStepOver != null) {
+            if (programToStepOver != null) {
 
-                engineToStepOver.reset();
-                int currExpansionLvl = engineToStepOver.getCurrentDegree();
-                List<Command> displayedCommands = engineToStepOver.getCommandsAtDesiredLevel(currExpansionLvl);
+                programToStepOver.reset();
+                int currExpansionLvl = programToStepOver.getCurrentDegree();
+                List<Command> displayedCommands = programToStepOver.getCommandsAtDesiredLevel(currExpansionLvl);
 
                 Set<Variable> displayedVars = new LinkedHashSet<>();
                 Set<Variable> inputVars = new LinkedHashSet<>();
@@ -442,12 +442,12 @@ public class BaseController {
                         }
                     }
                 }
-                engineToStepOver.reset();
+                programToStepOver.reset();
                 sortAllVars(displayedVars);
 
                 executionPanelComponentController.displayAllVars(displayedVars, null);
                 executionPanelComponentController.displayInputVars(inputVars, null);
-                executionPanelComponentController.setCyclesLabel(engineToStepOver.getCycleSum());
+                executionPanelComponentController.setCyclesLabel(programToStepOver.getCycleSum());
                 executionPanelComponentController.setCyclesLabel(0);
                 instructionTableComponentController.setDebugHighlight(null);
                 isDebuggingEnabled = false;
@@ -459,34 +459,34 @@ public class BaseController {
     public void continueDebugging() {
         Object selected = this.headerComponentController.getSelectedFunction();
         if (selected != null) {
-            Engine engineToContinue;
+            Program programToContinue;
             if (selected.toString().equals(s_emulator.getCurrentProgramName())) {
-                engineToContinue = (Engine) s_emulator;
+                programToContinue = (Program) s_emulator;
             } else {
-                engineToContinue = null;
-                for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+                programToContinue = null;
+                for (Program sub : ((Program) s_emulator).getSunFunctions()) {
                     if (selected.toString().equals(sub.getCurrentProgramName())) {
-                        engineToContinue = sub;
+                        programToContinue = sub;
                         break;
                     }
                 }
             }
-            if (engineToContinue != null) {
+            if (programToContinue != null) {
                 Map<String, Integer> prevValues = new HashMap<>();
-                for (Variable v : engineToContinue.getVariables()) {
+                for (Variable v : programToContinue.getVariables()) {
                     prevValues.put(v.getName(), v.getValue());
                 }
-                while (isDebuggingEnabled && engineToContinue.getCurrentDebugCommand() != null) {
-                    engineToContinue.stepOver();
+                while (isDebuggingEnabled && programToContinue.getCurrentDebugCommand() != null) {
+                    programToContinue.stepOver();
                 }
                 // Clear highlight and update UI
                 instructionTableComponentController.setDebugHighlight(null);
                 executionPanelComponentController.updateDebugButtons();
                 // Update variable tables
-                Command currentDebugCommand = engineToContinue.getCurrentDebugCommand();
+                Command currentDebugCommand = programToContinue.getCurrentDebugCommand();
                 instructionTableComponentController.setDebugHighlight(currentDebugCommand);
-                int currExpansionLvl = engineToContinue.getCurrentDegree();
-                List<Command> displayedCommands = engineToContinue.getCommandsAtDesiredLevel(currExpansionLvl);
+                int currExpansionLvl = programToContinue.getCurrentDegree();
+                List<Command> displayedCommands = programToContinue.getCommandsAtDesiredLevel(currExpansionLvl);
 
                 Set<Variable> displayedVars = new LinkedHashSet<>();
                 Set<Variable> inputVars = new LinkedHashSet<>();
@@ -507,7 +507,7 @@ public class BaseController {
                 sortAllVars(displayedVars);
 
                 Set<String> changedVars = new HashSet<>();
-                for (Variable v : engineToContinue.getVariables()) {
+                for (Variable v : programToContinue.getVariables()) {
                     Integer prev = prevValues.get(v.getName());
                     if (prev != null && prev != v.getValue()) {
                         changedVars.add(v.getName());
@@ -516,7 +516,7 @@ public class BaseController {
 
                 executionPanelComponentController.displayAllVars(displayedVars, changedVars);
                 executionPanelComponentController.displayInputVars(inputVars, changedVars);
-                executionPanelComponentController.setCyclesLabel(engineToContinue.getCycleSum());
+                executionPanelComponentController.setCyclesLabel(programToContinue.getCycleSum());
             }
         }
         // Disable debugging
@@ -526,25 +526,25 @@ public class BaseController {
 
 
     public void onFunctionSelectionChanged(String selectedName) {
-        Engine engineToShow = null;
+        Program programToShow = null;
         if (selectedName.equals(s_emulator.getCurrentProgramName())) {
-            engineToShow = (Engine) s_emulator;
-            handleVarsForChangedFunction(engineToShow);
+            programToShow = (Program) s_emulator;
+            handleVarsForChangedFunction(programToShow);
         } else {
-            for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+            for (Program sub : ((Program) s_emulator).getSunFunctions()) {
                 if (selectedName.equals(sub.getCurrentProgramName())) {
-                    engineToShow = sub;
-                    engineToShow.expandCommands();
-                    handleVarsForChangedFunction(engineToShow);
+                    programToShow = sub;
+                    programToShow.expandCommands();
+                    handleVarsForChangedFunction(programToShow);
                     break;
                 }
             }
         }
-        if (engineToShow != null) {
-            handleVarsForChangedFunction(engineToShow);
+        if (programToShow != null) {
+            handleVarsForChangedFunction(programToShow);
 
-            selectedEngine = engineToShow; // Track the selected engine
-            List<Command> displayedCommands = selectedEngine.getCommandsAtDesiredLevel(selectedEngine.getCurrentDegree());
+            selectedProgram = programToShow; // Track the selected engine
+            List<Command> displayedCommands = selectedProgram.getCommandsAtDesiredLevel(selectedProgram.getCurrentDegree());
             instructionTableComponentController.displayInstructions(displayedCommands);
 
             Set<Variable> displayedVars = new LinkedHashSet<>();
@@ -563,7 +563,7 @@ public class BaseController {
                     }
                 }
             }
-            selectedEngine.getVariables().forEach(v -> {
+            selectedProgram.getVariables().forEach(v -> {
                 if (v instanceof OutputVariable) {
                     displayedVars.add(v);
                 }
@@ -571,45 +571,45 @@ public class BaseController {
 
             executionPanelComponentController.displayAllVars(displayedVars);
             executionPanelComponentController.displayInputVars(inputVars, null);
-            statsComponentController.updateStats(selectedEngine.getExecutionHistory());
+            statsComponentController.updateStats(selectedProgram.getExecutionHistory());
         }
     }
 
-    private void handleVarsForChangedFunction(Engine engineToShow) {
-        if(engineToShow.assosciatedEngine == null) {
-            engineToShow.hardReset();
-            for(Engine sub : engineToShow.getSunFunctions()) {
+    private void handleVarsForChangedFunction(Program programToShow) {
+        if(programToShow.assosciatedProgram == null) {
+            programToShow.hardReset();
+            for(Program sub : programToShow.getSunFunctions()) {
                 sub.hardReset();
             }
         } else {
-            engineToShow.hardReset();
-            engineToShow.assosciatedEngine.hardReset();
-            for(Engine sub : engineToShow.getSunFunctions()) {
+            programToShow.hardReset();
+            programToShow.assosciatedProgram.hardReset();
+            for(Program sub : programToShow.getSunFunctions()) {
                 sub.hardReset();
             }
         }
     }
 
     public void expandProgram(String functionName) {
-        Engine engineToExpand;
+        Program programToExpand;
         if (functionName.equals(s_emulator.getCurrentProgramName())) {
-            engineToExpand = (Engine) s_emulator;
-            handleVarsWhenChangingDegree(engineToExpand);
+            programToExpand = (Program) s_emulator;
+            handleVarsWhenChangingDegree(programToExpand);
         } else {
-            engineToExpand = null;
-            for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+            programToExpand = null;
+            for (Program sub : ((Program) s_emulator).getSunFunctions()) {
                 if (functionName.equals(sub.getCurrentProgramName())) {
-                    engineToExpand = sub;
+                    programToExpand = sub;
                     handleVarsWhenChangingDegree(sub);
                     break;
                 }
             }
         }
-        if (engineToExpand != null) {
-            handleVarsWhenChangingDegree(engineToExpand);
-            engineToExpand.increaseDegree();
-            int currExpansionLvl = engineToExpand.getCurrentDegree();
-            List<Command> displayedCommands = engineToExpand.getCommandsAtDesiredLevel(currExpansionLvl);
+        if (programToExpand != null) {
+            handleVarsWhenChangingDegree(programToExpand);
+            programToExpand.increaseDegree();
+            int currExpansionLvl = programToExpand.getCurrentDegree();
+            List<Command> displayedCommands = programToExpand.getCommandsAtDesiredLevel(currExpansionLvl);
 
             Set<Variable> displayedVars = new LinkedHashSet<>();
             Set<Variable> inputVars = new LinkedHashSet<>();
@@ -627,7 +627,7 @@ public class BaseController {
                     }
                 }
             }
-            engineToExpand.getVariables().forEach(v -> {
+            programToExpand.getVariables().forEach(v -> {
                 if (v instanceof OutputVariable) {
                     displayedVars.add(v);
                 }
@@ -640,25 +640,25 @@ public class BaseController {
     }
 
     public void collapseProgram(String functionName) {
-        Engine engineToCollapse;
+        Program programToCollapse;
         if (functionName.equals(s_emulator.getCurrentProgramName())) {
-            engineToCollapse = (Engine) s_emulator;
-            handleVarsWhenChangingDegree(engineToCollapse);
+            programToCollapse = (Program) s_emulator;
+            handleVarsWhenChangingDegree(programToCollapse);
         } else {
-            engineToCollapse = null;
-            for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+            programToCollapse = null;
+            for (Program sub : ((Program) s_emulator).getSunFunctions()) {
                 if (functionName.equals(sub.getCurrentProgramName())) {
-                    engineToCollapse = sub;
+                    programToCollapse = sub;
                     handleVarsWhenChangingDegree(sub);
                     break;
                 }
             }
         }
-        if (engineToCollapse != null) {
-            handleVarsWhenChangingDegree(engineToCollapse);
-            engineToCollapse.decreaseDegree();
-            int currExpansionLvl = engineToCollapse.getCurrentDegree();
-            List<Command> displayedCommands = engineToCollapse.getCommandsAtDesiredLevel(currExpansionLvl);
+        if (programToCollapse != null) {
+            handleVarsWhenChangingDegree(programToCollapse);
+            programToCollapse.decreaseDegree();
+            int currExpansionLvl = programToCollapse.getCurrentDegree();
+            List<Command> displayedCommands = programToCollapse.getCommandsAtDesiredLevel(currExpansionLvl);
 
             Set<Variable> displayedVars = new LinkedHashSet<>();
             Set<Variable> inputVars = new LinkedHashSet<>();
@@ -676,7 +676,7 @@ public class BaseController {
                     }
                 }
             }
-            engineToCollapse.getVariables().forEach(v -> {
+            programToCollapse.getVariables().forEach(v -> {
                 if (v instanceof OutputVariable) {
                     displayedVars.add(v);
                 }
@@ -688,16 +688,16 @@ public class BaseController {
         }
     }
 
-    private void handleVarsWhenChangingDegree(Engine engineToCollapse) {
-        if(engineToCollapse.assosciatedEngine == null) {
-            engineToCollapse.resetWorkAndOutputVariables();
-            for(Engine sub : engineToCollapse.getSunFunctions()) {
+    private void handleVarsWhenChangingDegree(Program programToCollapse) {
+        if(programToCollapse.assosciatedProgram == null) {
+            programToCollapse.resetWorkAndOutputVariables();
+            for(Program sub : programToCollapse.getSunFunctions()) {
                 sub.resetWorkAndOutputVariables();
             }
         } else {
-            engineToCollapse.resetWorkAndOutputVariables();
-            engineToCollapse.assosciatedEngine.resetWorkAndOutputVariables();
-            for(Engine sub : engineToCollapse.getSunFunctions()) {
+            programToCollapse.resetWorkAndOutputVariables();
+            programToCollapse.assosciatedProgram.resetWorkAndOutputVariables();
+            for(Program sub : programToCollapse.getSunFunctions()) {
                 sub.resetWorkAndOutputVariables();
             }
         }
@@ -714,27 +714,27 @@ public class BaseController {
     }
 
     public String getProgramSummary() {
-        Engine engineToSummarize = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
-        if(engineToSummarize == null) {
+        Program programToSummarize = selectedProgram != null ? selectedProgram : (Program) s_emulator;
+        if(programToSummarize == null) {
             return "No program currently loaded.";
         }
-        String summary = "Program Name: " + engineToSummarize.getCurrentProgramName() + "\nCurrent expansion level: " + engineToSummarize.getCurrentDegree()+"\n";
-        summary += "Number of Commands: " + engineToSummarize.getCommandsAtDesiredLevel(engineToSummarize.getCurrentDegree()).size() + "\n";
-        summary += "Number of Basic Commands: " + engineToSummarize.countBasicCommands() + "\n";
-        summary += "Number of Synthetic Commands: " + engineToSummarize.countSyntheticCommands() + "\n";
+        String summary = "Program Name: " + programToSummarize.getCurrentProgramName() + "\nCurrent expansion level: " + programToSummarize.getCurrentDegree()+"\n";
+        summary += "Number of Commands: " + programToSummarize.getCommandsAtDesiredLevel(programToSummarize.getCurrentDegree()).size() + "\n";
+        summary += "Number of Basic Commands: " + programToSummarize.countBasicCommands() + "\n";
+        summary += "Number of Synthetic Commands: " + programToSummarize.countSyntheticCommands() + "\n";
         return summary;
     }
 
     public void setCurrentDegree(String string, int degree) {
-        Engine engineToSet = selectedEngine != null ? selectedEngine : (Engine) s_emulator;
-        if(engineToSet != null) {
-            while (engineToSet.getCurrentDegree() < degree) {
-                engineToSet.increaseDegree();
+        Program programToSet = selectedProgram != null ? selectedProgram : (Program) s_emulator;
+        if(programToSet != null) {
+            while (programToSet.getCurrentDegree() < degree) {
+                programToSet.increaseDegree();
             }
-            while (engineToSet.getCurrentDegree() > degree) {
-                engineToSet.decreaseDegree();
+            while (programToSet.getCurrentDegree() > degree) {
+                programToSet.decreaseDegree();
             }
-            List<Command> displayedCommands = engineToSet.getCommandsAtDesiredLevel(engineToSet.getCurrentDegree());
+            List<Command> displayedCommands = programToSet.getCommandsAtDesiredLevel(programToSet.getCurrentDegree());
             instructionTableComponentController.displayInstructions(displayedCommands);
 
             Set<Variable> displayedVars = new LinkedHashSet<>();
@@ -753,7 +753,7 @@ public class BaseController {
                     }
                 }
             }
-            engineToSet.getVariables().forEach(v -> {
+            programToSet.getVariables().forEach(v -> {
                 if (v instanceof OutputVariable) {
                     displayedVars.add(v);
                 }
@@ -767,21 +767,21 @@ public class BaseController {
     public void newRunButtonPressed() {
         Object selected = this.headerComponentController.getSelectedFunction();
         if (selected != null) {
-            Engine engineToExpand;
+            Program programToExpand;
             if (selected.toString().equals(s_emulator.getCurrentProgramName())) {
-                engineToExpand = (Engine) s_emulator;
+                programToExpand = (Program) s_emulator;
             } else {
-                engineToExpand = null;
-                for (Engine sub : ((Engine) s_emulator).getSunFunctions()) {
+                programToExpand = null;
+                for (Program sub : ((Program) s_emulator).getSunFunctions()) {
                     if (selected.toString().equals(sub.getCurrentProgramName())) {
-                        engineToExpand = sub;
+                        programToExpand = sub;
                         break;
                     }
                 }
             }
-            if (engineToExpand != null) {
-                int currExpansionLvl = engineToExpand.getCurrentDegree();
-                List<Command> displayedCommands = engineToExpand.getCommandsAtDesiredLevel(currExpansionLvl);
+            if (programToExpand != null) {
+                int currExpansionLvl = programToExpand.getCurrentDegree();
+                List<Command> displayedCommands = programToExpand.getCommandsAtDesiredLevel(currExpansionLvl);
 
                 Set<Variable> displayedVars = new LinkedHashSet<>();
                 Set<Variable> inputVars = new LinkedHashSet<>();
@@ -801,7 +801,7 @@ public class BaseController {
                         }
                     }
                 }
-                engineToExpand.getVariables().forEach(v -> {
+                programToExpand.getVariables().forEach(v -> {
                     if (v instanceof OutputVariable) {
                         displayedVars.add(v);
                     }

@@ -1,10 +1,9 @@
 package engine.commands.synthetic.types;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
-import engine.commands.Command;
 import engine.commands.base.types.Decrease;
 import engine.commands.base.types.JumpNotZero;
 import engine.commands.base.types.Neutral;
@@ -19,14 +18,14 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
     private final int constantValue; // Assuming a constant value for comparison
 
 
-    public JumpEqualConstant(SInstruction instruction, Engine engine) {
-        super(instruction, engine);
+    public JumpEqualConstant(SInstruction instruction, Program program) {
+        super(instruction, program);
         this.commandName = "JUMP_EQUAL_CONSTANT";
         this.cycles = 2;
         this.levelOfExpansion = 3;
         this.constantValue = Integer.parseInt(instruction.getSInstructionArguments().getSInstructionArgument().getLast().getValue());
         this.JEConstantLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
-        this.associatedEngine.labels.add(JEConstantLabel);
+        this.associatedProgram.labels.add(JEConstantLabel);
         this.associatedLabels.add(JEConstantLabel);
         this.isJumpCommand = true;
     }
@@ -44,22 +43,22 @@ public class JumpEqualConstant extends SyntheticCommand implements Serializable 
 
     private void expansionLogic() {
         String newLabel = generateNewLabel();
-        this.associatedEngine.labels.add(newLabel);
+        this.associatedProgram.labels.add(newLabel);
         WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
-        this.associatedEngine.getVariables().add(newWorkVariable);
-        this.ExpandedCommands.add(new Assignment(newWorkVariable,this.label, this.variable, this, this.associatedEngine));
+        this.associatedProgram.getVariables().add(newWorkVariable);
+        this.ExpandedCommands.add(new Assignment(newWorkVariable,this.label, this.variable, this, this.associatedProgram));
         for(int i = 0 ; i < this.constantValue;i++) {
-            this.ExpandedCommands.add(new JumpZero(newWorkVariable, newLabel, "   ", this, this.associatedEngine));
-            this.ExpandedCommands.add(new Decrease(newWorkVariable, "   ", this, this.associatedEngine));
+            this.ExpandedCommands.add(new JumpZero(newWorkVariable, newLabel, "   ", this, this.associatedProgram));
+            this.ExpandedCommands.add(new Decrease(newWorkVariable, "   ", this, this.associatedProgram));
         }
-        this.ExpandedCommands.add(new JumpNotZero(newWorkVariable,newLabel, "   ", this, this.associatedEngine));
-        this.ExpandedCommands.add(new GotoLabel(this.JEConstantLabel, this, this.associatedEngine));
+        this.ExpandedCommands.add(new JumpNotZero(newWorkVariable,newLabel, "   ", this, this.associatedProgram));
+        this.ExpandedCommands.add(new GotoLabel(this.JEConstantLabel, this, this.associatedProgram));
         Variable var = null;
-        for(Variable v : this.associatedEngine.getVariables()){
+        for(Variable v : this.associatedProgram.getVariables()){
             if( v instanceof OutputVariable)
                 var = v;
         }
-        this.ExpandedCommands.add(new Neutral(var, newLabel, this, this.associatedEngine));
+        this.ExpandedCommands.add(new Neutral(var, newLabel, this, this.associatedProgram));
 
         expandFurther();
     }

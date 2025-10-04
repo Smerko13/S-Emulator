@@ -1,6 +1,6 @@
 package engine.commands.synthetic.types;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
@@ -16,25 +16,25 @@ import java.util.*;
 public class JumpZero extends SyntheticCommand implements Serializable {
     private String JZLabel;
 
-    public JumpZero(SInstruction instruction, Engine engine) {
-        super(instruction, engine);
+    public JumpZero(SInstruction instruction, Program program) {
+        super(instruction, program);
         this.commandName = "JUMP_ZERO";
         this.cycles = 2;
         this.levelOfExpansion = 2;
         JZLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(JZLabel);
-        this.associatedEngine.labels.add(JZLabel);
+        this.associatedProgram.labels.add(JZLabel);
         this.isJumpCommand = true;
     }
 
-    public JumpZero(WorkVariable newWorkVariable, String jeConstantLabel, String spaces, Command parentCommand, Engine engine) {
-        super(newWorkVariable,spaces, parentCommand, engine);
+    public JumpZero(WorkVariable newWorkVariable, String jeConstantLabel, String spaces, Command parentCommand, Program program) {
+        super(newWorkVariable,spaces, parentCommand, program);
         this.commandName = "JUMP_ZERO";
         this.cycles = 2;
         this.levelOfExpansion = 2;
         JZLabel = jeConstantLabel;
         this.associatedLabels.add(JZLabel);
-        this.associatedEngine.labels.add(JZLabel);
+        this.associatedProgram.labels.add(JZLabel);
         this.isJumpCommand = true;
     }
 
@@ -51,12 +51,12 @@ public class JumpZero extends SyntheticCommand implements Serializable {
 
     private void expansionLogic() {
         String newLabel = this.generateNewLabel();
-        this.associatedEngine.labels.add(newLabel);
-        this.ExpandedCommands.add(new JumpNotZero(this.variable, newLabel, this.label, this, this.associatedEngine));
-        this.ExpandedCommands.add(new GotoLabel(this.JZLabel, this, this.associatedEngine));
-        for(Variable v : this.associatedEngine.getVariables()) {
+        this.associatedProgram.labels.add(newLabel);
+        this.ExpandedCommands.add(new JumpNotZero(this.variable, newLabel, this.label, this, this.associatedProgram));
+        this.ExpandedCommands.add(new GotoLabel(this.JZLabel, this, this.associatedProgram));
+        for(Variable v : this.associatedProgram.getVariables()) {
             if(v instanceof OutputVariable) {
-                this.ExpandedCommands.add(new Neutral(v, newLabel, this, this.associatedEngine));
+                this.ExpandedCommands.add(new Neutral(v, newLabel, this, this.associatedProgram));
             }
         }
         expandFurther();

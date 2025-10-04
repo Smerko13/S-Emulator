@@ -1,8 +1,7 @@
 package engine.commands.base.types;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
-import engine.arguments.types.InputVariable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
@@ -13,20 +12,20 @@ import java.io.Serializable;
 import java.util.*;
 
 public class Neutral extends BaseCommand implements Serializable {
-    public Neutral(SInstruction instruction, Engine engine) {
-        super(instruction, engine);
+    public Neutral(SInstruction instruction, Program program) {
+        super(instruction, program);
         this.commandName = "NEUTRAL";
         this.cycles = 0;
     }
 
-    public Neutral(Variable variable, String newLabel3, Command parentCommand, Engine engine) {
-        super(variable, newLabel3, parentCommand, engine);
+    public Neutral(Variable variable, String newLabel3, Command parentCommand, Program program) {
+        super(variable, newLabel3, parentCommand, program);
         this.commandName = "NEUTRAL";
         this.cycles = 0;
     }
 
-    public Neutral(Command cmd, Quote quote, String label, WorkVariable outputVar, Engine engine) {
-        super(cmd, quote, label, outputVar, engine);
+    public Neutral(Command cmd, Quote quote, String label, WorkVariable outputVar, Program program) {
+        super(cmd, quote, label, outputVar, program);
         this.commandName = "NEUTRAL";
         this.cycles = 0;
     }

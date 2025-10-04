@@ -1,11 +1,10 @@
 package engine.commands;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
 import engine.arguments.types.WorkVariable;
-import engine.commands.base.BaseCommand;
 import engine.commands.synthetic.types.Quote;
 import schema.SInstruction;
 
@@ -25,10 +24,10 @@ public abstract class Command implements Serializable, Cloneable {
     protected Set<String> associatedLabels;
     protected Set<Variable> associatedVariables;
     protected boolean isJumpCommand = false;
-    protected Engine associatedEngine;
+    protected Program associatedProgram;
 
-    public Command(SInstruction instruction, Engine engine) {
-        this.associatedEngine = engine;
+    public Command(SInstruction instruction, Program program) {
+        this.associatedProgram = program;
         this.associatedLabels = new LinkedHashSet<>();
         if (instruction.getSLabel() != null) {
             String label = instruction.getSLabel();
@@ -36,7 +35,7 @@ public abstract class Command implements Serializable, Cloneable {
                 label = label + " "; // Ensure label has at least 3 characters
             }
             this.label = label;
-            this.associatedEngine.labels.add(label);
+            this.associatedProgram.labels.add(label);
             this.associatedLabels.add(label);
         }
         String var = instruction.getSVariable();
@@ -45,8 +44,8 @@ public abstract class Command implements Serializable, Cloneable {
         this.associatedVariables.add(this.variable);
     }
 
-    public Command(Variable variable, String label, Command parentCommand, Engine engine) {
-        this.associatedEngine = engine;
+    public Command(Variable variable, String label, Command parentCommand, Program program) {
+        this.associatedProgram = program;
         this.parentCommand = parentCommand;
         if(label.length() == 2) {
             label = label + " "; // Ensure label has at least 3 characters
@@ -54,7 +53,7 @@ public abstract class Command implements Serializable, Cloneable {
         this.label = label;
         this.associatedLabels = new LinkedHashSet<>();
         this.associatedLabels.add(label);
-        this.associatedEngine.labels.add(label);
+        this.associatedProgram.labels.add(label);
         this.associatedVariables = new LinkedHashSet<>();
         if(variable != null) {
             this.variable = extractVariables(variable.getName());
@@ -64,17 +63,17 @@ public abstract class Command implements Serializable, Cloneable {
         this.associatedVariables.add(this.variable);
     }
 
-    public Command(Command cmd, Quote quote , String label, Variable outputVar, Engine engine) {
-        this.associatedEngine = engine;
+    public Command(Command cmd, Quote quote , String label, Variable outputVar, Program program) {
+        this.associatedProgram = program;
         this.associatedVariables = new LinkedHashSet<>();
         if(outputVar == null) {
             this.variable = new WorkVariable(generateNewWorkVariableName());
-            this.associatedEngine.getVariables().add(this.variable);
+            this.associatedProgram.getVariables().add(this.variable);
             this.associatedVariables.add(variable);
         } else if (outputVar instanceof  InputVariable) {
             this.variable = new WorkVariable(generateNewWorkVariableName());
             this.variable.setValue(outputVar.getValue());
-            this.associatedEngine.getVariables().add(this.variable);
+            this.associatedProgram.getVariables().add(this.variable);
             this.associatedVariables.add(variable);
         } else {
             this.variable = outputVar;
@@ -89,7 +88,7 @@ public abstract class Command implements Serializable, Cloneable {
         this.parentCommand = quote;
         this.associatedLabels = new LinkedHashSet<>();
         this.associatedLabels.add(label);
-        this.associatedEngine.labels.add(label);
+        this.associatedProgram.labels.add(label);
     }
 
     protected Variable extractVariables(String var) {
@@ -108,12 +107,12 @@ public abstract class Command implements Serializable, Cloneable {
     }
 
     private Variable canonicalInGlobalScope(Variable variable) {
-        for(Variable existingVar : this.associatedEngine.getVariables()) {
+        for(Variable existingVar : this.associatedProgram.getVariables()) {
             if (existingVar.getName().equals(variable.getName())) {
                 return existingVar; // Return the existing variable if found
             }
         }
-        this.associatedEngine.getVariables().add(variable); // Add the new variable to the global scope
+        this.associatedProgram.getVariables().add(variable); // Add the new variable to the global scope
         return variable;
     }
 
@@ -197,7 +196,7 @@ public abstract class Command implements Serializable, Cloneable {
 
     public String generateNewWorkVariableName() {
         Set<String> existingNames = new HashSet<>();
-        for (Variable var : this.associatedEngine.getVariables()) {
+        for (Variable var : this.associatedProgram.getVariables()) {
             existingNames.add(var.getName());
         }
         int workArgIndex = 1;
@@ -223,7 +222,7 @@ public abstract class Command implements Serializable, Cloneable {
             if (this.variable != null) {
                 cloned.variable = this.variable.clone();
             }
-            // Note: associatedEngine is not cloned (shared reference)
+            // Note: associatedProgram is not cloned (shared reference)
             return cloned;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError("Cloning not supported", e);
@@ -251,8 +250,8 @@ public abstract class Command implements Serializable, Cloneable {
         this.parentCommand = parent;
     }
 
-    public void setAssociatedEngine(Engine engine) {
-        this.associatedEngine = engine;
+    public void setAssociatedEngine(Program program) {
+        this.associatedProgram = program;
     }
 
     public int getId() {

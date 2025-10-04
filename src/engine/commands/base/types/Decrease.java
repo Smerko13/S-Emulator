@@ -1,8 +1,7 @@
 package engine.commands.base.types;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
-import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.BaseCommand;
 import schema.SInstruction;
@@ -11,14 +10,14 @@ import java.io.Serializable;
 import java.util.*;
 
 public class Decrease extends BaseCommand implements Serializable {
-    public Decrease(SInstruction instruction, Engine engine) {
-        super(instruction, engine);
+    public Decrease(SInstruction instruction, Program program) {
+        super(instruction, program);
         this.commandName = "DECREASE";
         this.cycles = 1;
     }
 
-    public Decrease(Variable variable, String label, Command parentCommand, Engine engine) {
-        super(variable, label, parentCommand, engine);
+    public Decrease(Variable variable, String label, Command parentCommand, Program program) {
+        super(variable, label, parentCommand, program);
         this.commandName = "DECREASE";
         this.cycles = 1;
     }

@@ -1,6 +1,6 @@
 package engine.commands.synthetic.types;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
 import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
@@ -18,14 +18,14 @@ public class JumpEqualFunction extends SyntheticCommand {
     private String functionArgsRaw;
     private List<String> functionArguments;
 
-    public JumpEqualFunction(SInstruction instruction, Engine engine) {
-        super(instruction, engine);
+    public JumpEqualFunction(SInstruction instruction, Program program) {
+        super(instruction, program);
         this.commandName = "JUMP_EQUAL_FUNCTION";
 
         // Target label
         JEFunctionLabel = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
         this.associatedLabels.add(JEFunctionLabel);
-        this.associatedEngine.labels.add(JEFunctionLabel);
+        this.associatedProgram.labels.add(JEFunctionLabel);
         this.isJumpCommand = true;
 
         // Function name resolution (program name -> user string)
@@ -44,7 +44,7 @@ public class JumpEqualFunction extends SyntheticCommand {
     }
 
     private int calculateSubFunctionExpansionLevel() {
-        for (Engine e : this.associatedEngine.subFunctions) {
+        for (Program e : this.associatedProgram.subFunctions) {
             String userString = e.getUserString();
             if (userString.equals(functionName)) {
                 return e.getMaxExpansionDepth();
@@ -54,7 +54,7 @@ public class JumpEqualFunction extends SyntheticCommand {
     }
 
     private int calculateSubFunctionCycles() {
-        for (Engine e : this.associatedEngine.subFunctions) {
+        for (Program e : this.associatedProgram.subFunctions) {
             String userString = e.getUserString();
             if (userString.equals(functionName)) {
                 return e.getTotalCycles();
@@ -77,7 +77,7 @@ public class JumpEqualFunction extends SyntheticCommand {
     private void expansionLogic() {
         // Scratch var to hold the function result so we can compare against this.variable
         WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
-        this.associatedEngine.getVariables().add(newWorkVariable); // ensure visibility to emitted commands
+        this.associatedProgram.getVariables().add(newWorkVariable); // ensure visibility to emitted commands
 
         // Use the parsed arguments gathered in the ctor
         List<String> parsedArgs = new ArrayList<>(this.functionArguments);
@@ -85,17 +85,17 @@ public class JumpEqualFunction extends SyntheticCommand {
         // Emit a Quote to compute the function into newWorkVariable.
         // Pass this.label so Quote can anchor properly (it will emit a Neutral if needed).
         this.ExpandedCommands.add(
-                new Quote(newWorkVariable, this.functionName, parsedArgs, this.label, this, this.associatedEngine)
+                new Quote(newWorkVariable, this.functionName, parsedArgs, this.label, this, this.associatedProgram)
         );
 
         // Then jump if equal (compare this.variable to the computed value)
         this.ExpandedCommands.add(
-                new JumpEqualVariable(this.variable, newWorkVariable, this.JEFunctionLabel, this, this.associatedEngine)
+                new JumpEqualVariable(this.variable, newWorkVariable, this.JEFunctionLabel, this, this.associatedProgram)
         );
 
         // Clean scratch (prevents later passes from seeing stale value)
         this.ExpandedCommands.add(
-                new ConstantAssignment(newWorkVariable, 0, "   ", this, this.associatedEngine)
+                new ConstantAssignment(newWorkVariable, 0, "   ", this, this.associatedProgram)
         );
 
         expandFurther();
@@ -106,7 +106,7 @@ public class JumpEqualFunction extends SyntheticCommand {
         int returnValue = -1;
 
         // Snapshot existing variables' values so we can restore them after speculative eval
-        Set<Variable> snapshot = this.associatedEngine.getVariables().stream()
+        Set<Variable> snapshot = this.associatedProgram.getVariables().stream()
                 .map(Variable::clone)
                 .collect(Collectors.toSet());
 
@@ -121,9 +121,9 @@ public class JumpEqualFunction extends SyntheticCommand {
                 callVars.add(resolveArgToVariable(a, execTemps));
             }
 
-            for (Engine e : this.associatedEngine.subFunctions) {
+            for (Program e : this.associatedProgram.subFunctions) {
                 if (e.getUserString().equals(functionName)) {
-                    returnValue = e.executeFunction(callVars, functionName, this.associatedEngine);
+                    returnValue = e.executeFunction(callVars, functionName, this.associatedProgram);
                     break;
                 }
             }
@@ -132,7 +132,7 @@ public class JumpEqualFunction extends SyntheticCommand {
             setBackOriginalVariables(snapshot);
             // Remove ephemeral temps created during evaluation
             if (!execTemps.isEmpty()) {
-                this.associatedEngine.getVariables().removeAll(execTemps);
+                this.associatedProgram.getVariables().removeAll(execTemps);
             }
         }
 
@@ -148,7 +148,7 @@ public class JumpEqualFunction extends SyntheticCommand {
 
         // Case 1: bare variable name
         if (!token.isEmpty() && token.charAt(0) != '(') {
-            for (Variable v : this.associatedEngine.getVariables()) {
+            for (Variable v : this.associatedProgram.getVariables()) {
                 if (v.getName().equals(token)) return v;
             }
             throw new IllegalArgumentException("Unknown variable: " + token);
@@ -159,7 +159,7 @@ public class JumpEqualFunction extends SyntheticCommand {
             int val = parseConstValue(token);
             WorkVariable tmp = new WorkVariable(generateNewWorkVariableName());
             tmp.setValue(val);
-            this.associatedEngine.getVariables().add(tmp);
+            this.associatedProgram.getVariables().add(tmp);
             execTemps.add(tmp);
             return tmp;
         }
@@ -176,15 +176,15 @@ public class JumpEqualFunction extends SyntheticCommand {
         for (String a : nestedList) nestedVars.add(resolveArgToVariable(a, execTemps));
 
         int result = -1;
-        for (Engine e : this.associatedEngine.subFunctions) {
+        for (Program e : this.associatedProgram.subFunctions) {
             if (e.getUserString().equals(nestedFunc)) {
-                result = e.executeFunction(nestedVars, nestedFunc, this.associatedEngine);
+                result = e.executeFunction(nestedVars, nestedFunc, this.associatedProgram);
                 break;
             }
         }
         WorkVariable tmp = new WorkVariable(generateNewWorkVariableName());
         tmp.setValue(result);
-        this.associatedEngine.getVariables().add(tmp);
+        this.associatedProgram.getVariables().add(tmp);
         execTemps.add(tmp);
         return tmp;
     }
@@ -237,7 +237,7 @@ public class JumpEqualFunction extends SyntheticCommand {
 
     private void setBackOriginalVariables(Set<Variable> snapshot) {
         for (Variable v : snapshot) {
-            for (Variable originalVar : this.associatedEngine.getVariables()) {
+            for (Variable originalVar : this.associatedProgram.getVariables()) {
                 if (v.getName().equals(originalVar.getName())) {
                     originalVar.setValue(v.getValue());
                 }
@@ -286,7 +286,7 @@ public class JumpEqualFunction extends SyntheticCommand {
     }
 
     private String findCorrectFunctionName(String functionName) {
-        for (Engine e : this.associatedEngine.subFunctions) {
+        for (Program e : this.associatedProgram.subFunctions) {
             if (e.getCurrentProgramName().equals(functionName)) {
                 return e.getUserString();
             }

@@ -1,8 +1,7 @@
 package engine.commands.synthetic.types;
 
-import engine.Engine;
+import engine.Program;
 import engine.arguments.Variable;
-import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.types.Increase;
 import engine.commands.synthetic.SyntheticCommand;
@@ -14,16 +13,16 @@ import java.util.*;
 public class ConstantAssignment extends SyntheticCommand implements Serializable {
     private final int constantValue;
 
-    public ConstantAssignment(SInstruction instruction, Engine engine) {
-        super(instruction, engine);
+    public ConstantAssignment(SInstruction instruction, Program program) {
+        super(instruction, program);
         this.commandName = "CONSTANT_ASSIGNMENT";
         this.cycles = 2;
         this.levelOfExpansion = 2;
         this.constantValue = Integer.parseInt(instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue());
     }
 
-    public ConstantAssignment(Variable v, int i, String spaces, Command quote, Engine associatedEngine) {
-        super(v,spaces, quote, associatedEngine);
+    public ConstantAssignment(Variable v, int i, String spaces, Command quote, Program associatedProgram) {
+        super(v,spaces, quote, associatedProgram);
         this.commandName = "CONSTANT_ASSIGNMENT";
         this.cycles = 2;
         this.levelOfExpansion = 2;
@@ -42,9 +41,9 @@ public class ConstantAssignment extends SyntheticCommand implements Serializable
     }
 
     private void expansionLogic() {
-        this.ExpandedCommands.add(new ZeroVariable(this.variable,this.label,this, this.associatedEngine));
+        this.ExpandedCommands.add(new ZeroVariable(this.variable,this.label,this, this.associatedProgram));
         for(int i = 0 ; i < this.constantValue ; i++) {
-            this.ExpandedCommands.add(new Increase(this.variable, "   ",this, this.associatedEngine));
+            this.ExpandedCommands.add(new Increase(this.variable, "   ",this, this.associatedProgram));
         }
         expandFurther();
     }
