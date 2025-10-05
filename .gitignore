@@ -1,0 +1,36 @@
+# Ignore everything at the repo root
+/*
+
+# Keep these at root
+!.gitignore
+!README.md
+
+# Keep BOTH modules *and their contents*
+!/S-Emulator/
+!/S-Emulator/**
+!/S-Emulator-Server/
+!/S-Emulator-Server/**
+
+# IDE/build junk inside the modules
+S-Emulator/.idea/
+S-Emulator/*.iml
+S-Emulator/**/out/
+S-Emulator/**/build/
+S-Emulator/**/target/
+S-Emulator/**/*.log
+S-Emulator/**/*.class
+S-Emulator/src/utils/javafx-sdk-*/
+
+S-Emulator-Server/.idea/
+S-Emulator-Server/*.iml
+S-Emulator-Server/**/out/
+S-Emulator-Server/**/build/
+S-Emulator-Server/**/target/
+S-Emulator-Server/**/*.log
+S-Emulator-Server/**/*.class
+
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
