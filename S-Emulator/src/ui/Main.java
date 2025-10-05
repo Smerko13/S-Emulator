@@ -1,0 +1,36 @@
+package ui;
+
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import ui.base.BaseController;
+
+import java.net.URL;
+
+public class Main extends Application {
+    public static void main(String[] args) {
+        Thread.currentThread().setName("main");
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        FXMLLoader fxmlLoader;
+        URL url;
+        fxmlLoader = new FXMLLoader();
+        url = getClass().getResource("base/base.fxml");
+        fxmlLoader.setLocation(url);
+        Parent root = fxmlLoader.load(url.openStream());
+
+        Scene scene = new Scene(root, 800, 500);
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("S-Emulator");
+        primaryStage.setMaximized(true);
+        primaryStage.show();
+        // Play startup animations (only once)
+        BaseController baseController = fxmlLoader.getController();
+        baseController.playStartupAnimations(scene);
+    }
+}

@@ -1,0 +1,22 @@
+# IntelliJ / JetBrains
+.idea/
+*.iml
+
+# Build outputs
+out/
+build/
+target/
+
+# Editors / OS
+.vscode/
+.DS_Store
+
+# Local data
+src/programs/
+
+resources
+src/META-INF/*
+
+
+
+
