@@ -1,27 +1,36 @@
-# IntelliJ / JetBrains
-.idea/
-*.iml
+# Ignore everything at the top level
+/*
 
-# Build outputs
-out/
-build/
-target/
+# Keep these at the top level
+!.gitignore
+!README.md
 
-# Editors / OS
-.vscode/
+# Keep the two modules
+!/S-Emulator/
+!/S-Emulator-Server/
+
+# Ignore IDE/build stuff *inside* both modules
+/S-Emulator/.idea/
+/S-Emulator/*.iml
+/S-Emulator/**/out/
+/S-Emulator/**/build/
+/S-Emulator/**/target/
+/S-Emulator/**/*.log
+/S-Emulator/**/*.class
+
+/S-Emulator-Server/.idea/
+/S-Emulator-Server/*.iml
+/S-Emulator-Server/**/out/
+/S-Emulator-Server/**/build/
+/S-Emulator-Server/**/target/
+/S-Emulator-Server/**/*.log
+/S-Emulator-Server/**/*.class
+
+# Don’t commit big SDKs or archives
+/S-Emulator/src/utils/javafx-sdk-*/
+**/*.{jar,war,ear,zip,tar,tar.gz,rar}
+
+# OS junk
 .DS_Store
-
-# Local data
-src/programs/
-
-resources
-src/META-INF/*
-
-08. Java FX.rar
-interface.rar
-reflection-tester.rar
-S-emulator-V1.docx
-src
-reflection-tester
-
-
+Thumbs.db
+desktop.ini
