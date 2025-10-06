@@ -1,0 +1,158 @@
+package engine.commands.synthetic.types;
+
+import engine.Program;
+import engine.arguments.Variable;
+import engine.arguments.types.WorkVariable;
+import engine.commands.Command;
+import engine.commands.base.types.Decrease;
+import engine.commands.base.types.Increase;
+import engine.commands.base.types.JumpNotZero;
+import engine.commands.base.types.Neutral;
+import engine.commands.synthetic.SyntheticCommand;
+import schema.SInstruction;
+
+import java.io.Serializable;
+import java.util.*;
+
+public class Assignment extends SyntheticCommand implements Serializable {
+    protected Variable assignedVariable;
+
+    public Assignment(SInstruction instruction, Program program) {
+        super(instruction, program);
+        this.commandName = "ASSIGNMENT";
+        this.cycles = 4;
+        this.levelOfExpansion = 2;
+        String assignedVar = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
+        this.assignedVariable = extractVariables(assignedVar);
+        this.associatedVariables.add(assignedVariable);
+    }
+
+    public Assignment(Variable newWorkVariable, String label, Variable assignedVariable, Command parentCommand, Program program) {
+        super(newWorkVariable, label, parentCommand, program);
+        this.commandName = "ASSIGNMENT";
+        this.cycles = 4;
+        this.levelOfExpansion = 2;
+        this.assignedVariable = assignedVariable;
+        this.associatedVariables.add(assignedVariable);
+    }
+
+    @Override
+    public void initializeExpandedCommands() {
+        if(this.didInitialize) {
+            this.getExpandedCommands().clear();
+            expansionLogic();
+            return;
+        }
+        expansionLogic();
+        this.didInitialize = true;
+    }
+
+    private void expansionLogic(){
+        String newLabel1 = generateNewLabel();
+        this.associatedProgram.labels.add(newLabel1);
+        String newLabel2 = generateNewLabel();
+        this.associatedProgram.labels.add(newLabel2);
+        String newLabel3 = generateNewLabel();
+        this.associatedProgram.labels.add(newLabel3);
+        this.ExpandedCommands.add(new ZeroVariable(variable,this.label,this, this.associatedProgram));
+        this.ExpandedCommands.add(new JumpNotZero(assignedVariable, newLabel1,"   ", this, this.associatedProgram));
+        this.ExpandedCommands.add(new GotoLabel(newLabel3,this, this.associatedProgram));
+        this.ExpandedCommands.add(new Decrease(assignedVariable,newLabel1, this, this.associatedProgram));
+        WorkVariable newWorkVariable = new WorkVariable(generateNewWorkVariableName());
+        this.associatedProgram.getVariables().add(newWorkVariable);
+        this.ExpandedCommands.add(new Increase(newWorkVariable,"   ",this, this.associatedProgram));
+        this.ExpandedCommands.add(new JumpNotZero(assignedVariable, newLabel1, "   ", this, this.associatedProgram));
+        this.ExpandedCommands.add(new Decrease(newWorkVariable,newLabel2, this, this.associatedProgram));
+        this.ExpandedCommands.add(new Increase(variable,"   ", this, this.associatedProgram));
+        this.ExpandedCommands.add(new Increase(assignedVariable,"   ", this, this.associatedProgram));
+        this.ExpandedCommands.add(new JumpNotZero(newWorkVariable, newLabel2, "   ", this, this.associatedProgram));
+        this.ExpandedCommands.add(new Neutral(variable,newLabel3, this, this.associatedProgram));
+
+        expandFurther();
+    }
+
+    @Override
+    public String execute() {
+        // Assign the value of the assigned variable to the variable
+        if (assignedVariable != null) {
+            variable.setValue(assignedVariable.getValue());
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isValid() {
+        if( assignedVariable == null || variable == null) {
+            return false;
+        } else return assignedVariable.getValue() >= 0 && variable.getValue() >= 0;
+    }
+
+    @Override
+    public String getTargetLabel() {
+        return null;
+    }
+
+    @Override
+    public Set<Variable> getAllVariables() {
+        Set<Variable> vars = new HashSet<>();
+        vars.add(assignedVariable);
+        vars.add(this.variable);
+        return vars;
+    }
+
+    @Override
+    public Assignment clone() {
+        Assignment cloned = (Assignment) super.clone();
+        cloned.assignedVariable = this.assignedVariable != null ? this.assignedVariable.clone() : null;
+        return cloned;
+    }
+
+    @Override
+    public Collection<String> getAssociatedLabels() {
+        return Collections.singleton(this.label);
+    }
+
+    @Override
+    public String toString() {
+        return variable.getName() + " <- " + assignedVariable.getName();
+    }
+
+    @Override
+    public void replaceVariable(Variable variable, WorkVariable v) {
+        if (this.variable.getName().equals(variable.getName())) {
+            this.variable = v;
+            for (Variable var : this.associatedVariables) {
+                if (var.getName().equals(variable.getName())) {
+                    this.associatedVariables.remove(var);
+                    this.associatedVariables.add(v);
+                    break;
+                }
+            }
+        }
+        if (this.assignedVariable.getName().equals(variable.getName())) {
+            this.assignedVariable = v;
+            for (Variable var : this.associatedVariables) {
+                if (var.getName().equals(variable.getName())) {
+                    this.associatedVariables.remove(var);
+                    this.associatedVariables.add(v);
+                    break;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void replaceLabel(String lbl, String newLabel) {
+        if (newLabel == null) {
+            return;
+        }
+        if(this.label == null) {
+            return;
+        }
+        if(this.label.equals(lbl)) {
+            this.label = newLabel;
+            this.associatedLabels.remove(lbl);
+            this.associatedLabels.add(newLabel);
+        }
+    }
+}

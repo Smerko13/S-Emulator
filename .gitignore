@@ -10,6 +10,10 @@
 !/S-Emulator/**
 !/S-Emulator-Server/
 !/S-Emulator-Server/**
+!/S-Emulator-Client/
+!/S-Emulator-Client/**
+!/S-Emulator-LogicEngine/
+!/S-Emulator-LogicEngine/**
 
 # IDE/build junk inside the modules
 S-Emulator/.idea/
