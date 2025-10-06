@@ -7,6 +7,7 @@ import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -19,8 +20,8 @@ import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 import util.Constants;
 import util.http.HttpClientUtil;
-
 import java.io.IOException;
+
 
 public class LoginController {
     @FXML private TextField userNameTextField;
@@ -41,26 +42,30 @@ public class LoginController {
         this.mainRoot = mainRoot;
     }
 
+
     @FXML
     private void loginButtonClicked(ActionEvent event) {
-
         String userName = userNameTextField.getText();
         if (userName.isEmpty()) {
             errorMessageProperty.set("User name is empty. You can't login with empty user name");
             return;
         }
 
-        //noinspection ConstantConditions
-        String finalUrl = HttpUrl
-                .parse(Constants.LOGIN_PAGE)
-                .newBuilder()
+        String ctx = Constants.CONTEXT_PATH.replaceFirst("^/+","");
+
+
+        HttpUrl finalUrl = new HttpUrl.Builder()
+                .scheme("http")
+                .host(Constants.BASE_DOMAIN)
+                .port(Constants.PORT)
+                .addPathSegment(ctx)
+                .addPathSegment(Constants.LOGIN_ENDPOINT)
                 .addQueryParameter("username", userName)
-                .build()
-                .toString();
+                .build();
 
         updateHttpStatusLine("New request is launched for: " + finalUrl);
 
-        HttpClientUtil.runAsync(finalUrl, new Callback() {
+        HttpClientUtil.runAsync(finalUrl.toString(), new Callback() {
 
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
@@ -71,17 +76,30 @@ public class LoginController {
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                if (response.code() != 200) {
-                    String responseBody = response.body().string();
-                    Platform.runLater(() ->
-                            errorMessageProperty.set("Something went wrong: " + responseBody)
-                    );
-                } else {
-                    Platform.runLater(() -> {
-                        clientMainController.updateUserName(userName);
-                        clientMainController.switchToChatRoom();
-                    });
-                }
+                boolean ok = response.code() >= 200 && response.code() < 300;
+                String body = response.body() != null ? response.body().string() : "";
+                Platform.runLater(() -> {
+                    if (!ok) {
+                        errorMessageProperty.set("Something went wrong: " + response.code() + " " + body);
+                        return;
+                    }
+
+                    if (stage != null && mainRoot != null) {
+                        if (stage.getScene() == null) {
+                            stage.setScene(new Scene(mainRoot));
+                        } else {
+                            stage.getScene().setRoot(mainRoot);
+                        }
+                        stage.centerOnScreen();
+                    }
+
+                    stage.setMaximized(true);
+                    stage.centerOnScreen();
+
+                    if (clientMainController != null) {
+                        clientMainController.updateUserName(userName.trim());
+                    }
+                });
             }
         });
     }

@@ -22,12 +22,8 @@ import static util.Constants.*;
 public class clientMainController implements Closeable, HttpStatusUpdate {
     private GridPane loginComponent;
     private LoginController logicController;
-
-    @FXML
-    private Label userGreetingLabel;
     @FXML
     private AnchorPane mainPanel;
-
     private final StringProperty currentUserName;
 
     public clientMainController() {
@@ -36,10 +32,6 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
 
     @FXML
     public void initialize() {
-        userGreetingLabel.textProperty().bind(Bindings.concat("Hello ", currentUserName));
-        // prepare components
-        loadLoginPage();
-        loadChatRoomPage();
     }
 
     public void updateUserName(String userName) {
@@ -92,10 +84,6 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
         //httpStatusComponentController.addHttpStatusLine(line);
     }
 
-    public void switchToChatRoom() {
-        //setMainPanelTo(chatRoomComponent);
-       // chatRoomComponentController.setActive();
-    }
 
     public void switchToLogin() {
         Platform.runLater(() -> {
