@@ -21,14 +21,13 @@
     </rowConstraints>
 
     <children>
-        <!-- Header include -->
         <fx:include source="mainDashboard/header/header.fxml"
                     GridPane.columnIndex="0" GridPane.rowIndex="0"
-                    GridPane.hgrow="ALWAYS" GridPane.vgrow="NEVER"/>
-
-        <!-- Users include -->
+                    GridPane.hgrow="ALWAYS" GridPane.vgrow="NEVER"
+                    fx:id="headerPanel"/>
         <fx:include source="mainDashboard/users/users.fxml"
                     GridPane.columnIndex="0" GridPane.rowIndex="1"
-                    GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/>
+                    GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"
+                    fx:id="usersPanel"/>
     </children>
 </GridPane>

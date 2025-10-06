@@ -20,5 +20,7 @@
       </library>
     </orderEntry>
     <orderEntry type="library" exported="" name="Kotlin" level="project" />
+    <orderEntry type="library" name="Tomcat 10.1.26" level="application_server_libraries" />
+    <orderEntry type="module" module-name="S-Emulator-LogicEngine" />
   </component>
 </module>

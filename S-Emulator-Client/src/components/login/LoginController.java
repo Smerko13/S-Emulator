@@ -76,31 +76,43 @@ public class LoginController {
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                boolean ok = response.code() >= 200 && response.code() < 300;
+                int code = response.code();
+                String contentType = response.header("Content-Type", "");
                 String body = response.body() != null ? response.body().string() : "";
+                response.close(); // tidy up
+
+                boolean ok = code >= 200 && code < 300;
+
+                // If it's JSON, try to extract an "error" (or "message") field
+                String msg = body;
+                if (!ok && contentType.contains("application/json")) {
+                    try {
+                        var json = com.google.gson.JsonParser.parseString(body).getAsJsonObject();
+                        if (json.has("error"))   msg = json.get("error").getAsString();
+                        else if (json.has("message")) msg = json.get("message").getAsString();
+                    } catch (Exception ignore) { /* fall back to raw body */ }
+                }
+
+                String finalMsg = msg;
                 Platform.runLater(() -> {
                     if (!ok) {
-                        errorMessageProperty.set("Something went wrong: " + response.code() + " " + body);
+                        errorMessageProperty.set(finalMsg);
                         return;
                     }
 
+                    // success → switch to main scene
                     if (stage != null && mainRoot != null) {
-                        if (stage.getScene() == null) {
-                            stage.setScene(new Scene(mainRoot));
-                        } else {
-                            stage.getScene().setRoot(mainRoot);
-                        }
+                        if (stage.getScene() == null) stage.setScene(new javafx.scene.Scene(mainRoot));
+                        else stage.getScene().setRoot(mainRoot);
+                        stage.setMaximized(true);
                         stage.centerOnScreen();
                     }
-
-                    stage.setMaximized(true);
-                    stage.centerOnScreen();
-
                     if (clientMainController != null) {
                         clientMainController.updateUserName(userName.trim());
                     }
                 });
             }
+
         });
     }
 
@@ -122,4 +134,5 @@ public class LoginController {
         HttpClientUtil.setCookieManagerLoggingFacility(line ->
                 Platform.runLater(() -> updateHttpStatusLine(line)));
     }
+
 }
