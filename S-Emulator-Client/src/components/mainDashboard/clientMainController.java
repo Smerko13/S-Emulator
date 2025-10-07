@@ -1,4 +1,4 @@
-package components;
+package components.mainDashboard;
 
 import components.api.HttpStatusUpdate;
 import components.login.LoginController;

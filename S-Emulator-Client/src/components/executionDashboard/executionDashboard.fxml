@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<GridPane styleClass="root" hgap="10.0" vgap="10.0"
+          xmlns="http://javafx.com/javafx/22.0.2"
+          xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="components.executionDashboard.ExecutionDashboardController">
+
+    <!-- 2 columns: 65% / 35% (only used if a child uses GridPane, SplitPane ignores these widths) -->
+    <columnConstraints>
+        <ColumnConstraints hgrow="ALWAYS" percentWidth="65.0"/>
+        <ColumnConstraints hgrow="ALWAYS" percentWidth="35.0"/>
+    </columnConstraints>
+
+    <!-- rows: header (fixed), middle (split), bottom (split) -->
+    <rowConstraints>
+        <RowConstraints vgrow="NEVER"/>     <!-- header -->
+        <RowConstraints vgrow="ALWAYS"/>    <!-- center -->
+        <RowConstraints vgrow="ALWAYS"/>    <!-- bottom -->
+    </rowConstraints>
+
+    <!-- HEADER -->
+    <fx:include fx:id="headerComponent"
+                source="header/header.fxml"
+                GridPane.columnSpan="2" GridPane.rowIndex="0" GridPane.vgrow="NEVER"/>
+
+    <!-- CENTER: Instruction (left) | Execution Panel (right) -->
+    <SplitPane dividerPositions="0.66"
+               GridPane.columnSpan="2" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
+        <items>
+            <fx:include fx:id="instructionTableComponent"
+                        source="instructionPanel/instructionTable.fxml"/>
+            <fx:include fx:id="executionPanelComponent"
+                        source="executionPanel/executionPanel.fxml"/>
+        </items>
+    </SplitPane>
+
+    <!-- BOTTOM: History (left) | Stats (right) -->
+    <SplitPane dividerPositions="0.5"
+               GridPane.columnSpan="2" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
+        <items>
+            <fx:include fx:id="historyPanelComponent"
+                        source="historyPanel/TextFlow.fxml"/>
+            <fx:include fx:id="statsComponent"
+                        source="statsPanel/statsPanel.fxml"/>
+        </items>
+    </SplitPane>
+
+    <padding>
+        <Insets top="5.0" right="5.0" bottom="5.0" left="5.0"/>
+    </padding>
+</GridPane>

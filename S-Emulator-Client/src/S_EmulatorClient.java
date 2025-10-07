@@ -1,11 +1,10 @@
-import components.clientMainController;
+import components.mainDashboard.clientMainController;
 import components.login.LoginController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import util.http.HttpClientUtil;
 
 import java.io.IOException;
 import java.net.URL;

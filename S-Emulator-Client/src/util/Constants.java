@@ -11,7 +11,7 @@ public class Constants {
     public final static String CHAT_LINE_FORMATTING = "%tH:%tM:%tS | %.10s: %s%n";
 
     // fxml locations
-    public final static String MAIN_PAGE_FXML_RESOURCE_LOCATION = "/components/mainDashboard.fxml";
+    public final static String MAIN_PAGE_FXML_RESOURCE_LOCATION = "/components/mainDashboard/mainDashboard.fxml";
     public final static String LOGIN_PAGE_FXML_RESOURCE_LOCATION = "/components/login/login.fxml";
     public final static String CHAT_ROOM_FXML_RESOURCE_LOCATION = "/chat/client/component/chatroom/chat-room-main.fxml";
 
@@ -32,4 +32,14 @@ public class Constants {
 
     // GSON instance
     public final static Gson GSON_INSTANCE = new Gson();
+
+    public static final String EXEC_BASE        = FULL_SERVER_PATH + "/exec";
+    public static final String EXEC_OPEN        = EXEC_BASE + "/open";           // ?programId=... or ?functionName=...
+    public static final String EXEC_EXECUTE     = EXEC_BASE + "/execute";
+    public static final String EXEC_SELECT_FN   = EXEC_BASE + "/selectFunction"; // ?name=...
+    public static final String EXEC_SET_DEGREE  = EXEC_BASE + "/degree";         // ?value=...
+    public static final String EXEC_DEBUG       = EXEC_BASE + "/debug";          // ?op=start|step|cont|stop
+    public static final String EXEC_NEW_RUN     = EXEC_BASE + "/newRun";
+    public static final String EXEC_STATE       = EXEC_BASE + "/state";
+
 }

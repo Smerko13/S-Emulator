@@ -1,6 +1,6 @@
 package components.mainDashboard.header;
 
-import components.clientMainController;
+import components.mainDashboard.clientMainController;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

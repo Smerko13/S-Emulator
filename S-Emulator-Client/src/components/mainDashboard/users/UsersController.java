@@ -1,6 +1,6 @@
 package components.mainDashboard.users;
 
-import components.clientMainController;
+import components.mainDashboard.clientMainController;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
