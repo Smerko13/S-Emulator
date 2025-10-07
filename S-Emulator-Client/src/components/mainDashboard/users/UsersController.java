@@ -18,6 +18,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
+import api.dto.UserSummary;
+
+
 
 import static util.Constants.GSON_INSTANCE;
 import static util.Constants.REFRESH_RATE;
@@ -64,24 +67,35 @@ public class UsersController {
                     @Override public void onFailure(@NotNull Call call, @NotNull IOException e) {
                         if (mainController != null) mainController.updateHttpLine("userslist failed: " + e.getMessage());
                     }
-                    @Override public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    @Override
+                    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                         String body = response.body() != null ? response.body().string() : "[]";
-                        String[] names = new String[0];
-                        try { names = GSON_INSTANCE.fromJson(body, String[].class); }
-                        catch (Exception ignore) { /* keep empty */ }
+                        UserSummary[] arr;
+                        try {
+                            arr = GSON_INSTANCE.fromJson(body, UserSummary[].class);
+                        } catch (Exception e) {
+                            arr = new UserSummary[0];
+                        }
 
-                        // map names -> rows (other fields zero for now)
-                        String[] finalNames = names;
+                        UserSummary[] finalArr = arr;
                         Platform.runLater(() -> {
-                            rows.setAll(Arrays.stream(finalNames).map(UserRow::new).toList());
+                            rows.setAll(Arrays.stream(finalArr).map(dto -> {
+                                var r = new UserRow(dto.username);
+                                r.programsUploadedProperty().set(dto.programs);
+                                r.functionsUploadedProperty().set(dto.functions);
+                                r.creditsAvailableProperty().set(dto.creditsAvailable);
+                                r.creditsUsedProperty().set(dto.creditsUsed);
+                                r.totalExecutionsProperty().set(dto.executions);
+                                return r;
+                            }).toList());
                         });
                     }
+
                 });
             }
         }, 0, REFRESH_RATE);
     }
 
-    /** stop polling (optional, call on app close) */
     public void stopUsersAutoRefresh() {
         if (timer != null) { timer.cancel(); timer = null; }
     }
