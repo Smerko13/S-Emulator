@@ -5,7 +5,6 @@ import components.login.LoginController;
 import components.mainDashboard.header.HeaderController;
 import components.mainDashboard.users.UsersController;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
@@ -32,7 +31,9 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
     @FXML
     public void initialize() {
         usersPanelController.setMainController(this);
+        usersPanelController.startUsersAutoRefresh();
         headerPanelController.setMainController(this);
+
     }
 
     public void updateUserName(String userName) {
@@ -41,8 +42,12 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
+        if (usersPanelController != null) {
+            usersPanelController.stopUsersAutoRefresh();
+        }
     }
+
 
     private void loadLoginPage() {
         URL loginPageUrl = getClass().getResource(LOGIN_PAGE_FXML_RESOURCE_LOCATION);
@@ -72,4 +77,13 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
             //setMainPanelTo(loginComponent);
         });
     }
+
+    public void onLoginSuccess(String userName) {
+        updateUserName(userName);              // updates header, etc.
+        if (usersPanelController != null) {
+            usersPanelController.startUsersAutoRefresh();  // begins polling /userslist
+        }
+    }
+
+
 }

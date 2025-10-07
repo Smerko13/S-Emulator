@@ -10,120 +10,95 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox maxHeight="1.7976931348623157E308" spacing="3.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="components.mainDashboard.users.UsersController">
-   <children>
-      <Label fx:id="chatUsersLabel" text="S-Emulator Users:">
-         <font>
-            <Font name="System Bold" size="16.0" />
-         </font>
-         <VBox.margin>
-            <Insets bottom="8.0" top="8.0" />
-         </VBox.margin>
-      </Label>
-      <TableView>
-        <columns>
-          <TableColumn fx:id="userNameColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
-                  <graphic>
-                        <Label text="User&#10;Name" />
-                  </graphic>
-            </TableColumn>
-          <TableColumn fx:id="programCountColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
-                    <graphic>
-                            <Label text="Programs&#10;Uploaded" />
-                    </graphic>
-          </TableColumn>
-            <TableColumn fx:id="FunctionCountColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
-                    <graphic>
-                            <Label text="Functions&#10;Uploaded" />
-                    </graphic>
-            </TableColumn>
-            <TableColumn fx:id="creditsColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
-                    <graphic>
-                            <Label text="Credits&#10;Avaliable" />
-                    </graphic>
-            </TableColumn>
-            <TableColumn fx:id="creditsUsedColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
-                    <graphic>
-                            <Label text="Credits&#10;Used" />
-                    </graphic>
-            </TableColumn>
-            <TableColumn fx:id="executionsColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
-                    <graphic>
-                            <Label text="Total&#10;Executions" />
-                    </graphic>
-            </TableColumn>
-        </columns>
-         <columnResizePolicy>
-            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-         </columnResizePolicy>
-      </TableView>
-      <Button fx:id="unselectUserButton" alignment="CENTER" contentDisplay="RIGHT" mnemonicParsing="false" onAction="#unselectedUserPressed" text="Unselect User" />
-       <AnchorPane fx:id="statsComponent" styleClass="root">
-           <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-               <Label alignment="CENTER" contentDisplay="CENTER" text="User Stats Panel:" textAlignment="CENTER">
-                   <VBox.margin>
-                       <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                   </VBox.margin>
-                   <font>
-                       <Font name="System Bold" size="16.0" />
-                   </font>
-               </Label>
-               <TableView fx:id="statsTable" prefHeight="410.0" prefWidth="512.6666666666667">
-                   <columns>
-                       <TableColumn fx:id="executionNumberColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false">
-                            <graphic>
-                                 <Label text="Execution&#10;Number" />
-                            </graphic>
-                          </TableColumn>
-                       <TableColumn fx:id="runTypeColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="50.0" prefWidth="-1.0" sortable="false">
-                            <graphic>
-                                 <Label text="Run&#10;Type" />
-                            </graphic>
-                          </TableColumn>
-                       <TableColumn fx:id="nameColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false" text="Name" />
-                       <TableColumn fx:id="architectureColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false">
-                            <graphic>
-                                 <Label text="Architecture&#10;Type" />
-                            </graphic>
-                          </TableColumn>
-                       <TableColumn fx:id="expansionLevelColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false">
-                            <graphic>
-                                 <Label text="Expansion&#10;Level" />
-                            </graphic>
-                          </TableColumn>
-                       <TableColumn fx:id="cyclesColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="50.0" prefWidth="-1.0" sortable="false">
-                            <graphic>
-                                 <Label text="Cycles&#10;Used" />
-                            </graphic>
-                          </TableColumn>
-                       <TableColumn fx:id="outputColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="60.0" prefWidth="-1.0" sortable="false">
-                            <graphic>
-                                 <Label text="Output&#10;Generated" />
-                            </graphic>
-                          </TableColumn>
-                   </columns>
-                   <columnResizePolicy>
-                       <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                   </columnResizePolicy>
-               </TableView>
-               <HBox>
-                   <children>
-                       <Button fx:id="showStatusButton" mnemonicParsing="false" onAction="#showStatusButtonPressed" text="Show Status">
-                           <HBox.margin>
-                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                           </HBox.margin>
-                       </Button>
-                       <Button fx:id="reRunButton" mnemonicParsing="false" onAction="#reRunButtonPressed" text="Re-Run">
-                           <HBox.margin>
-                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                           </HBox.margin>
-                       </Button>
-                   </children>
-               </HBox>
-           </VBox>
-       </AnchorPane>
-   </children>
-   <padding>
-      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-   </padding>
+<VBox maxHeight="1.7976931348623157E308" spacing="3.0"
+      xmlns="http://javafx.com/javafx/24.0.1"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="components.mainDashboard.users.UsersController">
+    <children>
+        <Label fx:id="chatUsersLabel" text="S-Emulator Users:">
+            <font>
+                <Font name="System Bold" size="16.0" />
+            </font>
+            <VBox.margin>
+                <Insets bottom="8.0" top="8.0" />
+            </VBox.margin>
+        </Label>
+        <TableView fx:id="usersTable">
+            <columns>
+                <TableColumn fx:id="userNameColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
+                    <graphic><Label text="User&#10;Name" /></graphic>
+                </TableColumn>
+                <TableColumn fx:id="programCountColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
+                    <graphic><Label text="Programs&#10;Uploaded" /></graphic>
+                </TableColumn>
+                <TableColumn fx:id="FunctionCountColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
+                    <graphic><Label text="Functions&#10;Uploaded" /></graphic>
+                </TableColumn>
+                <TableColumn fx:id="creditsColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
+                    <graphic><Label text="Credits&#10;Avaliable" /></graphic>
+                </TableColumn>
+                <TableColumn fx:id="creditsUsedColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
+                    <graphic><Label text="Credits&#10;Used" /></graphic>
+                </TableColumn>
+                <TableColumn fx:id="executionsColumn" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0">
+                    <graphic><Label text="Total&#10;Executions" /></graphic>
+                </TableColumn>
+            </columns>
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+            </columnResizePolicy>
+        </TableView>
+
+        <Button fx:id="unselectUserButton" alignment="CENTER" contentDisplay="RIGHT"
+                mnemonicParsing="false" onAction="#unselectedUserPressed" text="Unselect User" />
+
+        <AnchorPane fx:id="statsComponent" styleClass="root">
+            <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                <Label alignment="CENTER" contentDisplay="CENTER" text="User Stats Panel:" textAlignment="CENTER">
+                    <VBox.margin><Insets bottom="5.0" left="5.0" right="5.0" top="5.0" /></VBox.margin>
+                    <font><Font name="System Bold" size="16.0" /></font>
+                </Label>
+                <TableView fx:id="statsTable" prefHeight="410.0" prefWidth="512.6666666666667">
+                    <columns>
+                        <TableColumn fx:id="executionNumberColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false">
+                            <graphic><Label text="Execution&#10;Number" /></graphic>
+                        </TableColumn>
+                        <TableColumn fx:id="runTypeColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="50.0" prefWidth="-1.0" sortable="false">
+                            <graphic><Label text="Run&#10;Type" /></graphic>
+                        </TableColumn>
+                        <TableColumn fx:id="nameColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false" text="Name" />
+                        <TableColumn fx:id="architectureColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false">
+                            <graphic><Label text="Architecture&#10;Type" /></graphic>
+                        </TableColumn>
+                        <TableColumn fx:id="expansionLevelColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false">
+                            <graphic><Label text="Expansion&#10;Level" /></graphic>
+                        </TableColumn>
+                        <TableColumn fx:id="cyclesColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="50.0" prefWidth="-1.0" sortable="false">
+                            <graphic><Label text="Cycles&#10;Used" /></graphic>
+                        </TableColumn>
+                        <TableColumn fx:id="outputColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="60.0" prefWidth="-1.0" sortable="false">
+                            <graphic><Label text="Output&#10;Generated" /></graphic>
+                        </TableColumn>
+                    </columns>
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                    </columnResizePolicy>
+                </TableView>
+                <HBox>
+                    <children>
+                        <Button fx:id="showStatusButton" mnemonicParsing="false" onAction="#showStatusButtonPressed" text="Show Status">
+                            <HBox.margin><Insets bottom="5.0" left="5.0" right="5.0" top="5.0" /></HBox.margin>
+                        </Button>
+                        <Button fx:id="reRunButton" mnemonicParsing="false" onAction="#reRunButtonPressed" text="Re-Run">
+                            <HBox.margin><Insets bottom="5.0" left="5.0" right="5.0" top="5.0" /></HBox.margin>
+                        </Button>
+                    </children>
+                </HBox>
+            </VBox>
+        </AnchorPane>
+    </children>
+    <padding>
+        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+    </padding>
 </VBox>

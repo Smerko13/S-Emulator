@@ -108,7 +108,7 @@ public class LoginController {
                         stage.centerOnScreen();
                     }
                     if (clientMainController != null) {
-                        clientMainController.updateUserName(userName.trim());
+                        clientMainController.onLoginSuccess(userName.trim());
                     }
                 });
             }
