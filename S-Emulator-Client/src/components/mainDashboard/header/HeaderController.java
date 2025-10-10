@@ -48,7 +48,11 @@ public class HeaderController {
 
         // If a file was selected, update the file path text field
         if (selectedFile != null) {
-            filePathTextField.setText(selectedFile.getAbsolutePath());
+            if(this.mainController.sendFileToServerForValidation(selectedFile)) {
+                filePathTextField.setText(selectedFile.getAbsolutePath());
+            } else {
+                filePathTextField.setText("Invalid XML file. Please select a valid file.");
+            }
         }
     }
 }

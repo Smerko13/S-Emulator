@@ -20,8 +20,9 @@ public class Constants {
     public final static String BASE_DOMAIN = "localhost";
     private final static String BASE_URL = "http://" + BASE_DOMAIN + ":" + PORT;
     public final static String CONTEXT_PATH = "/S_Emulator_Server";
-    private final static String FULL_SERVER_PATH = BASE_URL + CONTEXT_PATH;
+    public final static String FULL_SERVER_PATH = BASE_URL + CONTEXT_PATH;
     public static final String LOGIN_ENDPOINT = "login";
+    public static final String VALIDATION_ENDPOINT = "validate";
 
 
     public final static String LOGIN_PAGE = FULL_SERVER_PATH + "/" + LOGIN_ENDPOINT;
