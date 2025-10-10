@@ -7,10 +7,13 @@ import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 
-import java.util.List;
-import java.util.Set;
+import java.io.IOException;
 
 public class ExecutionPanelController {
 
@@ -117,6 +120,31 @@ public class ExecutionPanelController {
     }
 
     public void backToMainDashBoard(ActionEvent actionEvent) {
+        try {
+            // Load the main dashboard FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/mainDashboard/mainDashboard.fxml"));
+            Parent mainDashboardRoot = loader.load();
 
+            // Get the current stage from the button (using your proven pattern)
+            Stage stage = (Stage) backToMainDashBoardButton.getScene().getWindow();
+
+            // Apply the same transition pattern that works well
+            if (stage != null && mainDashboardRoot != null) {
+                if (stage.getScene() == null) {
+                    stage.setScene(new Scene(mainDashboardRoot));
+                } else {
+                    stage.getScene().setRoot(mainDashboardRoot);
+                }
+                stage.setMaximized(true);
+                stage.centerOnScreen();
+            }
+
+            // Set the title for the main dashboard
+            stage.setTitle("S-Emulator - Main Dashboard");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle the error gracefully - could show an alert dialog here if needed
+        }
     }
 }
