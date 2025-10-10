@@ -37,7 +37,7 @@
       </HBox>
       <HBox alignment="CENTER" fillHeight="false" maxWidth="1.7976931348623157E308" VBox.vgrow="NEVER">
          <children>
-            <Button fx:id="loadFileButton" mnemonicParsing="false" text="Load File">
+            <Button fx:id="loadFileButton" mnemonicParsing="false" text="Load File" onAction="#loadFileButtonPressed">
                <HBox.margin>
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                </HBox.margin>
