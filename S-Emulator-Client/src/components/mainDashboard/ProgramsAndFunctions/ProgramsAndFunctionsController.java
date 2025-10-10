@@ -2,6 +2,7 @@ package components.mainDashboard.ProgramsAndFunctions;
 
 import components.executionDashboard.ExecutionDashboardController;
 import components.mainDashboard.clientMainController;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -9,6 +10,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
+import javafx.scene.layout.Region;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
@@ -35,58 +37,49 @@ public class ProgramsAndFunctionsController {
     }
 
     public void executeProgramButtonPressed(ActionEvent actionEvent) throws IOException {
-        String target = "test";
-        FXMLLoader fxml = new FXMLLoader(
-                getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
-        Parent root = fxml.load();
-        ExecutionDashboardController ctrl = fxml.getController();
+        // Load the execution dashboard FXML
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
+        Parent executionDashboardRoot = loader.load();
 
-        // Switch scene on current stage
-        Stage stage = (Stage) ((Button) actionEvent.getSource()).getScene().getWindow();
-        stage.setTitle("Execution");
-        stage.setResizable(true);
-        stage.setScene(new Scene(root));
+        // Get the current stage from the button (similar to your working pattern)
+        Stage stage = (Stage) executeProgramButton.getScene().getWindow();
 
-        stage.show();
+        // Apply the same transition pattern that works in login
+        if (stage != null && executionDashboardRoot != null) {
+            if (stage.getScene() == null) {
+                stage.setScene(new Scene(executionDashboardRoot));
+            } else {
+                stage.getScene().setRoot(executionDashboardRoot);
+            }
+            stage.setMaximized(true);
+            stage.centerOnScreen();
+        }
 
-        Screen screen = Screen.getScreensForRectangle(stage.getX(), stage.getY(), 1, 1)
-                .stream().findFirst().orElse(Screen.getPrimary());
-        Rectangle2D vb = screen.getVisualBounds();
-        stage.setX(vb.getMinX());
-        stage.setY(vb.getMinY());
-        stage.setWidth(vb.getWidth());
-        stage.setHeight(vb.getHeight());
-
-        ctrl.openOnServer(target);
+        // Set the title for the execution dashboard
+        stage.setTitle("S-Emulator - Execution Dashboard");
     }
 
-    public void executeFunctionButtonPressed(ActionEvent actionEvent) throws IOException {
-        String target = "functionTest";
-        FXMLLoader fxml = new FXMLLoader(
-                getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
-        Parent root = fxml.load();
-        ExecutionDashboardController ctrl = fxml.getController();
+    public void executeFunctionButtonPressed(ActionEvent e) throws IOException {
+        // Load the execution dashboard FXML
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
+        Parent executionDashboardRoot = loader.load();
 
-        Stage stage = (Stage) ((Button) actionEvent.getSource()).getScene().getWindow();
-        stage.setTitle("Execution");
-        stage.setResizable(true);
-        stage.setScene(new Scene(root));
+        // Get the current stage from the button (similar to your working pattern)
+        Stage stage = (Stage) executeFunctionButton.getScene().getWindow();
 
-        // Show first so window decorations are known
-        stage.show();
+        // Apply the same transition pattern that works in login
+        if (stage != null && executionDashboardRoot != null) {
+            if (stage.getScene() == null) {
+                stage.setScene(new Scene(executionDashboardRoot));
+            } else {
+                stage.getScene().setRoot(executionDashboardRoot);
+            }
+            stage.setMaximized(true);
+            stage.centerOnScreen();
+        }
 
-        // Then size the *stage* (not the scene) to the screen's visual area (no taskbar overlap)
-        Screen screen = Screen.getScreensForRectangle(stage.getX(), stage.getY(), 1, 1)
-                .stream().findFirst().orElse(Screen.getPrimary());
-        Rectangle2D vb = screen.getVisualBounds();
-        stage.setX(vb.getMinX());
-        stage.setY(vb.getMinY());
-        stage.setWidth(vb.getWidth());
-        stage.setHeight(vb.getHeight());
-
-        // no setMaximized() needed
-        ctrl.openOnServer("functionTest");
+        // Set the title for the execution dashboard
+        stage.setTitle("S-Emulator - Execution Dashboard");
     }
-
 
 }

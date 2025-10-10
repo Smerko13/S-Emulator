@@ -9,8 +9,11 @@ import javafx.scene.control.*;
 import java.util.List;
 
 public class HeaderController {
-
-    @FXML public Button CollapseButton;            // already in FXML
+    @FXML private ComboBox highLightSelector;
+    @FXML private Label nameLabel;
+    @FXML private Button CollapseButton;            // already in FXML
+    @FXML private Label creditsLabel;
+    @FXML private Label userNameLabel;
     @FXML private ComboBox<String> FunctionAndProgramSelector;
     @FXML private TextField currentDegreeTextField;
     @FXML private Label DegreeLabel;
@@ -20,11 +23,6 @@ public class HeaderController {
 
     public void setMainController(ExecutionDashboardController parent) {
         this.parent = parent;
-        // optional: wire selector to notify parent
-        FunctionAndProgramSelector.setOnAction(e -> {
-            String sel = FunctionAndProgramSelector.getSelectionModel().getSelectedItem();
-            if (sel != null && parent != null) parent.onFunctionSelectionChanged(sel);
-        });
     }
 
     // called by dashboard when a fresh state arrives

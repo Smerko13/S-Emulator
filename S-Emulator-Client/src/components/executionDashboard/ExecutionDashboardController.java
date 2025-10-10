@@ -9,7 +9,6 @@ import components.executionDashboard.executionPanel.ExecutionPanelController;
 import components.executionDashboard.header.HeaderController;
 import components.executionDashboard.historyPanel.HistoryPanelController;
 import components.executionDashboard.instructionPanel.InstructionTableController;
-import components.executionDashboard.statsPanel.StatsPanelController;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -41,7 +40,6 @@ public class ExecutionDashboardController {
     @FXML private InstructionTableController instructionTableComponentController;
     @FXML private ExecutionPanelController executionPanelComponentController;
     @FXML private HistoryPanelController historyPanelComponentController;
-    @FXML private StatsPanelController statsComponentController;
 
     // Server-side session “context” (optional: the server can rely on JSESSIONID only)
     private String selectedFunction = null;
@@ -53,7 +51,6 @@ public class ExecutionDashboardController {
         if (instructionTableComponentController != null) instructionTableComponentController.setMainController(this);
         if (executionPanelComponentController != null) executionPanelComponentController.setMainController(this);
         if (historyPanelComponentController != null) historyPanelComponentController.setMainController(this);
-        if (statsComponentController != null) statsComponentController.setMainController(this);
     }
 
     /* ---------------------------
@@ -192,11 +189,6 @@ public class ExecutionDashboardController {
             historyPanelComponentController.setTraceLines(s.getTraceLines());
         }
 
-        // 5) Stats
-        if (statsComponentController != null) {
-            StatsDTO stats = s.getStats();
-            statsComponentController.updateStats(stats);
-        }
     }
 
     private void pushError(String msg) {

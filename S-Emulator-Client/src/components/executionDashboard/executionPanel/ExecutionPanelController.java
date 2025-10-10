@@ -14,6 +14,8 @@ import java.util.Set;
 
 public class ExecutionPanelController {
 
+    @FXML private Button backToMainDashBoardButton;
+    @FXML private ComboBox architectureComboBox;
     @FXML private Button newRunButton, stepOverButton, continueButton, stopDebugButton, startDebugButton, programExecuteButton;
     @FXML private TableView<VariableDTO> inputVarsTable;
     @FXML private TableView<VariableDTO> allVarsTable;
@@ -112,5 +114,9 @@ public class ExecutionPanelController {
     }
 
     public void continueButtonPressed(ActionEvent actionEvent) {
+    }
+
+    public void backToMainDashBoard(ActionEvent actionEvent) {
+
     }
 }
