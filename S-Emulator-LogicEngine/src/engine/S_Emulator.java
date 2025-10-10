@@ -3,15 +3,21 @@ package engine;
 import engine.arguments.Variable;
 import engine.commands.Command;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.util.List;
 import java.util.Set;
 
 public interface S_Emulator {
+
     String getCurrentProgramName();
 
-    Boolean readProgramFromXml(String filePath);
+    //public Boolean readProgramFromXml(File xmlFile);
+
+    public Boolean readProgramFromXml(String xmlContent);
+
+    //Boolean readProgramFromXml(String filePath);
 
     Set<String> getLabels(int expansionLevel);
 

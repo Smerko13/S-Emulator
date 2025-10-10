@@ -49,25 +49,69 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         return currentProgramName;
     }
 
-    public Boolean readProgramFromXml(String filePath) {
-        boolean found = false;
+//    public Boolean readProgramFromXml(File xmlFile) {
+//        boolean found = false;
+//        try {
+//                found = true;
+//                JAXBContext jaxbContext = JAXBContext.newInstance(SProgram.class);
+//                Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+//                SProgram program = (SProgram) jaxbUnmarshaller.unmarshal(xmlFile);
+//                parseObjectToLocalVariables(program);
+//                if(!checkIfProgramIsValid()) {
+//                    return false;
+//                }
+//                this.stats.reset();
+//        } catch (JAXBException e) {
+//            return false;
+//        }
+//        return found;
+//    }
+//
+//    public Boolean readProgramFromXml(String filePath) {
+//        boolean found = false;
+//        try {
+//            File xmlFile = new File(filePath);
+//            if (xmlFile.exists()) {
+//                found = true;
+//                JAXBContext jaxbContext = JAXBContext.newInstance(SProgram.class);
+//                Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+//                SProgram program = (SProgram) jaxbUnmarshaller.unmarshal(xmlFile);
+//                parseObjectToLocalVariables(program);
+//                if(!checkIfProgramIsValid()) {
+//                    return false;
+//                }
+//                this.stats.reset();
+//            }
+//        } catch (JAXBException e) {
+//            return false;
+//        }
+//        return found;
+//    }
+
+    public Boolean readProgramFromXml(String xmlContent) {
         try {
-            File xmlFile = new File(filePath);
-            if (xmlFile.exists()) {
-                found = true;
-                JAXBContext jaxbContext = JAXBContext.newInstance(SProgram.class);
-                Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-                SProgram program = (SProgram) jaxbUnmarshaller.unmarshal(xmlFile);
-                parseObjectToLocalVariables(program);
-                if(!checkIfProgramIsValid()) {
-                    return false;
-                }
-                this.stats.reset();
+            JAXBContext jaxbContext = JAXBContext.newInstance(SProgram.class);
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+
+            // Create StringReader from XML content
+            StringReader reader = new StringReader(xmlContent);
+            SProgram program = (SProgram) jaxbUnmarshaller.unmarshal(reader);
+
+            parseObjectToLocalVariables(program);
+            if(!checkIfProgramIsValid()) {
+                return false;
             }
+            this.stats.reset();
+            return true;
         } catch (JAXBException e) {
+            System.out.println("JAXB Exception: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } catch (Exception e) {
+            System.out.println("General Exception: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
-        return found;
     }
 
     private boolean checkIfProgramIsValid() {

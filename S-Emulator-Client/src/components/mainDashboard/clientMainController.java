@@ -14,7 +14,13 @@ import javafx.scene.layout.GridPane;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 import static util.Constants.*;
 
@@ -90,21 +96,47 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
 
     public boolean sendFileToServerForValidation(File selectedFile) {
         try {
-            String xmlContent = new String(java.nio.file.Files.readAllBytes(selectedFile.toPath()), java.nio.charset.StandardCharsets.UTF_8);
-            java.net.URL url = new java.net.URL(FULL_SERVER_PATH + "/" + VALIDATION_ENDPOINT);
-            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setDoOutput(true);
-            conn.setRequestProperty("Content-Type", "application/xml; charset=UTF-8");
-            try (java.io.OutputStream os = conn.getOutputStream()) {
-                os.write(xmlContent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            }
-            int responseCode = conn.getResponseCode();
-            return responseCode == 200;
-        } catch (IOException e) {
+            // Read the XML content
+            String xmlContent = Files.readString(selectedFile.toPath(), StandardCharsets.UTF_8);
+            System.out.println("CLIENT - XML Content Length: " + xmlContent.length());
+            System.out.println("CLIENT - First 200 chars: " + xmlContent.substring(0, Math.min(200, xmlContent.length())));
+
+            // Check byte array size
+            byte[] xmlBytes = xmlContent.getBytes(StandardCharsets.UTF_8);
+            System.out.println("CLIENT - XML bytes length: " + xmlBytes.length);
+            System.out.println("CLIENT - Current User ID: " + getCurrentUserId());
+
+            // Create HTTP client and request
+            HttpClient client = HttpClient.newHttpClient();
+
+            // Build the request with XML content in the body
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(FULL_SERVER_PATH + "/" + VALIDATION_ENDPOINT + "?userId=" + getCurrentUserId()))
+                    .header("Content-Type", "application/xml; charset=utf-8")
+                    .POST(HttpRequest.BodyPublishers.ofString(xmlContent, StandardCharsets.UTF_8))
+                    .build();
+
+            System.out.println("CLIENT - Sending request to: " + request.uri());
+            System.out.println("CLIENT - Request headers: " + request.headers().map());
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println("CLIENT - Response status: " + response.statusCode());
+            System.out.println("CLIENT - Response body: " + response.body());
+            System.out.println("CLIENT - Response headers: " + response.headers().map());
+
+            return response.statusCode() == 200;
+
+        } catch (Exception e) {
+            System.out.println("CLIENT - Exception: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
+    }
+
+
+    private String getCurrentUserId() {
+        return currentUserName.get().replaceAll("\\s+", "_").toLowerCase();
     }
 
 }
