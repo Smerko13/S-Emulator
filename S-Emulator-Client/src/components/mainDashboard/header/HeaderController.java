@@ -3,13 +3,12 @@ package components.mainDashboard.header;
 import components.mainDashboard.clientMainController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.util.Optional;
 
 public class HeaderController {
     @FXML private TextField creditInputTextField;
@@ -46,13 +45,31 @@ public class HeaderController {
         // Show the file chooser dialog
         File selectedFile = fileChooser.showOpenDialog(stage);
 
-        // If a file was selected, update the file path text field
+        // If a file was selected, get program name from user
         if (selectedFile != null) {
-            if(this.mainController.sendFileToServerForValidation(selectedFile)) {
-                filePathTextField.setText(selectedFile.getAbsolutePath());
+            String programName = getProgramNameFromUser(selectedFile.getName());
+
+            if (programName != null && !programName.trim().isEmpty()) {
+                if (this.mainController.sendFileToServerForValidation(selectedFile, programName)) {
+                    filePathTextField.setText(selectedFile.getAbsolutePath() + " (Program: " + programName + ")");
+                } else {
+                    filePathTextField.setText("Invalid XML file. Please select a valid file.");
+                }
             } else {
-                filePathTextField.setText("Invalid XML file. Please select a valid file.");
+                filePathTextField.setText("Upload cancelled - program name required.");
             }
         }
+    }
+
+    private String getProgramNameFromUser(String fileName) {
+        // Create a dialog to get program name from user
+        TextInputDialog dialog = new TextInputDialog(fileName.replace(".xml", ""));
+        dialog.setTitle("Program Name");
+        dialog.setHeaderText("Enter a name for this program:");
+        dialog.setContentText("Program name:");
+
+        // Show dialog and get result
+        Optional<String> result = dialog.showAndWait();
+        return result.orElse(null);
     }
 }

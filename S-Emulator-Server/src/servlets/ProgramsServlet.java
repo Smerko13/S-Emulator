@@ -33,18 +33,27 @@ public class ProgramsServlet extends HttpServlet {
                     jsonBuilder.append(",");
                 }
 
-                String userId = entry.getKey();
+                String compositeKey = entry.getKey(); // This is userId_programName
                 S_Emulator emulator = entry.getValue();
 
-                // Extract program information from S_Emulator
-                String programName = emulator.getCurrentProgramName(); // You need this method
-                int numInstructions = emulator.getCommandsAtDesiredLevel(0).size(); // You need this method
-                int maxDegree = emulator.getMaxExpansionDepth(); // You need this method
-                int numExecutions = emulator.getExecutionCount(); // You need this method
-                double avgCreditCost = emulator.getAverageCreditCost(); // You need this method
+                // Extract userId and programName from composite key
+                String[] keyParts = compositeKey.split("_", 2);
+                String userId = keyParts[0];
+                String programName = keyParts.length > 1 ? keyParts[1] : "Unknown";
+
+                // Extract actual program information from S_Emulator
+                String actualProgramName = emulator.getCurrentProgramName();
+                int numInstructions = emulator.getCommandsAtDesiredLevel(0).size();
+                int maxDegree = emulator.getMaxExpansionDepth();
+                int numExecutions = emulator.getExecutionHistory().getExecutionCount();
+                double avgCreditCost = emulator.getExecutionHistory().getAverageCreditCost();
+
+                // Use actual program name from emulator if available, otherwise use extracted name
+                String displayProgramName = (actualProgramName != null && !actualProgramName.trim().isEmpty()) ?
+                                          actualProgramName : programName;
 
                 jsonBuilder.append("{");
-                jsonBuilder.append("\"programName\":\"").append(escapeJson(programName)).append("\",");
+                jsonBuilder.append("\"programName\":\"").append(escapeJson(displayProgramName)).append("\",");
                 jsonBuilder.append("\"uploaderName\":\"").append(escapeJson(userId)).append("\",");
                 jsonBuilder.append("\"numOfInstructions\":").append(numInstructions).append(",");
                 jsonBuilder.append("\"maxDegree\":").append(maxDegree).append(",");

@@ -33,6 +33,14 @@ public class Stats implements Serializable, Cloneable {
         return executionHistory;
     }
 
+    public int getExecutionCount() {
+        return executionCounter;
+    }
+
+    public double getAverageCreditCost() {
+        return 0;
+    }
+
 
     public class Execution implements Serializable, Cloneable {
         private int executionNumber;
