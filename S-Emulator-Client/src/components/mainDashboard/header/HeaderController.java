@@ -8,7 +8,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.util.Optional;
 
 public class HeaderController {
     @FXML private TextField creditInputTextField;
@@ -45,31 +44,13 @@ public class HeaderController {
         // Show the file chooser dialog
         File selectedFile = fileChooser.showOpenDialog(stage);
 
-        // If a file was selected, get program name from user
+        // If a file was selected, upload it directly (program name will be extracted from XML)
         if (selectedFile != null) {
-            String programName = getProgramNameFromUser(selectedFile.getName());
-
-            if (programName != null && !programName.trim().isEmpty()) {
-                if (this.mainController.sendFileToServerForValidation(selectedFile, programName)) {
-                    filePathTextField.setText(selectedFile.getAbsolutePath() + " (Program: " + programName + ")");
-                } else {
-                    filePathTextField.setText("Invalid XML file. Please select a valid file.");
-                }
+            if (this.mainController.sendFileToServerForValidation(selectedFile)) {
+                filePathTextField.setText(selectedFile.getAbsolutePath());
             } else {
-                filePathTextField.setText("Upload cancelled - program name required.");
+                filePathTextField.setText("Invalid XML file. Please select a valid file.");
             }
         }
-    }
-
-    private String getProgramNameFromUser(String fileName) {
-        // Create a dialog to get program name from user
-        TextInputDialog dialog = new TextInputDialog(fileName.replace(".xml", ""));
-        dialog.setTitle("Program Name");
-        dialog.setHeaderText("Enter a name for this program:");
-        dialog.setContentText("Program name:");
-
-        // Show dialog and get result
-        Optional<String> result = dialog.showAndWait();
-        return result.orElse(null);
     }
 }

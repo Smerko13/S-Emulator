@@ -109,54 +109,9 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
             // Create HTTP client and request
             HttpClient client = HttpClient.newHttpClient();
 
-            // Build the request with XML content in the body
+            // Build the request with XML content in the body - program name will be extracted from XML on server
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(FULL_SERVER_PATH + "/" + VALIDATION_ENDPOINT + "?userId=" + getCurrentUserId()))
-                    .header("Content-Type", "application/xml; charset=utf-8")
-                    .POST(HttpRequest.BodyPublishers.ofString(xmlContent, StandardCharsets.UTF_8))
-                    .build();
-
-            System.out.println("CLIENT - Sending request to: " + request.uri());
-            System.out.println("CLIENT - Request headers: " + request.headers().map());
-
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            System.out.println("CLIENT - Response status: " + response.statusCode());
-            System.out.println("CLIENT - Response body: " + response.body());
-            System.out.println("CLIENT - Response headers: " + response.headers().map());
-
-            return response.statusCode() == 200;
-
-        } catch (Exception e) {
-            System.out.println("CLIENT - Exception: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public boolean sendFileToServerForValidation(File selectedFile, String programName) {
-        try {
-            // Read the XML content
-            String xmlContent = Files.readString(selectedFile.toPath(), StandardCharsets.UTF_8);
-            System.out.println("CLIENT - XML Content Length: " + xmlContent.length());
-            System.out.println("CLIENT - First 200 chars: " + xmlContent.substring(0, Math.min(200, xmlContent.length())));
-            System.out.println("CLIENT - Program Name: " + programName);
-
-            // Check byte array size
-            byte[] xmlBytes = xmlContent.getBytes(StandardCharsets.UTF_8);
-            System.out.println("CLIENT - XML bytes length: " + xmlBytes.length);
-            System.out.println("CLIENT - Current User ID: " + getCurrentUserId());
-
-            // Create HTTP client and request
-            HttpClient client = HttpClient.newHttpClient();
-
-            // Build the request with XML content in the body and both userId and programName as parameters
-            String encodedUserId = java.net.URLEncoder.encode(getCurrentUserId(), StandardCharsets.UTF_8);
-            String encodedProgramName = java.net.URLEncoder.encode(programName, StandardCharsets.UTF_8);
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(FULL_SERVER_PATH + "/" + VALIDATION_ENDPOINT +
-                                  "?userId=" + encodedUserId + "&programName=" + encodedProgramName))
                     .header("Content-Type", "application/xml; charset=utf-8")
                     .POST(HttpRequest.BodyPublishers.ofString(xmlContent, StandardCharsets.UTF_8))
                     .build();
