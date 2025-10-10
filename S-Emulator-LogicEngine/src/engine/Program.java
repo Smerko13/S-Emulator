@@ -351,6 +351,16 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         this.currentCommand = null;
     }
 
+    @Override
+    public int getExecutionCount() {
+        return 0;
+    }
+
+    @Override
+    public double getAverageCreditCost() {
+        return 0;
+    }
+
 
     @Override
     public void executeProgram(int expansionLevel,boolean forHistory) {

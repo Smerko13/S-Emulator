@@ -64,4 +64,8 @@ public interface S_Emulator {
     String countSyntheticCommands();
 
     void hardReset();
+
+    int getExecutionCount();
+
+    double getAverageCreditCost();
 }

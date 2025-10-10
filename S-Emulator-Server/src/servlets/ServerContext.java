@@ -38,4 +38,8 @@ public class ServerContext {
     public boolean hasUserProgram(String userId) {
         return userPrograms.containsKey(userId);
     }
+
+    public Map<String, S_Emulator> getAllStoredPrograms() {
+        return new ConcurrentHashMap<>(userPrograms);
+    }
 }
