@@ -170,12 +170,12 @@ public class ProgramsAndFunctionsController implements Initializable {
             programsData.clear();
             functionsData.clear();
 
-            // Simple JSON parsing - look for programs array
+            // Parse programs
             if (jsonResponse != null && jsonResponse.contains("\"programs\":[")) {
                 // Extract programs from JSON manually (basic parsing)
                 String programsSection = jsonResponse.substring(
                         jsonResponse.indexOf("\"programs\":[") + 12,
-                        jsonResponse.lastIndexOf("]}")
+                        jsonResponse.indexOf("],\"functions\":[")
                 );
 
                 // If there are programs, parse them
@@ -205,7 +205,41 @@ public class ProgramsAndFunctionsController implements Initializable {
                 }
             }
 
-            System.out.println("Parsed " + programsData.size() + " programs");
+            // Parse functions
+            if (jsonResponse != null && jsonResponse.contains("\"functions\":[")) {
+                // Extract functions from JSON
+                String functionsSection = jsonResponse.substring(
+                        jsonResponse.indexOf("\"functions\":[") + 13,
+                        jsonResponse.lastIndexOf("]}")
+                );
+
+                // If there are functions, parse them
+                if (!functionsSection.trim().isEmpty() && !functionsSection.equals("")) {
+                    // Split by function objects
+                    String[] functions = functionsSection.split("\\},\\{");
+
+                    for (String function : functions) {
+                        // Clean up the function string
+                        function = function.replace("{", "").replace("}", "");
+
+                        // Extract values using simple string parsing
+                        String functionName = extractJsonValue(function, "functionName");
+                        String associatedProgram = extractJsonValue(function, "associatedProgram");
+                        String associatedUser = extractJsonValue(function, "associatedUser");
+                        int numInstructions = Integer.parseInt(extractJsonValue(function, "numOfInstructions"));
+                        int maxDegree = Integer.parseInt(extractJsonValue(function, "maxDegree"));
+
+                        // Create DTO and add to list
+                        FunctionInfoDTO functionInfo = new FunctionInfoDTO(
+                                functionName, associatedProgram, associatedUser,
+                                numInstructions, maxDegree
+                        );
+                        functionsData.add(functionInfo);
+                    }
+                }
+            }
+
+            System.out.println("Parsed " + programsData.size() + " programs and " + functionsData.size() + " functions");
 
         } catch (Exception e) {
             System.err.println("Error parsing JSON: " + e.getMessage());
@@ -213,6 +247,7 @@ public class ProgramsAndFunctionsController implements Initializable {
 
             // Add test data if parsing fails
             programsData.add(new ProgramInfoDTO("Test Program", "Test User", 10, 5, 2, 1.5));
+            functionsData.add(new FunctionInfoDTO("Test Function", "Test Program", "Test User", 5, 3));
         }
     }
 

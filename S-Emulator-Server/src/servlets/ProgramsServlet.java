@@ -27,9 +27,9 @@ public class ProgramsServlet extends HttpServlet {
             StringBuilder jsonBuilder = new StringBuilder();
             jsonBuilder.append("{\"programs\":[");
 
-            boolean first = true;
+            boolean firstProgram = true;
             for (Map.Entry<String, S_Emulator> entry : allPrograms.entrySet()) {
-                if (!first) {
+                if (!firstProgram) {
                     jsonBuilder.append(",");
                 }
 
@@ -61,13 +61,57 @@ public class ProgramsServlet extends HttpServlet {
                 jsonBuilder.append("\"avgCreditCost\":").append(avgCreditCost);
                 jsonBuilder.append("}");
 
-                first = false;
+                firstProgram = false;
+            }
+
+            jsonBuilder.append("],\"functions\":[");
+
+            // Add functions from all programs
+            boolean firstFunction = true;
+            for (Map.Entry<String, S_Emulator> entry : allPrograms.entrySet()) {
+                String compositeKey = entry.getKey();
+                S_Emulator emulator = entry.getValue();
+
+                // Extract userId and programName from composite key
+                String[] keyParts = compositeKey.split("_", 2);
+                String userId = keyParts[0];
+                String programName = keyParts.length > 1 ? keyParts[1] : "Unknown";
+
+                // Get sub-functions from the program
+                if (emulator instanceof engine.Program) {
+                    engine.Program program = (engine.Program) emulator;
+                    if (program.subFunctions != null) {
+                        for (engine.Program subFunction : program.subFunctions) {
+                            if (!firstFunction) {
+                                jsonBuilder.append(",");
+                            }
+
+                            String functionName = subFunction.getCurrentProgramName();
+                            if (functionName == null || functionName.trim().isEmpty()) {
+                                functionName = "Function_" + System.currentTimeMillis();
+                            }
+
+                            int functionInstructions = subFunction.getCommandsAtDesiredLevel(0).size();
+                            int functionMaxDegree = subFunction.getMaxExpansionDepth();
+
+                            jsonBuilder.append("{");
+                            jsonBuilder.append("\"functionName\":\"").append(escapeJson(functionName)).append("\",");
+                            jsonBuilder.append("\"associatedProgram\":\"").append(escapeJson(programName)).append("\",");
+                            jsonBuilder.append("\"associatedUser\":\"").append(escapeJson(userId)).append("\",");
+                            jsonBuilder.append("\"numOfInstructions\":").append(functionInstructions).append(",");
+                            jsonBuilder.append("\"maxDegree\":").append(functionMaxDegree);
+                            jsonBuilder.append("}");
+
+                            firstFunction = false;
+                        }
+                    }
+                }
             }
 
             jsonBuilder.append("]}");
 
             resp.getWriter().write(jsonBuilder.toString());
-            System.out.println("SERVER - Sent programs data: " + jsonBuilder.toString());
+            System.out.println("SERVER - Sent programs and functions data: " + jsonBuilder.toString());
 
         } catch (Exception e) {
             System.err.println("SERVER - Error in ProgramsServlet: " + e.getMessage());
