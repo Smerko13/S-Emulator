@@ -4,10 +4,12 @@ import components.executionDashboard.ExecutionDashboardController;
 import components.mainDashboard.clientMainController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -39,29 +41,52 @@ public class ProgramsAndFunctionsController {
         Parent root = fxml.load();
         ExecutionDashboardController ctrl = fxml.getController();
 
-        Stage stage = new Stage();
+        // Switch scene on current stage
+        Stage stage = (Stage) ((Button) actionEvent.getSource()).getScene().getWindow();
         stage.setTitle("Execution");
+        stage.setResizable(true);
         stage.setScene(new Scene(root));
-
-// 3/4 of the screen, centered
-        javafx.geometry.Rectangle2D vb = javafx.stage.Screen.getPrimary().getVisualBounds();
-        double w = vb.getWidth()  * 0.75;
-        double h = vb.getHeight() * 0.75;
-        stage.setWidth(w);
-        stage.setHeight(h);
-        stage.setX(vb.getMinX() + (vb.getWidth()  - w) / 2);
-        stage.setY(vb.getMinY() + (vb.getHeight() - h) / 2);
-
-// (optional) reasonable mins so it's still usable if resized smaller
-        stage.setMinWidth(vb.getWidth() * 0.5);
-        stage.setMinHeight(vb.getHeight() * 0.5);
 
         stage.show();
 
+        Screen screen = Screen.getScreensForRectangle(stage.getX(), stage.getY(), 1, 1)
+                .stream().findFirst().orElse(Screen.getPrimary());
+        Rectangle2D vb = screen.getVisualBounds();
+        stage.setX(vb.getMinX());
+        stage.setY(vb.getMinY());
+        stage.setWidth(vb.getWidth());
+        stage.setHeight(vb.getHeight());
+
         ctrl.openOnServer(target);
-
     }
 
-    public void executeFunctionButtonPressed(ActionEvent actionEvent) {
+    public void executeFunctionButtonPressed(ActionEvent actionEvent) throws IOException {
+        String target = "functionTest";
+        FXMLLoader fxml = new FXMLLoader(
+                getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
+        Parent root = fxml.load();
+        ExecutionDashboardController ctrl = fxml.getController();
+
+        Stage stage = (Stage) ((Button) actionEvent.getSource()).getScene().getWindow();
+        stage.setTitle("Execution");
+        stage.setResizable(true);
+        stage.setScene(new Scene(root));
+
+        // Show first so window decorations are known
+        stage.show();
+
+        // Then size the *stage* (not the scene) to the screen's visual area (no taskbar overlap)
+        Screen screen = Screen.getScreensForRectangle(stage.getX(), stage.getY(), 1, 1)
+                .stream().findFirst().orElse(Screen.getPrimary());
+        Rectangle2D vb = screen.getVisualBounds();
+        stage.setX(vb.getMinX());
+        stage.setY(vb.getMinY());
+        stage.setWidth(vb.getWidth());
+        stage.setHeight(vb.getHeight());
+
+        // no setMaximized() needed
+        ctrl.openOnServer("functionTest");
     }
+
+
 }
