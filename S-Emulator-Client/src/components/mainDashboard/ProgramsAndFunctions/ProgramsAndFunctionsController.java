@@ -358,8 +358,16 @@ public class ProgramsAndFunctionsController implements Initializable {
         Object controller = loader.getController();
         if (controller instanceof ExecutionDashboardController) {
             ExecutionDashboardController dashboardController = (ExecutionDashboardController) controller;
-            // Assuming the dashboard controller has access to the header controller
-            dashboardController.setProgramOrFunctionName(selectedFunction.getFunctionName());
+            // Create a ProgramInfoDTO for the function to use with setUp
+            ProgramInfoDTO functionAsProgram = new ProgramInfoDTO(
+                selectedFunction.getFunctionName(),
+                selectedFunction.getAssociatedUser(),
+                selectedFunction.getNumOfInstructions(),
+                selectedFunction.getMaxDegree(),
+                0, // numOfExecutions - default to 0 for functions
+                0.0 // avgCreditCost - default to 0.0 for functions
+            );
+            dashboardController.setUp(functionAsProgram);
         }
 
         // Get the current stage from the button (similar to your working pattern)

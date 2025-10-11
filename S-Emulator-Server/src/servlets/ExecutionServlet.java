@@ -15,11 +15,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @WebServlet(name = "ExecutionServlet", urlPatterns = {"/exec/*"})
 public class ExecutionServlet extends HttpServlet {
@@ -74,6 +71,8 @@ public class ExecutionServlet extends HttpServlet {
             throws IOException {
 
         String target = request.getParameter("target");
+        System.out.println("ExecutionServlet: handleOpen called with target: " + target);
+
         if (target == null || target.trim().isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(GSON.toJson("Missing target parameter"));
@@ -82,6 +81,7 @@ public class ExecutionServlet extends HttpServlet {
 
         HttpSession session = request.getSession();
         String username = (String) session.getAttribute("username");
+        System.out.println("ExecutionServlet: Username from session: " + username);
 
         if (username == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -92,9 +92,15 @@ public class ExecutionServlet extends HttpServlet {
         try {
             // Create or get the engine for this user/program combination
             S_Emulator engine = getOrCreateEngine(session, target);
+            System.out.println("ExecutionServlet: Engine loaded: " + (engine != null));
 
             // Create execution state DTO
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, target);
+            System.out.println("ExecutionServlet: ExecutionStateDTO created with " +
+                (executionState.getInstructions() != null ? executionState.getInstructions().size() : "null") +
+                " instructions and " +
+                (executionState.getAllVariables() != null ? executionState.getAllVariables().size() : "null") +
+                " variables");
 
             // Store current program/function in session
             session.setAttribute("currentTarget", target);
@@ -102,6 +108,8 @@ public class ExecutionServlet extends HttpServlet {
             response.getWriter().write(GSON.toJson(executionState));
 
         } catch (Exception e) {
+            System.err.println("ExecutionServlet: Error in handleOpen: " + e.getMessage());
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Failed to open program: " + e.getMessage()));
         }
@@ -121,8 +129,8 @@ public class ExecutionServlet extends HttpServlet {
         }
 
         try {
-            // Execute the program
-            engine.runProgram();
+            // Execute the program - use the correct method from S_Emulator interface
+            engine.executeProgram(engine.getCurrentDegree(), true);
 
             // Return updated execution state
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
@@ -312,9 +320,9 @@ public class ExecutionServlet extends HttpServlet {
 
         // Set basic information
         state.setSelectedFunction(target);
-        state.setCurrentDegree(0); // Default or get from engine
-        state.setMaxDegree(10);    // Default or get from program
-        state.setCycles(engine.getStats() != null ? engine.getStats().getCycles() : 0);
+        state.setCurrentDegree(engine.getCurrentDegree()); // Use actual current degree from engine
+        state.setMaxDegree(engine.getMaxExpansionDepth()); // Use actual max degree from engine
+        state.setCycles(engine.getCycleSum()); // Use getCycleSum() method from S_Emulator
         state.setDebugging(false); // Default or get from engine state
 
         // Set function names (for now just the target)
@@ -322,11 +330,11 @@ public class ExecutionServlet extends HttpServlet {
         functionNames.add(target);
         state.setFunctionNames(functionNames);
 
-        // Get instructions from the engine/program
+        // Get instructions from the engine using proper methods
         List<InstructionDTO> instructions = getInstructionsFromEngine(engine);
         state.setInstructions(instructions);
 
-        // Get variables
+        // Get variables using proper methods
         List<VariableDTO> allVariables = getVariablesFromEngine(engine);
         List<VariableDTO> inputVariables = getInputVariablesFromEngine(engine);
         state.setAllVariables(allVariables);
@@ -344,24 +352,35 @@ public class ExecutionServlet extends HttpServlet {
     private List<InstructionDTO> getInstructionsFromEngine(S_Emulator engine) {
         List<InstructionDTO> instructions = new ArrayList<>();
 
-        if (engine.getProgram() != null && engine.getProgram().getCommands() != null) {
-            List<Command> commands = engine.getProgram().getCommands();
+        // Use the correct method from S_Emulator interface to get commands at current degree
+        List<Command> commands = engine.getCommandsAtDesiredLevel(engine.getCurrentDegree());
+        System.out.println("ExecutionServlet: Retrieved " + commands.size() + " commands from engine");
 
-            for (int i = 0; i < commands.size(); i++) {
-                Command command = commands.get(i);
-                InstructionDTO instruction = new InstructionDTO();
-                instruction.setId(i);
-                instruction.setInstruction(command.toString());
-                instruction.setArguments(command.getArguments() != null ? command.getArguments().toString() : "");
+        for (int i = 0; i < commands.size(); i++) {
+            Command command = commands.get(i);
+            InstructionDTO instruction = new InstructionDTO();
+            instruction.setId(i);
+            instruction.setInstruction(command.toString());
 
-                // Set the additional fields expected by InstructionTableController
-                instruction.setType(command.getClass().getSimpleName()); // e.g., "Increase", "Decrease", etc.
-                instruction.setCycles(1); // Default to 1 cycle per instruction
-                instruction.setLabel(null); // Most instructions won't have labels
-                instruction.setText(command.toString()); // Display text for the instruction
-
-                instructions.add(instruction);
+            // Get associated variables if they exist
+            Variable[] assocVars = command.getAssociatedVariables();
+            String arguments = "";
+            if (assocVars != null && assocVars.length > 0) {
+                arguments = Arrays.stream(assocVars)
+                    .filter(Objects::nonNull)
+                    .map(Variable::getName)
+                    .collect(Collectors.joining(", "));
             }
+            instruction.setArguments(arguments);
+
+            // Set the additional fields expected by InstructionTableController
+            instruction.setType(command.getClass().getSimpleName()); // e.g., "Increase", "Decrease", etc.
+            instruction.setCycles(command.getCycles()); // Use actual cycles from command
+            instruction.setLabel(command.getLabel()); // Use actual label from command
+            instruction.setText(command.toString()); // Display text for the instruction
+
+            instructions.add(instruction);
+            System.out.println("ExecutionServlet: Added instruction " + i + ": " + command.toString());
         }
 
         return instructions;
@@ -370,14 +389,17 @@ public class ExecutionServlet extends HttpServlet {
     private List<VariableDTO> getVariablesFromEngine(S_Emulator engine) {
         List<VariableDTO> variables = new ArrayList<>();
 
-        if (engine.getProgram() != null && engine.getProgram().getVariables() != null) {
-            for (Variable variable : engine.getProgram().getVariables()) {
-                VariableDTO varDTO = new VariableDTO();
-                varDTO.setName(variable.getName());
-                varDTO.setValue(variable.getValue());
-                varDTO.setType(variable.getClass().getSimpleName());
-                variables.add(varDTO);
-            }
+        // Use the correct method from S_Emulator interface to get variables
+        Set<Variable> variableSet = engine.getVariables();
+        System.out.println("ExecutionServlet: Retrieved " + variableSet.size() + " variables from engine");
+
+        for (Variable variable : variableSet) {
+            VariableDTO varDTO = new VariableDTO();
+            varDTO.setName(variable.getName());
+            varDTO.setValue(variable.getValue());
+            varDTO.setType(variable.getClass().getSimpleName());
+            variables.add(varDTO);
+            System.out.println("ExecutionServlet: Added variable: " + variable.getName() + " = " + variable.getValue());
         }
 
         return variables;
@@ -386,15 +408,16 @@ public class ExecutionServlet extends HttpServlet {
     private List<VariableDTO> getInputVariablesFromEngine(S_Emulator engine) {
         List<VariableDTO> inputVariables = new ArrayList<>();
 
-        if (engine.getProgram() != null && engine.getProgram().getVariables() != null) {
-            for (Variable variable : engine.getProgram().getVariables()) {
-                if (variable instanceof InputVariable) {
-                    VariableDTO varDTO = new VariableDTO();
-                    varDTO.setName(variable.getName());
-                    varDTO.setValue(variable.getValue());
-                    varDTO.setType("InputVariable");
-                    inputVariables.add(varDTO);
-                }
+        // Use the correct method from S_Emulator interface to get variables
+        Set<Variable> variableSet = engine.getVariables();
+
+        for (Variable variable : variableSet) {
+            if (variable instanceof InputVariable) {
+                VariableDTO varDTO = new VariableDTO();
+                varDTO.setName(variable.getName());
+                varDTO.setValue(variable.getValue());
+                varDTO.setType("InputVariable");
+                inputVariables.add(varDTO);
             }
         }
 

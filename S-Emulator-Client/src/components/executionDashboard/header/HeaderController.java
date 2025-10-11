@@ -58,22 +58,24 @@ public class HeaderController {
 
     // called by dashboard when a fresh state arrives
     public void updateFunctionSelector(List<String> names) {
-        FunctionAndProgramSelector.getItems().setAll(names == null ? List.of() : names);
+        if (FunctionAndProgramSelector != null) {
+            FunctionAndProgramSelector.getItems().setAll(names == null ? List.of() : names);
+        }
     }
 
     // existing button handlers can delegate to parent
     @FXML private void CollapseProgram() {
-        if (parent != null && FunctionAndProgramSelector.getValue() != null)
+        if (parent != null && FunctionAndProgramSelector != null && FunctionAndProgramSelector.getValue() != null)
             parent.collapseProgram(FunctionAndProgramSelector.getValue());
     }
     @FXML private void ExpandProgram() {
-        if (parent != null && FunctionAndProgramSelector.getValue() != null)
+        if (parent != null && FunctionAndProgramSelector != null && FunctionAndProgramSelector.getValue() != null)
             parent.expandProgram(FunctionAndProgramSelector.getValue());
     }
     @FXML private void degreeInserted() {
-        if (parent == null) return;
+        if (parent == null || FunctionAndProgramSelector == null) return;
         String sel = FunctionAndProgramSelector.getValue();
-        if (sel == null) return;
+        if (sel == null || currentDegreeTextField == null) return;
         try {
             int v = Integer.parseInt(currentDegreeTextField.getText().trim());
             parent.setCurrentDegree(sel, v);
@@ -81,16 +83,22 @@ public class HeaderController {
     }
 
     // helper the dashboard calls
-    public Object getSelectedFunction() { return FunctionAndProgramSelector.getValue(); }
+    public Object getSelectedFunction() {
+        return FunctionAndProgramSelector != null ? FunctionAndProgramSelector.getValue() : null;
+    }
 
     public void setSelectedFunction(String name) {
-        if (name == null) return;
+        if (name == null || FunctionAndProgramSelector == null) return;
         FunctionAndProgramSelector.getSelectionModel().select(name);
     }
 
     public void setDegreeLabels(int current, int max) {
-        currentDegreeTextField.setText(String.valueOf(current));
-        DegreeLabel.setText("/" + max);
+        if (currentDegreeTextField != null) {
+            currentDegreeTextField.setText(String.valueOf(current));
+        }
+        if (DegreeLabel != null) {
+            DegreeLabel.setText("/" + max);
+        }
     }
 
     public void setProgramOrFunctionName(String name) {

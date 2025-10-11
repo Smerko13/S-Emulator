@@ -146,19 +146,32 @@ public class ExecutionDashboardController {
     }
 
     private void callAndApply(HttpUrl url) {
+        System.out.println("Making request to: " + url.toString());
         HttpClientUtil.runAsync(url.toString(), new Callback() {
             @Override public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                System.err.println("HTTP Request failed: " + e.getMessage());
                 Platform.runLater(() -> pushError("Network error: " + e.getMessage()));
             }
 
             @Override public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String json = response.body() != null ? response.body().string() : "";
+                System.out.println("Received response: " + response.code() + " - " + json);
+
                 if (!response.isSuccessful()) {
                     Platform.runLater(() -> pushError(shorten(json)));
                     return;
                 }
-                ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
-                Platform.runLater(() -> applyStateToPanels(state));
+
+                try {
+                    ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
+                    System.out.println("Parsed ExecutionStateDTO - Instructions: " +
+                        (state.getInstructions() != null ? state.getInstructions().size() : "null") +
+                        ", Variables: " + (state.getAllVariables() != null ? state.getAllVariables().size() : "null"));
+                    Platform.runLater(() -> applyStateToPanels(state));
+                } catch (Exception e) {
+                    System.err.println("Error parsing JSON response: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         });
     }
@@ -181,7 +194,14 @@ public class ExecutionDashboardController {
         // 2) Instructions table
         if (instructionTableComponentController != null) {
             List<InstructionDTO> instructions = s.getInstructions();
-            instructionTableComponentController.setInstructions(instructions, s.getHighlightedInstructionId());
+            if (instructions != null && !instructions.isEmpty()) {
+                System.out.println("Setting " + instructions.size() + " instructions to instruction table");
+                instructionTableComponentController.setInstructions(instructions, s.getHighlightedInstructionId());
+            } else {
+                System.out.println("No instructions received from server");
+            }
+        } else {
+            System.out.println("InstructionTableController is null - cannot set instructions");
         }
 
         // 3) Variables (all + inputs) + changed set + cycles
@@ -189,9 +209,16 @@ public class ExecutionDashboardController {
             List<VariableDTO> allVars   = s.getAllVariables();
             List<VariableDTO> inputVars = s.getInputVariables();
             Set<String>       changed   = s.getChangedVariableNames();
-            executionPanelComponentController.setVariables(allVars, inputVars, changed);
+            if (allVars != null && !allVars.isEmpty()) {
+                System.out.println("Setting " + allVars.size() + " variables to execution panel");
+                executionPanelComponentController.setVariables(allVars, inputVars, changed);
+            } else {
+                System.out.println("No variables received from server");
+            }
             executionPanelComponentController.setCyclesLabel(s.getCycles());
             executionPanelComponentController.updateDebugButtons(s.isDebugging());
+        } else {
+            System.out.println("ExecutionPanelController is null - cannot set variables");
         }
 
         // 4) History text/trace (server can render a list of strings or nodes)
@@ -243,4 +270,5 @@ public class ExecutionDashboardController {
             openOnServer(selectedProgram.getProgramName());
         }
     }
+
 }
