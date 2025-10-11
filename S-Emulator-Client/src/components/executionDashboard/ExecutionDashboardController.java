@@ -9,6 +9,7 @@ import components.executionDashboard.executionPanel.ExecutionPanelController;
 import components.executionDashboard.header.HeaderController;
 import components.executionDashboard.historyPanel.HistoryPanelController;
 import components.executionDashboard.instructionPanel.InstructionTableController;
+import components.shared.UserSession;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -41,8 +42,13 @@ public class ExecutionDashboardController {
     @FXML private ExecutionPanelController executionPanelComponentController;
     @FXML private HistoryPanelController historyPanelComponentController;
 
-    // Server-side session “context” (optional: the server can rely on JSESSIONID only)
+    // Server-side session "context" (optional: the server can rely on JSESSIONID only)
     private String selectedFunction = null;
+    private final UserSession userSession;
+
+    public ExecutionDashboardController() {
+        userSession = UserSession.getInstance();
+    }
 
     @FXML
     public void initialize() {
@@ -204,6 +210,22 @@ public class ExecutionDashboardController {
 
     public void updateInputValue(String name, int value) {
         // TODO: POST to server, then fetch fresh ExecutionStateDTO and call applyState(...)
+    }
+
+    /* ---------------------------------
+       User data management methods for header
+       --------------------------------- */
+
+    public String getUserName() {
+        return userSession.getUserName();
+    }
+
+    public int getUserCredits() {
+        return userSession.getCredits();
+    }
+
+    public String getCurrentUserId() {
+        return userSession.getUserName().replaceAll("\\s+", "_").toLowerCase();
     }
 
 }

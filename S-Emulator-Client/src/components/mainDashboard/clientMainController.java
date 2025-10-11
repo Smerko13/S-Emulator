@@ -4,6 +4,7 @@ import components.api.HttpStatusUpdate;
 import components.login.LoginController;
 import components.mainDashboard.header.HeaderController;
 import components.mainDashboard.users.UsersController;
+import components.shared.UserSession;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -30,9 +31,11 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
     @FXML private UsersController usersPanelController;
     @FXML private HeaderController headerPanelController;
     private final StringProperty currentUserName;
+    private final UserSession userSession;
 
     public clientMainController() {
         currentUserName = new SimpleStringProperty(JHON_DOE);
+        userSession = UserSession.getInstance();
     }
 
     @FXML
@@ -41,10 +44,12 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
         usersPanelController.startUsersAutoRefresh();
         headerPanelController.setMainController(this);
 
+        // Sync local userName with shared session
+        currentUserName.bindBidirectional(userSession.userNameProperty());
     }
 
     public void updateUserName(String userName) {
-        currentUserName.set(userName);
+        userSession.setUserName(userName);
         headerPanelController.updateUserName(userName);
     }
 
@@ -79,7 +84,7 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
 
     public void switchToLogin() {
         Platform.runLater(() -> {
-            currentUserName.set(JHON_DOE);
+            userSession.clearSession();
             //chatRoomComponentController.setInActive();
             //setMainPanelTo(loginComponent);
         });
@@ -154,13 +159,16 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
                             responseBody.indexOf("\"credits\":") + 10,
                             responseBody.indexOf("}")
                     );
-                    return Integer.parseInt(creditsStr);
+                    int credits = Integer.parseInt(creditsStr);
+                    // Update shared session with latest credits from server
+                    userSession.setCredits(credits);
+                    return credits;
                 }
             }
         } catch (Exception e) {
             System.err.println("Error fetching credits: " + e.getMessage());
         }
-        return 0; // Default if error
+        return userSession.getCredits(); // Return cached value if server call fails
     }
 
     public boolean addUserCredits(int creditsToAdd) {
@@ -174,7 +182,12 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             System.out.println("Add credits response: " + response.statusCode() + " - " + response.body());
-            return response.statusCode() == 200;
+            if (response.statusCode() == 200) {
+                // Refresh credits from server to get updated value
+                getUserCredits();
+                return true;
+            }
+            return false;
 
         } catch (Exception e) {
             System.err.println("Error adding credits: " + e.getMessage());
@@ -184,7 +197,7 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
 
 
     private String getCurrentUserId() {
-        return currentUserName.get().replaceAll("\\s+", "_").toLowerCase();
+        return userSession.getUserName().replaceAll("\\s+", "_").toLowerCase();
     }
 
 }

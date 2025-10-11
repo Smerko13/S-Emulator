@@ -2,6 +2,8 @@
 package components.executionDashboard.header;
 
 import components.executionDashboard.ExecutionDashboardController;
+import components.shared.UserSession;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -20,9 +22,38 @@ public class HeaderController {
     @FXML private Button ExpandButton;
 
     private ExecutionDashboardController parent;   // <-- replace BaseController
+    private final UserSession userSession;
+
+    public HeaderController() {
+        userSession = UserSession.getInstance();
+    }
 
     public void setMainController(ExecutionDashboardController parent) {
         this.parent = parent;
+
+        // Bind UI components to shared session for real-time updates
+        userSession.userNameProperty().addListener((obs, oldVal, newVal) ->
+            Platform.runLater(() -> {
+                if (userNameLabel != null) {
+                    userNameLabel.setText("User: " + newVal);
+                }
+            }));
+        userSession.creditsProperty().addListener((obs, oldVal, newVal) ->
+            Platform.runLater(() -> {
+                if (creditsLabel != null) {
+                    creditsLabel.setText("Credits: " + newVal);
+                }
+            }));
+
+        // Initialize with current values from shared session
+        Platform.runLater(() -> {
+            if (userNameLabel != null) {
+                userNameLabel.setText("User: " + userSession.getUserName());
+            }
+            if (creditsLabel != null) {
+                creditsLabel.setText("Credits: " + userSession.getCredits());
+            }
+        });
     }
 
     // called by dashboard when a fresh state arrives

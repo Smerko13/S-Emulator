@@ -1,6 +1,7 @@
 package components.mainDashboard.header;
 
 import components.mainDashboard.clientMainController;
+import components.shared.UserSession;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -21,10 +22,25 @@ public class HeaderController {
     @FXML private Label userNameLabel;
     clientMainController mainController;
     private Timer creditsRefreshTimer;
+    private final UserSession userSession;
+
+    public HeaderController() {
+        userSession = UserSession.getInstance();
+    }
 
     public void setMainController(clientMainController mainController) {
         this.mainController = mainController;
         startCreditsAutoRefresh();
+
+        // Bind UI components to shared session
+        userSession.userNameProperty().addListener((obs, oldVal, newVal) ->
+            Platform.runLater(() -> userNameLabel.setText("User Name: " + newVal)));
+        userSession.creditsProperty().addListener((obs, oldVal, newVal) ->
+            Platform.runLater(() -> creditsLabel.setText("Credits: " + newVal)));
+
+        // Initialize with current values
+        updateUserName(userSession.getUserName());
+        updateCreditsDisplay();
     }
 
     public void updateUserName(String userName) {
