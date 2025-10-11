@@ -135,6 +135,54 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
     }
 
 
+    // Credits management methods
+    public int getUserCredits() {
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(FULL_SERVER_PATH + "/credits?userId=" + getCurrentUserId()))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                String responseBody = response.body();
+                // Simple JSON parsing for credits
+                if (responseBody.contains("\"credits\":")) {
+                    String creditsStr = responseBody.substring(
+                            responseBody.indexOf("\"credits\":") + 10,
+                            responseBody.indexOf("}")
+                    );
+                    return Integer.parseInt(creditsStr);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching credits: " + e.getMessage());
+        }
+        return 0; // Default if error
+    }
+
+    public boolean addUserCredits(int creditsToAdd) {
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(FULL_SERVER_PATH + "/credits?userId=" + getCurrentUserId() + "&credits=" + creditsToAdd))
+                    .POST(HttpRequest.BodyPublishers.noBody())
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println("Add credits response: " + response.statusCode() + " - " + response.body());
+            return response.statusCode() == 200;
+
+        } catch (Exception e) {
+            System.err.println("Error adding credits: " + e.getMessage());
+            return false;
+        }
+    }
+
+
     private String getCurrentUserId() {
         return currentUserName.get().replaceAll("\\s+", "_").toLowerCase();
     }

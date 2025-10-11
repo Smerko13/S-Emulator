@@ -1,6 +1,7 @@
 package components.mainDashboard.header;
 
 import components.mainDashboard.clientMainController;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -8,6 +9,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class HeaderController {
     @FXML private TextField creditInputTextField;
@@ -17,13 +20,66 @@ public class HeaderController {
     @FXML private Label creditsLabel;
     @FXML private Label userNameLabel;
     clientMainController mainController;
+    private Timer creditsRefreshTimer;
 
     public void setMainController(clientMainController mainController) {
         this.mainController = mainController;
+        startCreditsAutoRefresh();
     }
 
     public void updateUserName(String userName) {
         userNameLabel.setText("User Name: " + userName);
+        updateCreditsDisplay();
+    }
+
+    private void startCreditsAutoRefresh() {
+        creditsRefreshTimer = new Timer(true);
+        creditsRefreshTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                updateCreditsDisplay();
+            }
+        }, 1000, 3000); // Update every 3 seconds
+    }
+
+    public void updateCreditsDisplay() {
+        if (mainController != null) {
+            Platform.runLater(() -> {
+                int credits = mainController.getUserCredits();
+                creditsLabel.setText("Credits: " + credits);
+            });
+        }
+    }
+
+    @FXML
+    public void chargeCreditsButtonPressed(ActionEvent actionEvent) {
+        String creditsText = creditInputTextField.getText();
+
+        if (creditsText == null || creditsText.trim().isEmpty()) {
+            showAlert("Invalid Input", "Please enter the number of credits to add.");
+            return;
+        }
+
+        try {
+            int creditsToAdd = Integer.parseInt(creditsText.trim());
+
+            if (creditsToAdd <= 0) {
+                showAlert("Invalid Amount", "Credits amount must be a positive number.");
+                return;
+            }
+
+            // Add credits through main controller
+            if (mainController.addUserCredits(creditsToAdd)) {
+                creditInputTextField.clear();
+                updateCreditsDisplay();
+                showSuccessAlert("Credits Added", "Successfully added " + creditsToAdd + " credits!");
+            } else {
+                showAlert("Error", "Failed to add credits. Please try again.");
+            }
+
+        } catch (NumberFormatException e) {
+            showAlert("Invalid Input", "Please enter a valid number.");
+        }
     }
 
     public void loadFileButtonPressed(ActionEvent actionEvent) {
@@ -51,6 +107,28 @@ public class HeaderController {
             } else {
                 filePathTextField.setText("Invalid XML file. Please select a valid file.");
             }
+        }
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showSuccessAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    public void cleanup() {
+        if (creditsRefreshTimer != null) {
+            creditsRefreshTimer.cancel();
         }
     }
 }

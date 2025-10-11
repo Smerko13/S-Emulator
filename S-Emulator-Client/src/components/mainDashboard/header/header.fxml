@@ -48,7 +48,7 @@
                </HBox.margin>
             </TextField>
             <Region disable="true" HBox.hgrow="ALWAYS" />
-            <Button fx:id="chargeCreditsButton" mnemonicParsing="false" text="Charge Credits">
+            <Button fx:id="chargeCreditsButton" mnemonicParsing="false" text="Charge Credits" onAction="#chargeCreditsButtonPressed">
                <HBox.margin>
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                </HBox.margin>
