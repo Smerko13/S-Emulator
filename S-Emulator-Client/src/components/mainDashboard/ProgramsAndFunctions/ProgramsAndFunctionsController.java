@@ -120,6 +120,27 @@ public class ProgramsAndFunctionsController implements Initializable {
         // Set data to tables
         programsTable.setItems(programsData);
         functionsTable.setItems(functionsData);
+
+        // Initially disable execute buttons
+        executeProgramButton.setDisable(true);
+        executeFunctionButton.setDisable(true);
+
+        // Add selection listeners to enable/disable buttons
+        programsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            executeProgramButton.setDisable(newSelection == null);
+            // Clear function table selection when program is selected
+            if (newSelection != null) {
+                functionsTable.getSelectionModel().clearSelection();
+            }
+        });
+
+        functionsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            executeFunctionButton.setDisable(newSelection == null);
+            // Clear program table selection when function is selected
+            if (newSelection != null) {
+                programsTable.getSelectionModel().clearSelection();
+            }
+        });
     }
 
     // ADD THIS MISSING METHOD
@@ -328,3 +349,4 @@ public class ProgramsAndFunctionsController implements Initializable {
         stage.setTitle("S-Emulator - Function Execution Dashboard");
     }
 }
+
