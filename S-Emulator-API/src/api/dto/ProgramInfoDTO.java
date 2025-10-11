@@ -1,5 +1,9 @@
 package api.dto;
 
+import engine.commands.Command;
+
+import java.util.List;
+
 public class ProgramInfoDTO {
     private String programName;
     private String uploaderName;
@@ -7,6 +11,7 @@ public class ProgramInfoDTO {
     private int maxDegree;
     private int numOfExecutions;
     private double avgCreditCost;
+    private List<Command> commands;
 
     // Constructor
     public ProgramInfoDTO(String programName, String uploaderName, int numOfInstructions,
@@ -40,4 +45,7 @@ public class ProgramInfoDTO {
 
     public double getAvgCreditCost() { return avgCreditCost; }
     public void setAvgCreditCost(double avgCreditCost) { this.avgCreditCost = avgCreditCost; }
+
+    public List<Command> getCommands() { return commands; }
+    public void setCommands(List<Command> commands) { this.commands = commands; }
 }

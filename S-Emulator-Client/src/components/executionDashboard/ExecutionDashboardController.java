@@ -237,5 +237,10 @@ public class ExecutionDashboardController {
             headerComponentController.setProgramOrFunctionName(selectedProgram.getProgramName());
             headerComponentController.setDegreeLabels(0, selectedProgram.getMaxDegree());
         }
+
+        // Fetch the list of commands/instructions from the server
+        if (selectedProgram != null) {
+            openOnServer(selectedProgram.getProgramName());
+        }
     }
 }
