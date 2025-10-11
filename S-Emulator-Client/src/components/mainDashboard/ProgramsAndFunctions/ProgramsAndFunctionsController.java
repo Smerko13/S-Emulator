@@ -304,9 +304,26 @@ public class ProgramsAndFunctionsController implements Initializable {
     }
 
     public void executeProgramButtonPressed(ActionEvent actionEvent) throws IOException {
+        // Get the selected program
+        ProgramInfoDTO selectedProgram = programsTable.getSelectionModel().getSelectedItem();
+        if (selectedProgram == null) {
+            return; // No program selected
+        }
+
         // Load the execution dashboard FXML
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
         Parent executionDashboardRoot = loader.load();
+
+        // Get the controller and set the program name
+        Object controller = loader.getController();
+        if (controller instanceof ExecutionDashboardController) {
+            ExecutionDashboardController dashboardController = (ExecutionDashboardController) controller;
+            // Assuming the dashboard controller has access to the header controller
+            dashboardController.setUp(selectedProgram);
+            //dashboardController.setProgramOrFunctionName(selectedProgram.getProgramName());
+            //dashboardController.setCurrentDegree(selectedProgram.getProgramName(),0);
+
+        }
 
         // Get the current stage from the button (similar to your working pattern)
         Stage stage = (Stage) executeProgramButton.getScene().getWindow();
@@ -327,9 +344,23 @@ public class ProgramsAndFunctionsController implements Initializable {
     }
 
     public void executeFunctionButtonPressed(ActionEvent e) throws IOException {
+        // Get the selected function
+        FunctionInfoDTO selectedFunction = functionsTable.getSelectionModel().getSelectedItem();
+        if (selectedFunction == null) {
+            return; // No function selected
+        }
+
         // Load the execution dashboard FXML
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
         Parent executionDashboardRoot = loader.load();
+
+        // Get the controller and set the function name
+        Object controller = loader.getController();
+        if (controller instanceof ExecutionDashboardController) {
+            ExecutionDashboardController dashboardController = (ExecutionDashboardController) controller;
+            // Assuming the dashboard controller has access to the header controller
+            dashboardController.setProgramOrFunctionName(selectedFunction.getFunctionName());
+        }
 
         // Get the current stage from the button (similar to your working pattern)
         Stage stage = (Stage) executeFunctionButton.getScene().getWindow();
@@ -349,4 +380,3 @@ public class ProgramsAndFunctionsController implements Initializable {
         stage.setTitle("S-Emulator - Function Execution Dashboard");
     }
 }
-

@@ -93,6 +93,12 @@ public class HeaderController {
         DegreeLabel.setText("/" + max);
     }
 
+    public void setProgramOrFunctionName(String name) {
+        if (nameLabel != null && name != null) {
+            nameLabel.setText("Program/Function Name: " + name);
+        }
+    }
+
     public void loadFileButtonPressed(ActionEvent actionEvent) {
     }
 }

@@ -83,11 +83,7 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
 
 
     public void switchToLogin() {
-        Platform.runLater(() -> {
-            userSession.clearSession();
-            //chatRoomComponentController.setInActive();
-            //setMainPanelTo(loginComponent);
-        });
+        Platform.runLater(userSession::clearSession);
     }
 
     public void onLoginSuccess(String userName) {

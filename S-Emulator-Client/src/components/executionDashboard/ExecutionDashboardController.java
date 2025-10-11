@@ -1,9 +1,6 @@
 package components.executionDashboard;
 
-import api.dto.ExecutionStateDTO;
-import api.dto.InstructionDTO;
-import api.dto.StatsDTO;
-import api.dto.VariableDTO;
+import api.dto.*;
 
 import components.executionDashboard.executionPanel.ExecutionPanelController;
 import components.executionDashboard.header.HeaderController;
@@ -108,6 +105,13 @@ public class ExecutionDashboardController {
 
     public void newRunButtonPressed() {
         callAndApply(HttpUrl.parse(Constants.EXEC_NEW_RUN).newBuilder().build());
+    }
+
+    /** Set the program or function name in the header */
+    public void setProgramOrFunctionName(String name) {
+        if (headerComponentController != null) {
+            headerComponentController.setProgramOrFunctionName(name);
+        }
     }
 
     /* Debugging – entirely on server */
@@ -228,4 +232,10 @@ public class ExecutionDashboardController {
         return userSession.getUserName().replaceAll("\\s+", "_").toLowerCase();
     }
 
+    public void setUp(ProgramInfoDTO selectedProgram) {
+        if (headerComponentController != null && selectedProgram != null) {
+            headerComponentController.setProgramOrFunctionName(selectedProgram.getProgramName());
+            headerComponentController.setDegreeLabels(0, selectedProgram.getMaxDegree());
+        }
+    }
 }
