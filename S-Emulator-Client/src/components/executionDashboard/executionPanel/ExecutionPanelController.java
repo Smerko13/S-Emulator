@@ -96,6 +96,8 @@ public class ExecutionPanelController {
             TableColumn<VariableDTO, Number> valueCol =
                     (TableColumn<VariableDTO, Number>) inputVarsTable.getColumns().get(1);
             nameCol.setCellValueFactory(cd -> new ReadOnlyStringWrapper(cd.getValue().getName()));
+            
+            // Use a simple integer wrapper that allows editing
             valueCol.setCellValueFactory(cd -> new ReadOnlyIntegerWrapper(cd.getValue().getValue()));
 
             // Make input variables table value column editable
@@ -143,7 +145,7 @@ public class ExecutionPanelController {
                 @Override
                 public void cancelEdit() {
                     super.cancelEdit();
-                    setText(getItem().toString());
+                    setText(getItem() != null ? getItem().toString() : "");
                     setGraphic(null);
                 }
 
@@ -152,25 +154,35 @@ public class ExecutionPanelController {
                     super.commitEdit(newValue);
                     VariableDTO variable = getTableView().getItems().get(getIndex());
                     variable.setValue(newValue.intValue());
+                    
+                    System.out.println("Committed edit: " + variable.getName() + " = " + newValue.intValue());
+                    
+                    // Update the display immediately without full table refresh
+                    setText(newValue.toString());
+                    setGraphic(null);
                 }
 
                 private void createTextField() {
                     textField = new TextField(getItem() == null ? "" : getItem().toString());
                     textField.setMinWidth(this.getWidth() - this.getGraphicTextGap() * 2);
+                    
                     textField.setOnAction(e -> {
                         try {
                             int value = Integer.parseInt(textField.getText());
                             commitEdit(value);
                         } catch (NumberFormatException ex) {
+                            System.err.println("Invalid number format: " + textField.getText());
                             cancelEdit();
                         }
                     });
+                    
                     textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-                        if (!isNowFocused) {
+                        if (!isNowFocused && isEditing()) {
                             try {
                                 int value = Integer.parseInt(textField.getText());
                                 commitEdit(value);
                             } catch (NumberFormatException ex) {
+                                System.err.println("Invalid number format on focus lost: " + textField.getText());
                                 cancelEdit();
                             }
                         }

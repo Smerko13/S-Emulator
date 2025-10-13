@@ -338,6 +338,8 @@ public class ExecutionServlet extends HttpServlet {
         String inputName = request.getParameter("name");
         String inputValue = request.getParameter("value");
 
+        System.out.println("ExecutionServlet: handleUpdateInput called with name: '" + inputName + "', value: '" + inputValue + "'");
+
         HttpSession session = request.getSession();
         S_Emulator engine = (S_Emulator) session.getAttribute("engine");
         String currentTarget = (String) session.getAttribute("currentTarget");
@@ -348,15 +350,23 @@ public class ExecutionServlet extends HttpServlet {
             return;
         }
 
-        try {
-            // Update the input variable in the engine
-            engine.updateInputVariable(inputName, inputValue);
+        if (inputName == null || inputValue == null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(GSON.toJson("Missing name or value parameter"));
+            return;
+        }
 
-            // Return updated execution state
-            ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
-            response.getWriter().write(GSON.toJson(executionState));
+        try {
+            // Update the input variable in the engine (do NOT execute)
+            engine.updateInputVariable(inputName, inputValue);
+            System.out.println("ExecutionServlet: Successfully updated input variable " + inputName + " = " + inputValue);
+
+            // Return simple success response WITHOUT calling createExecutionStateDTO
+            // This prevents automatic execution during input updates
+            response.getWriter().write(GSON.toJson("Input variable updated successfully"));
 
         } catch (Exception e) {
+            System.err.println("ExecutionServlet: Failed to update input variable " + inputName + ": " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Input update failed: " + e.getMessage()));
         }
