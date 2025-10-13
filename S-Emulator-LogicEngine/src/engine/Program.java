@@ -625,32 +625,108 @@ public class Program implements S_Emulator , Serializable, Cloneable {
     public List<String> getParentCommandChain(int commandId, int expansionLevel) {
         List<String> parentChain = new ArrayList<>();
 
-        // Get commands at the specified expansion level
-        List<Command> commands = getCommandsAtDesiredLevel(expansionLevel);
+        if (expansionLevel == 0) {
+            parentChain.add("Root level - no parent commands");
+            return parentChain;
+        }
 
-        // Find the command with the given ID
+        // Build the command chain by reconstructing the expansion process
+        // We'll trace back through each expansion level to find the parent commands
+
+        // Start with the target command at the current level
+        List<Command> currentLevelCommands = getCommandsAtDesiredLevel(expansionLevel);
         Command targetCommand = null;
-        for (Command cmd : commands) {
-            if (cmd.id == commandId) {
+        for (Command cmd : currentLevelCommands) {
+            if (cmd.getId() == commandId) {
                 targetCommand = cmd;
                 break;
             }
         }
 
         if (targetCommand == null) {
-            return parentChain; // Return empty list if command not found
+            parentChain.add("Command not found at expansion level " + expansionLevel);
+            return parentChain;
         }
 
-        // Build the parent chain by traversing up the parent hierarchy
-        Command currentCommand = targetCommand;
-        while (currentCommand != null) {
-            String commandInfo = String.format("[ID: %d] %s",
-                currentCommand.id,
-                currentCommand.toString());
-            parentChain.add(0, commandInfo); // Add to the beginning to maintain order
-            currentCommand = currentCommand.getParentCommand();
+        // Now trace back through the expansion levels
+        Command currentTraceCommand = targetCommand;
+
+        for (int level = expansionLevel - 1; level >= 0; level--) {
+            if (currentTraceCommand == null) break;
+
+            // Find the parent command that this command expanded from
+            Command parentCommand = findParentAtLevel(currentTraceCommand, level);
+
+            if (parentCommand != null) {
+                // Get the commands at this level to find the correct ID
+                List<Command> levelCommands = getCommandsAtDesiredLevel(level);
+                int parentId = -1;
+                for (int i = 0; i < levelCommands.size(); i++) {
+                    Command cmd = levelCommands.get(i);
+                    if (isSameCommand(cmd, parentCommand)) {
+                        parentId = i + 1; // IDs start from 1
+                        break;
+                    }
+                }
+
+                String commandInfo = String.format("Level %d: [ID: %d] %s",
+                    level, parentId, parentCommand.toString());
+                parentChain.add(0, commandInfo);
+
+                currentTraceCommand = parentCommand;
+            } else {
+                // No parent found at this level - might be a direct command
+                break;
+            }
+        }
+
+        if (parentChain.isEmpty()) {
+            parentChain.add("No parent command chain found");
         }
 
         return parentChain;
+    }
+
+    private Command findParentAtLevel(Command targetCommand, int level) {
+        // If the target command has a parent reference, use it
+        Command directParent = targetCommand.getParentCommand();
+        if (directParent != null) {
+            return directParent;
+        }
+
+        // If no direct parent, we need to find which command at the previous level
+        // would have expanded to include this command
+        List<Command> levelCommands = getCommandsAtDesiredLevel(level);
+
+        for (Command cmd : levelCommands) {
+            if (cmd instanceof SyntheticCommand) {
+                SyntheticCommand synCmd = (SyntheticCommand) cmd;
+                List<Command> expandedCommands = synCmd.getExpandedCommands();
+
+                // Check if any of the expanded commands match our target
+                for (Command expanded : expandedCommands) {
+                    if (isSameCommand(expanded, targetCommand)) {
+                        return cmd;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private boolean isSameCommand(Command cmd1, Command cmd2) {
+        if (cmd1 == cmd2) return true;
+        if (cmd1 == null || cmd2 == null) return false;
+
+        // Compare by class, variable, and label
+        return cmd1.getClass().equals(cmd2.getClass()) &&
+               Objects.equals(getVariableName(cmd1), getVariableName(cmd2)) &&
+               Objects.equals(cmd1.getLabel(), cmd2.getLabel());
+    }
+
+    private String getVariableName(Command cmd) {
+        Variable var = cmd.getVariable();
+        return var != null ? var.getName() : null;
     }
 }

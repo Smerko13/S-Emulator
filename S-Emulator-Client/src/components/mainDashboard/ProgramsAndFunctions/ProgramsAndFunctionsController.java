@@ -314,21 +314,21 @@ public class ProgramsAndFunctionsController implements Initializable {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
         Parent executionDashboardRoot = loader.load();
 
-        // Get the controller and set the program name
+        // Get the controller and set it up for program execution
         Object controller = loader.getController();
         if (controller instanceof ExecutionDashboardController) {
             ExecutionDashboardController dashboardController = (ExecutionDashboardController) controller;
-            // Assuming the dashboard controller has access to the header controller
-            dashboardController.setUp(selectedProgram);
-            //dashboardController.setProgramOrFunctionName(selectedProgram.getProgramName());
-            //dashboardController.setCurrentDegree(selectedProgram.getProgramName(),0);
 
+            // Set the program name in the header first
+            dashboardController.setProgramOrFunctionName(selectedProgram.getProgramName());
+
+            // Open the program on the server - this will load the program's instructions and variables
+            dashboardController.openOnServer(selectedProgram.getProgramName());
         }
 
-        // Get the current stage from the button (similar to your working pattern)
+        // Get the current stage from the button and transition to execution dashboard
         Stage stage = (Stage) executeProgramButton.getScene().getWindow();
 
-        // Apply the same transition pattern that works in login
         if (stage != null && executionDashboardRoot != null) {
             if (stage.getScene() == null) {
                 stage.setScene(new Scene(executionDashboardRoot));
@@ -340,7 +340,7 @@ public class ProgramsAndFunctionsController implements Initializable {
         }
 
         // Set the title for the execution dashboard
-        stage.setTitle("S-Emulator - Execution Dashboard");
+        stage.setTitle("S-Emulator - Program Execution Dashboard: " + selectedProgram.getProgramName());
     }
 
     public void executeFunctionButtonPressed(ActionEvent e) throws IOException {

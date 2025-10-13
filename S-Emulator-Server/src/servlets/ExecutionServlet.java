@@ -456,7 +456,8 @@ public class ExecutionServlet extends HttpServlet {
         for (int i = 0; i < commands.size(); i++) {
             Command command = commands.get(i);
             InstructionDTO instruction = new InstructionDTO();
-            instruction.setId(i);
+            // FIX: Use the command's actual ID (which is 1-based) instead of the loop index
+            instruction.setId(command.getId());
             instruction.setInstruction(command.toString());
 
             // Get associated variables if they exist
@@ -477,7 +478,7 @@ public class ExecutionServlet extends HttpServlet {
             instruction.setText(command.toString()); // Display text for the instruction
 
             instructions.add(instruction);
-            System.out.println("ExecutionServlet: Added instruction " + i + ": " + command.toString());
+            System.out.println("ExecutionServlet: Added instruction " + command.getId() + ": " + command.toString());
         }
 
         return instructions;

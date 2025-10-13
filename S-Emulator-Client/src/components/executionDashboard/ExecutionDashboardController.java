@@ -35,10 +35,14 @@ public class ExecutionDashboardController {
 
     // Child controllers are injected automatically because their fx:ids
     // are the same as these field names + "Controller" suffix in the FXML.
-    @FXML private HeaderController headerComponentController;
-    @FXML private InstructionTableController instructionTableComponentController;
-    @FXML private ExecutionPanelController executionPanelComponentController;
-    @FXML private HistoryPanelController historyPanelComponentController;
+    @FXML
+    private HeaderController headerComponentController;
+    @FXML
+    private InstructionTableController instructionTableComponentController;
+    @FXML
+    private ExecutionPanelController executionPanelComponentController;
+    @FXML
+    private HistoryPanelController historyPanelComponentController;
 
     // Server-side session "context" (optional: the server can rely on JSESSIONID only)
     private String selectedFunction = null;
@@ -61,7 +65,9 @@ public class ExecutionDashboardController {
        Public API called by UI
        --------------------------- */
 
-    /** Called when we first open the execution dashboard for a program/function the user chose. */
+    /**
+     * Called when we first open the execution dashboard for a program/function the user chose.
+     */
     public void openOnServer(String programIdOrFunctionName) {
         HttpUrl url = HttpUrl.parse(Constants.EXEC_OPEN)
                 .newBuilder()
@@ -70,22 +76,30 @@ public class ExecutionDashboardController {
         callAndApply(url);
     }
 
-    /** Run whole program/function (no client-side compute). */
+    /**
+     * Run whole program/function (no client-side compute).
+     */
     public void executeProgram() {
         callAndApply(HttpUrl.parse(Constants.EXEC_EXECUTE).newBuilder().build());
     }
 
-    /** Degree change (+1) – expands. */
+    /**
+     * Degree change (+1) – expands.
+     */
     public void expandProgram(String functionName) {
         setCurrentDegreeDelta(functionName, +1);
     }
 
-    /** Degree change (-1) – collapses. */
+    /**
+     * Degree change (-1) – collapses.
+     */
     public void collapseProgram(String functionName) {
         setCurrentDegreeDelta(functionName, -1);
     }
 
-    /** Direct set degree (spinner/slider). */
+    /**
+     * Direct set degree (spinner/slider).
+     */
     public void setCurrentDegree(String functionName, int value) {
         HttpUrl url = HttpUrl.parse(Constants.EXEC_SET_DEGREE)
                 .newBuilder()
@@ -108,7 +122,9 @@ public class ExecutionDashboardController {
         callAndApply(HttpUrl.parse(Constants.EXEC_NEW_RUN).newBuilder().build());
     }
 
-    /** Set the program or function name in the header */
+    /**
+     * Set the program or function name in the header
+     */
     public void setProgramOrFunctionName(String name) {
         if (headerComponentController != null) {
             headerComponentController.setProgramOrFunctionName(name);
@@ -116,14 +132,30 @@ public class ExecutionDashboardController {
     }
 
     /* Debugging – entirely on server */
-    public void startDebugging()   { debugOp("start"); }
-    public void stepOver()         { debugOp("step");  }
-    public void continueDebugging(){ debugOp("cont");  }
-    public void stopDebugging()    { debugOp("stop");  }
+    public void startDebugging() {
+        debugOp("start");
+    }
+
+    public void stepOver() {
+        debugOp("step");
+    }
+
+    public void continueDebugging() {
+        debugOp("cont");
+    }
+
+    public void stopDebugging() {
+        debugOp("stop");
+    }
 
     /* Optional read-only helpers that the header might bind to */
-    public String getCurrentDegree() { /* value comes from latest state; header can store it */ return ""; }
-    public String getMaxDegree()     { return ""; }
+    public String getCurrentDegree() { /* value comes from latest state; header can store it */
+        return "";
+    }
+
+    public String getMaxDegree() {
+        return "";
+    }
 
     /* ---------------------------------
        Internal: HTTP + apply state
@@ -149,12 +181,14 @@ public class ExecutionDashboardController {
     private void callAndApply(HttpUrl url) {
         System.out.println("Making request to: " + url.toString());
         HttpClientUtil.runAsync(url.toString(), new Callback() {
-            @Override public void onFailure(@NotNull Call call, @NotNull IOException e) {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 System.err.println("HTTP Request failed: " + e.getMessage());
                 Platform.runLater(() -> pushError("Network error: " + e.getMessage()));
             }
 
-            @Override public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String json = response.body() != null ? response.body().string() : "";
                 System.out.println("Received response: " + response.code() + " - " + json);
 
@@ -166,8 +200,8 @@ public class ExecutionDashboardController {
                 try {
                     ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
                     System.out.println("Parsed ExecutionStateDTO - Instructions: " +
-                        (state.getInstructions() != null ? state.getInstructions().size() : "null") +
-                        ", Variables: " + (state.getAllVariables() != null ? state.getAllVariables().size() : "null"));
+                            (state.getInstructions() != null ? state.getInstructions().size() : "null") +
+                            ", Variables: " + (state.getAllVariables() != null ? state.getAllVariables().size() : "null"));
                     Platform.runLater(() -> applyStateToPanels(state));
                 } catch (Exception e) {
                     System.err.println("Error parsing JSON response: " + e.getMessage());
@@ -208,9 +242,9 @@ public class ExecutionDashboardController {
 
         // 3) Variables (all + inputs) + changed set + cycles
         if (executionPanelComponentController != null) {
-            List<VariableDTO> allVars   = s.getAllVariables();
+            List<VariableDTO> allVars = s.getAllVariables();
             List<VariableDTO> inputVars = s.getInputVariables();
-            Set<String>       changed   = s.getChangedVariableNames();
+            Set<String> changed = s.getChangedVariableNames();
             if (allVars != null && !allVars.isEmpty()) {
                 System.out.println("Setting " + allVars.size() + " variables to execution panel");
                 executionPanelComponentController.setVariables(allVars, inputVars, changed);
@@ -245,7 +279,9 @@ public class ExecutionDashboardController {
         // TODO: POST to server, then fetch fresh ExecutionStateDTO and call applyState(...)
     }
 
-    /** Fetch parent command chain for a selected command */
+    /**
+     * Fetch parent command chain for a selected command
+     */
     public void fetchParentCommandChain(int commandId) {
         HttpUrl url = HttpUrl.parse(Constants.EXEC_PARENT_CHAIN)
                 .newBuilder()
@@ -254,7 +290,8 @@ public class ExecutionDashboardController {
 
         System.out.println("Fetching parent chain for command ID: " + commandId);
         HttpClientUtil.runAsync(url.toString(), new Callback() {
-            @Override public void onFailure(@NotNull Call call, @NotNull IOException e) {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 System.err.println("Failed to fetch parent chain: " + e.getMessage());
                 Platform.runLater(() -> {
                     if (historyPanelComponentController != null) {
@@ -263,7 +300,8 @@ public class ExecutionDashboardController {
                 });
             }
 
-            @Override public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String json = response.body() != null ? response.body().string() : "";
                 System.out.println("Parent chain response: " + json);
 
@@ -301,3 +339,4 @@ public class ExecutionDashboardController {
             }
         });
     }
+}

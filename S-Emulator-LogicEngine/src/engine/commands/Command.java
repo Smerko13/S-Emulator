@@ -148,6 +148,10 @@ public abstract class Command implements Serializable, Cloneable {
         this.id = i;
     }
 
+    public Variable getVariable() {
+        return this.variable;
+    }
+
     public String getLabels() {
         StringBuilder labels = new StringBuilder();
         for(String label : associatedLabels) {
