@@ -19,6 +19,7 @@ import util.Constants;
 import util.http.HttpClientUtil;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -244,32 +245,59 @@ public class ExecutionDashboardController {
         // TODO: POST to server, then fetch fresh ExecutionStateDTO and call applyState(...)
     }
 
-    /* ---------------------------------
-       User data management methods for header
-       --------------------------------- */
+    /** Fetch parent command chain for a selected command */
+    public void fetchParentCommandChain(int commandId) {
+        HttpUrl url = HttpUrl.parse(Constants.EXEC_PARENT_CHAIN)
+                .newBuilder()
+                .addQueryParameter("commandId", String.valueOf(commandId))
+                .build();
 
-    public String getUserName() {
-        return userSession.getUserName();
+        System.out.println("Fetching parent chain for command ID: " + commandId);
+        HttpClientUtil.runAsync(url.toString(), new Callback() {
+            @Override public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                System.err.println("Failed to fetch parent chain: " + e.getMessage());
+                Platform.runLater(() -> {
+                    if (historyPanelComponentController != null) {
+                        historyPanelComponentController.setTraceLines(List.of("Error fetching parent chain: " + e.getMessage()));
+                    }
+                });
+            }
+
+            @Override public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String json = response.body() != null ? response.body().string() : "";
+                System.out.println("Parent chain response: " + json);
+
+                if (!response.isSuccessful()) {
+                    Platform.runLater(() -> {
+                        if (historyPanelComponentController != null) {
+                            historyPanelComponentController.setTraceLines(List.of("Server error: " + shorten(json)));
+                        }
+                    });
+                    return;
+                }
+
+                try {
+                    // Parse the JSON array of strings
+                    String[] parentChainArray = GSON_INSTANCE.fromJson(json, String[].class);
+                    List<String> parentChain = Arrays.asList(parentChainArray);
+
+                    Platform.runLater(() -> {
+                        if (historyPanelComponentController != null) {
+                            if (parentChain.isEmpty()) {
+                                historyPanelComponentController.setTraceLines(List.of("No parent command chain found for command ID: " + commandId));
+                            } else {
+                                historyPanelComponentController.setTraceLines(parentChain);
+                            }
+                        }
+                    });
+                } catch (Exception e) {
+                    System.err.println("Error parsing parent chain JSON: " + e.getMessage());
+                    Platform.runLater(() -> {
+                        if (historyPanelComponentController != null) {
+                            historyPanelComponentController.setTraceLines(List.of("Error parsing parent chain data"));
+                        }
+                    });
+                }
+            }
+        });
     }
-
-    public int getUserCredits() {
-        return userSession.getCredits();
-    }
-
-    public String getCurrentUserId() {
-        return userSession.getUserName().replaceAll("\\s+", "_").toLowerCase();
-    }
-
-    public void setUp(ProgramInfoDTO selectedProgram) {
-        if (headerComponentController != null && selectedProgram != null) {
-            headerComponentController.setProgramOrFunctionName(selectedProgram.getProgramName());
-            headerComponentController.setDegreeLabels(0, selectedProgram.getMaxDegree());
-        }
-
-        // Fetch the list of commands/instructions from the server
-        if (selectedProgram != null) {
-            openOnServer(selectedProgram.getProgramName());
-        }
-    }
-
-}

@@ -620,4 +620,37 @@ public class Program implements S_Emulator , Serializable, Cloneable {
             }
         }
     }
+
+    @Override
+    public List<String> getParentCommandChain(int commandId, int expansionLevel) {
+        List<String> parentChain = new ArrayList<>();
+
+        // Get commands at the specified expansion level
+        List<Command> commands = getCommandsAtDesiredLevel(expansionLevel);
+
+        // Find the command with the given ID
+        Command targetCommand = null;
+        for (Command cmd : commands) {
+            if (cmd.id == commandId) {
+                targetCommand = cmd;
+                break;
+            }
+        }
+
+        if (targetCommand == null) {
+            return parentChain; // Return empty list if command not found
+        }
+
+        // Build the parent chain by traversing up the parent hierarchy
+        Command currentCommand = targetCommand;
+        while (currentCommand != null) {
+            String commandInfo = String.format("[ID: %d] %s",
+                currentCommand.id,
+                currentCommand.toString());
+            parentChain.add(0, commandInfo); // Add to the beginning to maintain order
+            currentCommand = currentCommand.getParentCommand();
+        }
+
+        return parentChain;
+    }
 }

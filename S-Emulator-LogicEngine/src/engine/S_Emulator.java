@@ -70,4 +70,6 @@ public interface S_Emulator {
     int getExecutionCount();
 
     double getAverageCreditCost();
+
+    List<String> getParentCommandChain(int commandId, int expansionLevel);
 }

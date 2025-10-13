@@ -69,6 +69,11 @@ public class InstructionTableController {
                                 "Cycles: " + cur.getCycles() + "\n" +
                                 "Label: " + (cur.getLabel() == null ? "" : cur.getLabel())
                 ));
+
+                // Fetch and display parent command chain in history panel
+                if (parent != null) {
+                    parent.fetchParentCommandChain(cur.getId());
+                }
             }
         });
     }

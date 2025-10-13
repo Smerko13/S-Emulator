@@ -42,5 +42,5 @@ public class Constants {
     public static final String EXEC_DEBUG       = EXEC_BASE + "/debug";          // ?op=start|step|cont|stop
     public static final String EXEC_NEW_RUN     = EXEC_BASE + "/newRun";
     public static final String EXEC_STATE       = EXEC_BASE + "/state";
-
+    public static final String EXEC_PARENT_CHAIN = EXEC_BASE + "/parentChain";   // ?commandId=...
 }

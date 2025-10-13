@@ -58,6 +58,9 @@ public class ExecutionServlet extends HttpServlet {
                 case "/debug":
                     handleDebug(request, response);
                     break;
+                case "/parentChain":
+                    handleGetParentChain(request, response);
+                    break;
                 default:
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     break;
@@ -285,6 +288,44 @@ public class ExecutionServlet extends HttpServlet {
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Debug operation failed: " + e.getMessage()));
+        }
+    }
+
+    private void handleGetParentChain(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        String commandIdStr = request.getParameter("commandId");
+        HttpSession session = request.getSession();
+        S_Emulator engine = (S_Emulator) session.getAttribute("engine");
+        String currentTarget = (String) session.getAttribute("currentTarget");
+
+        if (engine == null || currentTarget == null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(GSON.toJson("No active execution session"));
+            return;
+        }
+
+        if (commandIdStr == null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(GSON.toJson("Missing commandId parameter"));
+            return;
+        }
+
+        try {
+            int commandId = Integer.parseInt(commandIdStr);
+            int currentDegree = engine.getCurrentDegree();
+
+            // Get the parent command chain for the specified command
+            List<String> parentChain = engine.getParentCommandChain(commandId, currentDegree);
+
+            response.getWriter().write(GSON.toJson(parentChain));
+
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(GSON.toJson("Invalid commandId format"));
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(GSON.toJson("Failed to get parent chain: " + e.getMessage()));
         }
     }
 

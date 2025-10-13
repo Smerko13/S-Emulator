@@ -19,6 +19,14 @@ public class HistoryPanelController {
         this.parent = parent;
     }
 
+    @FXML
+    private void initialize() {
+        if (historyTable != null && instructionColumn != null) {
+            // Set up the single column to display the command strings
+            instructionColumn.setCellValueFactory(cd -> new javafx.beans.property.SimpleStringProperty(cd.getValue()));
+        }
+    }
+
     // DTO-era method the dashboard calls
     public void setTraceLines(List<String> lines) {
         if (historyTable == null) return;
