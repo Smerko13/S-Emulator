@@ -157,6 +157,14 @@ public class ExecutionPanelController {
                     
                     System.out.println("Committed edit: " + variable.getName() + " = " + newValue.intValue());
                     
+                    // IMPORTANT: Send the updated value to the server immediately
+                    if (parent != null) {
+                        System.out.println("Automatically sending input variable update to server: " + variable.getName() + " = " + newValue.intValue());
+                        parent.updateInputValue(variable.getName(), newValue.intValue());
+                    } else {
+                        System.err.println("Cannot send input variable update - parent controller is null");
+                    }
+
                     // Update the display immediately without full table refresh
                     setText(newValue.toString());
                     setGraphic(null);
@@ -287,18 +295,53 @@ public class ExecutionPanelController {
     }
 
     public void debugButtonPressed(ActionEvent actionEvent) {
+        if (parent == null) {
+            System.err.println("Parent controller not set - cannot start debugging");
+            return;
+        }
+
+        System.out.println("Debug button pressed - starting debugging mode");
+        parent.startDebugging();
     }
 
     public void newRunButtonPressed(ActionEvent actionEvent) {
+        if (parent == null) {
+            System.err.println("Parent controller not set - cannot create new run");
+            return;
+        }
+
+        System.out.println("New run button pressed - creating fresh execution");
+        parent.newRunButtonPressed();
     }
 
     public void stepOverPressed(ActionEvent actionEvent) {
+        if (parent == null) {
+            System.err.println("Parent controller not set - cannot step over");
+            return;
+        }
+
+        System.out.println("Step over button pressed - stepping to next instruction");
+        parent.stepOver();
     }
 
     public void stopDebugPressed(ActionEvent actionEvent) {
+        if (parent == null) {
+            System.err.println("Parent controller not set - cannot stop debugging");
+            return;
+        }
+
+        System.out.println("Stop debug button pressed - stopping debugging mode");
+        parent.stopDebugging();
     }
 
     public void continueButtonPressed(ActionEvent actionEvent) {
+        if (parent == null) {
+            System.err.println("Parent controller not set - cannot continue debugging");
+            return;
+        }
+
+        System.out.println("Continue button pressed - continuing execution");
+        parent.continueDebugging();
     }
 
     public void backToMainDashBoard(ActionEvent actionEvent) {

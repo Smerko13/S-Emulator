@@ -265,30 +265,71 @@ public class ExecutionServlet extends HttpServlet {
         }
 
         try {
+            System.out.println("Debug operation: " + operation);
+
             // Handle debug operations
             switch (operation) {
                 case "start":
-                    // Start debugging mode
+                    // Start debugging mode - prepare the engine for step-by-step execution
+                    engine.prepareForDebugging();
+                    session.setAttribute("debugMode", true);
+                    System.out.println("Debug mode started");
                     break;
+
                 case "step":
                     // Step to next instruction
+                    Boolean debugMode = (Boolean) session.getAttribute("debugMode");
+                    if (debugMode == null || !debugMode) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write(GSON.toJson("Not in debug mode"));
+                        return;
+                    }
+                    engine.stepOver();
+                    System.out.println("Stepped to next instruction");
                     break;
+
                 case "cont":
-                    // Continue execution
+                    // Continue execution - run remaining program
+                    debugMode = (Boolean) session.getAttribute("debugMode");
+                    if (debugMode == null || !debugMode) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write(GSON.toJson("Not in debug mode"));
+                        return;
+                    }
+                    // Continue by executing the rest of the program
+                    engine.executeProgram(engine.getCurrentDegree(), true);
+                    session.setAttribute("debugMode", false);
+                    // Also stop debugging in the program
+                    if (engine instanceof Program) {
+                        ((Program) engine).stopDebugging();
+                    }
+                    System.out.println("Continued execution to completion");
                     break;
+
                 case "stop":
-                    // Stop debugging
+                    // Stop debugging - reset to normal mode
+                    session.setAttribute("debugMode", false);
+                    if (engine instanceof Program) {
+                        ((Program) engine).stopDebugging();
+                    }
+                    engine.reset(); // Reset to initial state
+                    System.out.println("Debug mode stopped and program reset");
                     break;
+
                 default:
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    response.getWriter().write(GSON.toJson("Unknown debug operation"));
+                    response.getWriter().write(GSON.toJson("Unknown debug operation: " + operation));
                     return;
             }
 
+            // Create updated execution state - this will handle debug state properly
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
+
             response.getWriter().write(GSON.toJson(executionState));
 
         } catch (Exception e) {
+            System.err.println("Debug operation failed: " + e.getMessage());
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Debug operation failed: " + e.getMessage()));
         }
@@ -463,7 +504,14 @@ public class ExecutionServlet extends HttpServlet {
         state.setCurrentDegree(engine.getCurrentDegree()); // Use actual current degree from engine
         state.setMaxDegree(engine.getMaxExpansionDepth()); // Use actual max degree from engine
         state.setCycles(engine.getCycleSum()); // Use getCycleSum() method from S_Emulator
-        state.setDebugging(false); // Default or get from engine state
+
+        // Set debug state properly
+        Boolean debugMode = false;
+        if (engine instanceof Program) {
+            Program program = (Program) engine;
+            debugMode = program.isInDebugMode();
+        }
+        state.setDebugging(debugMode);
 
         // Set function names (for now just the target)
         List<String> functionNames = new ArrayList<>();
@@ -474,14 +522,35 @@ public class ExecutionServlet extends HttpServlet {
         List<InstructionDTO> instructions = getInstructionsFromEngine(engine);
         state.setInstructions(instructions);
 
+        // Set highlighted instruction for debug mode
+        if (debugMode) {
+            Command currentDebugCommand = engine.getCurrentDebugCommand();
+            if (currentDebugCommand != null) {
+                // Find the instruction ID that matches the current debug command
+                for (InstructionDTO instruction : instructions) {
+                    if (instruction.getId() == currentDebugCommand.getId()) {
+                        state.setHighlightedInstructionId(currentDebugCommand.getId());
+                        System.out.println("Highlighted debug instruction ID: " + currentDebugCommand.getId());
+                        break;
+                    }
+                }
+            }
+        }
+
         // Get variables using proper methods
         List<VariableDTO> allVariables = getVariablesFromEngine(engine);
         List<VariableDTO> inputVariables = getInputVariablesFromEngine(engine);
         state.setAllVariables(allVariables);
         state.setInputVariables(inputVariables);
 
-        // Set empty changed variables for now
-        state.setChangedVariableNames(new HashSet<>());
+        // Get changed variables from the program if in debug mode
+        Set<String> changedVariables = new HashSet<>();
+        if (debugMode && engine instanceof Program) {
+            Program program = (Program) engine;
+            changedVariables = program.getChangedVariableNames();
+            System.out.println("Changed variables in debug mode: " + changedVariables);
+        }
+        state.setChangedVariableNames(changedVariables);
 
         // Set empty trace lines for now
         state.setTraceLines(new ArrayList<>());

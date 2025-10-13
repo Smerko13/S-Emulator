@@ -272,101 +272,181 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         return variables;
     }
 
+    // Debug-related fields
+    private boolean debugMode = false;
+    private int debugCommandIndex = 0;
+    private List<Command> debugCommands = null;
+    private Set<Variable> previousVariableState = null;
+
     @Override
     public void prepareForDebugging() {
-        resetWorkAndOutputVariables();
-        this.currentCommand = getCommandsAtDesiredLevel(currentDegree).getFirst();
+        System.out.println("Program.prepareForDebugging called");
+        debugMode = true;
+        debugCommandIndex = 0;
+
+        // Get commands at current degree for debugging
+        debugCommands = getCommandsAtDesiredLevel(currentDegree);
+        System.out.println("Prepared " + debugCommands.size() + " commands for debugging at degree " + currentDegree);
+
+        // Reset program state but PRESERVE input variables that user set
+        // Only reset work and output variables, NOT input variables
+        for(Variable variable : variables) {
+            if(variable instanceof OutputVariable) {
+                variable.setValue(0);
+            } else if (variable instanceof WorkVariable) {
+                variable.setValue(0);
+            }
+            // NOTE: We deliberately do NOT reset InputVariable values here
+            // to preserve values the user set before starting debug mode
+        }
+
+        // Reset execution state
+        this.cycleSum = 0;
+        this.currentCommand = null;
+
+        // Store initial variable state for change tracking
+        previousVariableState = new HashSet<>();
+        for (Variable var : variables) {
+            previousVariableState.add(var.clone());
+        }
+
+        System.out.println("Debug mode prepared. Input variables preserved. First command will be: " +
+            (debugCommands.isEmpty() ? "none" : debugCommands.get(0).toString()));
+
+        // Log current input variable values to confirm they're preserved
+        System.out.println("Input variable values at debug start:");
+        for (Variable var : variables) {
+            if (var instanceof InputVariable) {
+                System.out.println("  " + var.getName() + " = " + var.getValue());
+            }
+        }
     }
 
     @Override
     public void stepOver() {
-        if (this.currentCommand != null) {
-            String executionLabel = this.currentCommand.execute();
-            this.cycleSum += this.currentCommand.getCycles();
-            if(executionLabel != null) {
-                if (executionLabel.length() == 2) {
-                    executionLabel = executionLabel + " "; // Ensure label has at least 3 characters
-                }
-                if (executionLabel.equals("EXIT")) {
-                    this.currentCommand = null; // End of program
-                    return;
-                }
-                for (Command command : getCommandsAtDesiredLevel(currentDegree)) {
-                    String currentLabel = command.getLabel();
-                    if (currentLabel.equals(executionLabel)) {
-                        this.currentCommand = command;
+        if (!debugMode || debugCommands == null || debugCommandIndex >= debugCommands.size()) {
+            System.out.println("Cannot step over: not in debug mode or no more commands. Index: " +
+                debugCommandIndex + ", Commands size: " + (debugCommands != null ? debugCommands.size() : "null"));
+            return;
+        }
+
+        System.out.println("Program.stepOver called - executing command at index " + debugCommandIndex);
+
+        // Get the current command to execute
+        Command currentCommand = debugCommands.get(debugCommandIndex);
+        System.out.println("Executing debug command [" + debugCommandIndex + "]: " + currentCommand.toString());
+
+        // Execute the single command and handle jump logic
+        String jumpLabel = currentCommand.execute();
+        cycleSum += currentCommand.getCycles();
+
+        // Handle jump commands in debug mode
+        if (jumpLabel != null) {
+            if (jumpLabel.length() == 2) {
+                jumpLabel = jumpLabel + " "; // Ensure label has at least 3 characters
+            }
+
+            if (jumpLabel.equals("EXIT")) {
+                System.out.println("Debug: Program reached EXIT");
+                debugCommandIndex = debugCommands.size(); // Mark as finished
+            } else {
+                // Find the target command for the jump
+                boolean foundTarget = false;
+                System.out.println("Debug: Looking for target label '" + jumpLabel + "'");
+
+                for (int i = 0; i < debugCommands.size(); i++) {
+                    Command cmd = debugCommands.get(i);
+                    String cmdLabel = cmd.getLabel();
+
+                    // Debug logging to see what labels we're comparing
+                    System.out.println("  Checking command [" + i + "] with label: '" + cmdLabel + "'");
+
+                    // Compare labels properly - handle null and whitespace
+                    if (cmdLabel != null && jumpLabel.trim().equals(cmdLabel.trim())) {
+                        debugCommandIndex = i;
+                        foundTarget = true;
+                        System.out.println("Debug: Found target! Jumped to label '" + jumpLabel + "' at index " + debugCommandIndex);
                         break;
                     }
                 }
-            }
-            else {
-                int currentIndex = getCommandsAtDesiredLevel(currentDegree).indexOf(this.currentCommand);
-                currentIndex++;
-                if (currentIndex < getCommandsAtDesiredLevel(currentDegree).size()) {
-                    this.currentCommand = getCommandsAtDesiredLevel(currentDegree).get(currentIndex);
-                } else {
-                    this.currentCommand = null; // No more commands to execute
+
+                if (!foundTarget) {
+                    System.out.println("Debug: Label '" + jumpLabel + "' not found in any command, continuing to next command");
+                    debugCommandIndex++;
                 }
             }
+        } else {
+            // Normal sequential execution
+            debugCommandIndex++;
+        }
+
+        System.out.println("Debug step completed. Next command index: " + debugCommandIndex + "/" + debugCommands.size());
+
+        // Log current variable states after execution
+        System.out.println("Variables after step:");
+        for (Variable var : variables) {
+            System.out.println("  " + var.getName() + " = " + var.getValue());
         }
     }
 
     @Override
     public Command getCurrentDebugCommand() {
-        return this.currentCommand;
-    }
-
-    @Override
-    public Program[] getSunFunctions() {
-        List<Program> funcs = new ArrayList<>(this.subFunctions);
-        for(Program subFunction : subFunctions) {
-            funcs.addAll(Arrays.asList(subFunction.getSunFunctions()));
+        if (!debugMode || debugCommands == null || debugCommandIndex >= debugCommands.size()) {
+            return null;
         }
-        return funcs.toArray(new Program[0]);
+
+        return debugCommands.get(debugCommandIndex);
     }
 
-    @Override
-    public String countBasicCommands() {
-        int i = 0;
-        for(Command cmd : this.getCommandsAtDesiredLevel(currentDegree)) {
-            if(cmd instanceof BaseCommand) {
-                i++;
+    public Set<String> getChangedVariableNames() {
+        Set<String> changedNames = new HashSet<>();
+
+        if (previousVariableState == null) {
+            System.out.println("No previous variable state to compare against");
+            return changedNames;
+        }
+
+        System.out.println("Comparing variable states for changes:");
+
+        // Compare current variable state with previous state
+        for (Variable currentVar : variables) {
+            Variable previousVar = previousVariableState.stream()
+                    .filter(v -> v.getName().equals(currentVar.getName()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (previousVar == null) {
+                changedNames.add(currentVar.getName());
+                System.out.println("  " + currentVar.getName() + ": NEW variable = " + currentVar.getValue());
+            } else if (previousVar.getValue() != currentVar.getValue()) {
+                changedNames.add(currentVar.getName());
+                System.out.println("  " + currentVar.getName() + ": " + previousVar.getValue() + " -> " + currentVar.getValue() + " (CHANGED)");
+            } else {
+                System.out.println("  " + currentVar.getName() + ": " + currentVar.getValue() + " (unchanged)");
             }
         }
-        return String.valueOf(i);
-    }
 
-    @Override
-    public String countSyntheticCommands() {
-        int i = 0;
-        for(Command cmd : this.getCommandsAtDesiredLevel(currentDegree)) {
-            if(cmd instanceof SyntheticCommand) {
-                i++;
-            }
+        // Update previous state for next comparison
+        previousVariableState = new HashSet<>();
+        for (Variable var : variables) {
+            previousVariableState.add(var.clone());
         }
-        return String.valueOf(i);
+
+        System.out.println("Changed variables: " + changedNames);
+        return changedNames;
     }
 
-    @Override
-    public void hardReset() {
-        for(Variable variable : variables) {
-            variable.setValue(0);
-        }
-        this.cycleSum = 0;
-        this.currentDegree = 0;
-        this.currentCommand = null;
+    public boolean isInDebugMode() {
+        return debugMode;
     }
 
-    @Override
-    public int getExecutionCount() {
-        return 0;
+    public void stopDebugging() {
+        debugMode = false;
+        debugCommandIndex = 0;
+        debugCommands = null;
+        previousVariableState = null;
+        System.out.println("Debug mode stopped");
     }
-
-    @Override
-    public double getAverageCreditCost() {
-        return 0;
-    }
-
 
     @Override
     public void executeProgram(int expansionLevel,boolean forHistory) {
@@ -761,5 +841,76 @@ public class Program implements S_Emulator , Serializable, Cloneable {
             System.err.println("Invalid value format for input variable " + name + ": " + value);
             throw new IllegalArgumentException("Invalid value format: " + value);
         }
+    }
+
+    @Override
+    public Program[] getSunFunctions() {
+        return subFunctions.toArray(new Program[0]);
+    }
+
+    @Override
+    public String countBasicCommands() {
+        int basicCount = 0;
+        for (Command command : commands) {
+            if (command instanceof BaseCommand) {
+                basicCount++;
+            }
+        }
+        return String.valueOf(basicCount);
+    }
+
+    @Override
+    public String countSyntheticCommands() {
+        int syntheticCount = 0;
+        for (Command command : commands) {
+            if (command instanceof SyntheticCommand) {
+                syntheticCount++;
+            }
+        }
+        return String.valueOf(syntheticCount);
+    }
+
+    @Override
+    public void hardReset() {
+        // Reset all variables to their initial state
+        for (Variable variable : variables) {
+            if (variable instanceof InputVariable) {
+                InputVariable inputVar = (InputVariable) variable;
+                if (inputVar.isOriginal()) {
+                    variable.setValue(inputVar.getOriginalValue());
+                } else {
+                    variable.setValue(0);
+                }
+            } else {
+                variable.setValue(0);
+            }
+        }
+
+        // Reset execution state
+        this.cycleSum = 0;
+        this.currentCommand = null;
+        this.currentDegree = 0;
+
+        // Reset debug state if active
+        if (debugMode) {
+            stopDebugging();
+        }
+
+        // Reset stats
+        if (stats != null) {
+            stats.reset();
+        }
+
+        System.out.println("Program hard reset completed");
+    }
+
+    @Override
+    public int getExecutionCount() {
+        return stats != null ? stats.getExecutionCount() : 0;
+    }
+
+    @Override
+    public double getAverageCreditCost() {
+        return stats != null ? stats.getAverageCreditCost() : 0.0;
     }
 }
