@@ -331,6 +331,19 @@ public class ExecutionServlet extends HttpServlet {
             if (programName.equals(storedProgramName) || programName.equals(actualProgramName)) {
                 return emulator;
             }
+
+            // NEW: Search for functions within this program
+            if (emulator instanceof Program) {
+                Program mainProgram = (Program) emulator;
+                // Check if the target is a function within this program
+                for (Program subFunction : mainProgram.subFunctions) {
+                    if (programName.equals(subFunction.getCurrentProgramName()) ||
+                        programName.equals(subFunction.getUserString())) {
+                        // Return the sub-function as the target for execution
+                        return subFunction;
+                    }
+                }
+            }
         }
 
         return null; // Program not found

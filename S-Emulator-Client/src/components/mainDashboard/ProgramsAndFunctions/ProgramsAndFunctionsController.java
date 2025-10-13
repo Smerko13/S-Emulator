@@ -354,26 +354,21 @@ public class ProgramsAndFunctionsController implements Initializable {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
         Parent executionDashboardRoot = loader.load();
 
-        // Get the controller and set the function name
+        // Get the controller and set it up for function execution
         Object controller = loader.getController();
         if (controller instanceof ExecutionDashboardController) {
             ExecutionDashboardController dashboardController = (ExecutionDashboardController) controller;
-            // Create a ProgramInfoDTO for the function to use with setUp
-            ProgramInfoDTO functionAsProgram = new ProgramInfoDTO(
-                selectedFunction.getFunctionName(),
-                selectedFunction.getAssociatedUser(),
-                selectedFunction.getNumOfInstructions(),
-                selectedFunction.getMaxDegree(),
-                0, // numOfExecutions - default to 0 for functions
-                0.0 // avgCreditCost - default to 0.0 for functions
-            );
-            dashboardController.setUp(functionAsProgram);
+
+            // Set the function name in the header first
+            dashboardController.setProgramOrFunctionName(selectedFunction.getFunctionName());
+
+            // Open the function on the server - this will load the function's instructions and variables
+            dashboardController.openOnServer(selectedFunction.getFunctionName());
         }
 
-        // Get the current stage from the button (similar to your working pattern)
+        // Get the current stage from the button and transition to execution dashboard
         Stage stage = (Stage) executeFunctionButton.getScene().getWindow();
 
-        // Apply the same transition pattern that works in login
         if (stage != null && executionDashboardRoot != null) {
             if (stage.getScene() == null) {
                 stage.setScene(new Scene(executionDashboardRoot));
@@ -385,6 +380,6 @@ public class ProgramsAndFunctionsController implements Initializable {
         }
 
         // Set the title for the execution dashboard
-        stage.setTitle("S-Emulator - Function Execution Dashboard");
+        stage.setTitle("S-Emulator - Function Execution Dashboard: " + selectedFunction.getFunctionName());
     }
 }
