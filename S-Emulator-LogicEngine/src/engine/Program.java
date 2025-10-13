@@ -913,4 +913,12 @@ public class Program implements S_Emulator , Serializable, Cloneable {
     public double getAverageCreditCost() {
         return stats != null ? stats.getAverageCreditCost() : 0.0;
     }
+
+    public void setCycleSum(int cycleSum) {
+        this.cycleSum = cycleSum;
+    }
+
+    public void setCurrentCommand(Command currentCommand) {
+        this.currentCommand = currentCommand;
+    }
 }

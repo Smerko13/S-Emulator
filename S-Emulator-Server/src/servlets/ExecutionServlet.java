@@ -7,6 +7,8 @@ import engine.Program;
 import engine.commands.Command;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
+import engine.arguments.types.OutputVariable;
+import engine.arguments.types.WorkVariable;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -230,21 +232,54 @@ public class ExecutionServlet extends HttpServlet {
 
         HttpSession session = request.getSession();
         String currentTarget = (String) session.getAttribute("currentTarget");
+        S_Emulator engine = (S_Emulator) session.getAttribute("engine");
 
-        if (currentTarget == null) {
+        if (currentTarget == null || engine == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(GSON.toJson("No active program"));
             return;
         }
 
         try {
-            // Create new engine instance for fresh run
-            S_Emulator engine = getOrCreateEngine(session, currentTarget);
+            System.out.println("ExecutionServlet: handleNewRun - resetting ALL variables to 0 and resetting execution state");
+
+            // Exit debug mode if active
+            Boolean debugMode = (Boolean) session.getAttribute("debugMode");
+            if (debugMode != null && debugMode) {
+                System.out.println("Exiting debug mode before new run");
+                session.setAttribute("debugMode", false);
+                if (engine instanceof Program) {
+                    ((Program) engine).stopDebugging();
+                }
+            }
+
+            // Reset ALL variables to 0 (input, output, and work variables)
+            Set<Variable> variables = engine.getVariables();
+            for (Variable variable : variables) {
+                variable.setValue(0);
+                System.out.println("Reset variable: " + variable.getName() + " to 0 (type: " + variable.getClass().getSimpleName() + ")");
+            }
+
+            // Reset execution state
+            if (engine instanceof Program) {
+                Program program = (Program) engine;
+                program.setCycleSum(0);
+                program.setCurrentCommand(null);
+                System.out.println("Reset execution state (cycles and current command)");
+            }
+
+            // Log final state to confirm all variables are reset
+            System.out.println("Final variable values after new run:");
+            for (Variable var : engine.getVariables()) {
+                System.out.println("  " + var.getName() + " = " + var.getValue() + " (type: " + var.getClass().getSimpleName() + ")");
+            }
 
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
             response.getWriter().write(GSON.toJson(executionState));
 
         } catch (Exception e) {
+            System.err.println("ExecutionServlet: Error in handleNewRun: " + e.getMessage());
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Failed to create new run: " + e.getMessage()));
         }
