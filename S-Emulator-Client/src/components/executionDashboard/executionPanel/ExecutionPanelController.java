@@ -29,13 +29,35 @@ public class ExecutionPanelController {
     public void setVariables(java.util.List<VariableDTO> allVars,
                              java.util.List<VariableDTO> inputVars,
                              java.util.Set<String> changedNames) {
+        System.out.println("==================== VARIABLES UPDATE RECEIVED ====================");
+        System.out.println("setVariables called - updating UI with execution results");
+
+        // Log received data
+        System.out.println("All variables received: " + (allVars != null ? allVars.size() : "null"));
+        if (allVars != null) {
+            for (VariableDTO var : allVars) {
+                System.out.println("  All var: " + var.getName() + " = " + var.getValue() + " (type: " + var.getType() + ", isInput: " + var.isInput() + ")");
+            }
+        }
+
+        System.out.println("Input variables received: " + (inputVars != null ? inputVars.size() : "null"));
+        if (inputVars != null) {
+            for (VariableDTO var : inputVars) {
+                System.out.println("  Input var: " + var.getName() + " = " + var.getValue() + " (type: " + var.getType() + ")");
+            }
+        }
+
+        System.out.println("Changed variables: " + (changedNames != null ? changedNames.toString() : "null"));
+
         // Left table: all/work/output variables
         var all = javafx.collections.FXCollections.observableArrayList(allVars);
         allVarsTable.setItems(all);
+        System.out.println("Updated all variables table with " + all.size() + " items");
 
         // Right table: inputs
         var inputs = javafx.collections.FXCollections.observableArrayList(inputVars);
         inputVarsTable.setItems(inputs);
+        System.out.println("Updated input variables table with " + inputs.size() + " items");
 
         // simple highlight for changed names
         allVarsTable.setRowFactory(tv -> new TableRow<VariableDTO>() {
@@ -55,7 +77,7 @@ public class ExecutionPanelController {
             }
         });
 
-        // column factories — run once if you haven’t already:
+        // column factories — run once if you haven't already:
         if (allVarsTable.getColumns().size() == 2) {
             @SuppressWarnings("unchecked")
             TableColumn<VariableDTO, String> nameCol =
@@ -75,10 +97,96 @@ public class ExecutionPanelController {
                     (TableColumn<VariableDTO, Number>) inputVarsTable.getColumns().get(1);
             nameCol.setCellValueFactory(cd -> new ReadOnlyStringWrapper(cd.getValue().getName()));
             valueCol.setCellValueFactory(cd -> new ReadOnlyIntegerWrapper(cd.getValue().getValue()));
+
+            // Make input variables table value column editable
+            valueCol.setCellFactory(col -> new TableCell<VariableDTO, Number>() {
+                private TextField textField;
+
+                @Override
+                protected void updateItem(Number item, boolean empty) {
+                    super.updateItem(item, empty);
+
+                    if (empty || item == null) {
+                        setText(null);
+                        setGraphic(null);
+                    } else {
+                        if (isEditing()) {
+                            if (textField != null) {
+                                textField.setText(item.toString());
+                            }
+                            setText(null);
+                            setGraphic(textField);
+                        } else {
+                            setText(item.toString());
+                            setGraphic(null);
+                        }
+                    }
+                }
+
+                @Override
+                public void startEdit() {
+                    if (!isEditable() || !getTableView().isEditable() || !getTableColumn().isEditable()) {
+                        return;
+                    }
+                    super.startEdit();
+
+                    if (textField == null) {
+                        createTextField();
+                    }
+
+                    setText(null);
+                    setGraphic(textField);
+                    textField.selectAll();
+                    textField.requestFocus();
+                }
+
+                @Override
+                public void cancelEdit() {
+                    super.cancelEdit();
+                    setText(getItem().toString());
+                    setGraphic(null);
+                }
+
+                @Override
+                public void commitEdit(Number newValue) {
+                    super.commitEdit(newValue);
+                    VariableDTO variable = getTableView().getItems().get(getIndex());
+                    variable.setValue(newValue.intValue());
+                }
+
+                private void createTextField() {
+                    textField = new TextField(getItem() == null ? "" : getItem().toString());
+                    textField.setMinWidth(this.getWidth() - this.getGraphicTextGap() * 2);
+                    textField.setOnAction(e -> {
+                        try {
+                            int value = Integer.parseInt(textField.getText());
+                            commitEdit(value);
+                        } catch (NumberFormatException ex) {
+                            cancelEdit();
+                        }
+                    });
+                    textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+                        if (!isNowFocused) {
+                            try {
+                                int value = Integer.parseInt(textField.getText());
+                                commitEdit(value);
+                            } catch (NumberFormatException ex) {
+                                cancelEdit();
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Enable editing on the input variables table
+            inputVarsTable.setEditable(true);
+            valueCol.setEditable(true);
         }
 
         allVarsTable.refresh();
         inputVarsTable.refresh();
+        System.out.println("Tables refreshed successfully");
+        System.out.println("==================== VARIABLES UPDATE COMPLETE ====================");
     }
 
 
@@ -90,7 +198,18 @@ public class ExecutionPanelController {
 
     // Must be public (dashboard calls it)
     public void setCyclesLabel(int cycles) {
-        if (cyclesLabel != null) cyclesLabel.setText("Cycles: " + cycles);
+        System.out.println("==================== CYCLES UPDATE ====================");
+        System.out.println("setCyclesLabel called with cycles: " + cycles);
+
+        if (cyclesLabel != null) {
+            String oldText = cyclesLabel.getText();
+            cyclesLabel.setText("Cycles: " + cycles);
+            System.out.println("Cycles label updated from '" + oldText + "' to 'Cycles: " + cycles + "'");
+        } else {
+            System.err.println("Cycles label is null - cannot update cycles display");
+        }
+
+        System.out.println("==================== CYCLES UPDATE COMPLETE ====================");
     }
 
     // New signature used by dashboard
@@ -102,6 +221,57 @@ public class ExecutionPanelController {
     }
 
     public void executeButtonPressed(ActionEvent actionEvent) {
+        if (parent == null) {
+            System.err.println("Parent controller not set - cannot execute program");
+            return;
+        }
+
+        System.out.println("==================== EXECUTE BUTTON PRESSED ====================");
+        System.out.println("Execute button pressed - collecting input variables and executing program");
+
+        // Collect and update input variable values before execution
+        if (inputVarsTable != null && inputVarsTable.getItems() != null) {
+            System.out.println("Input variables table found with " + inputVarsTable.getItems().size() + " variables");
+
+            for (VariableDTO var : inputVarsTable.getItems()) {
+                System.out.println("Processing input variable: " + var.getName() + " = " + var.getValue());
+
+                // Send each input variable value to the server
+                // The server needs to know the current values before execution
+                if (parent != null) {
+                    System.out.println("Sending to server: updateInputValue('" + var.getName() + "', " + var.getValue() + ")");
+                    parent.updateInputValue(var.getName(), var.getValue());
+                } else {
+                    System.err.println("Parent controller is null - cannot send variable update for: " + var.getName());
+                }
+            }
+
+            System.out.println("Completed sending " + inputVarsTable.getItems().size() + " input variable updates to server");
+        } else {
+            if (inputVarsTable == null) {
+                System.out.println("Input variables table is null - no input variables to send");
+            } else {
+                System.out.println("Input variables table items is null - no input variables to send");
+            }
+        }
+
+        // Log current state before execution
+        System.out.println("Current cycles before execution: " + (cyclesLabel != null ? cyclesLabel.getText() : "unknown"));
+        if (allVarsTable != null && allVarsTable.getItems() != null) {
+            System.out.println("Current all variables count: " + allVarsTable.getItems().size());
+            for (VariableDTO var : allVarsTable.getItems()) {
+                System.out.println("  - " + var.getName() + " = " + var.getValue() + " (type: " + var.getType() + ")");
+            }
+        }
+
+        // Execute the program using the parent controller's method
+        // This will make an HTTP call to the server and update all UI components
+        // The server will execute with the current degree and updated input variables
+        System.out.println("Calling parent.executeProgram() to trigger server execution...");
+        parent.executeProgram();
+
+        System.out.println("Program execution request sent to server");
+        System.out.println("==================== EXECUTE REQUEST COMPLETE ====================");
     }
 
     public void debugButtonPressed(ActionEvent actionEvent) {

@@ -276,7 +276,39 @@ public class ExecutionDashboardController {
     }
 
     public void updateInputValue(String name, int value) {
-        // TODO: POST to server, then fetch fresh ExecutionStateDTO and call applyState(...)
+        System.out.println("==================== UPDATE INPUT VALUE ====================");
+        System.out.println("updateInputValue called with name: '" + name + "', value: " + value);
+
+        HttpUrl url = HttpUrl.parse(Constants.EXEC_UPDATE_INPUT)
+                .newBuilder()
+                .addQueryParameter("name", name)
+                .addQueryParameter("value", String.valueOf(value))
+                .build();
+
+        System.out.println("Sending input variable update to: " + url.toString());
+
+        HttpClientUtil.runAsync(url.toString(), new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                System.err.println("Failed to update input variable " + name + ": " + e.getMessage());
+                Platform.runLater(() -> pushError("Failed to update input variable " + name + ": " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String responseBody = response.body() != null ? response.body().string() : "";
+                System.out.println("Input variable update response: " + response.code() + " - " + responseBody);
+
+                if (!response.isSuccessful()) {
+                    System.err.println("Server error updating input variable " + name + ": " + responseBody);
+                    Platform.runLater(() -> pushError("Server error updating input variable " + name + ": " + shorten(responseBody)));
+                } else {
+                    System.out.println("Successfully updated input variable " + name + " = " + value + " on server");
+                }
+            }
+        });
+
+        System.out.println("==================== UPDATE INPUT VALUE COMPLETE ====================");
     }
 
     /**

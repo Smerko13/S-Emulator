@@ -729,4 +729,37 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         Variable var = cmd.getVariable();
         return var != null ? var.getName() : null;
     }
+
+    @Override
+    public void updateInputVariable(String name, String value) {
+        System.out.println("Program.updateInputVariable called with name: '" + name + "', value: '" + value + "'");
+
+        try {
+            int intValue = Integer.parseInt(value);
+
+            // First, try to find and update the variable in the main variables set
+            boolean variableFound = false;
+            for (Variable variable : variables) {
+                if (variable instanceof InputVariable && variable.getName().equals(name)) {
+                    variable.setValue(intValue);
+                    variableFound = true;
+                    System.out.println("Updated input variable " + name + " to " + intValue + " in main variables set");
+                    break;
+                }
+            }
+
+            // Also check extraInputVariables set
+            for (Variable variable : extraInputVariables) {
+                if (variable instanceof InputVariable && variable.getName().equals(name)) {
+                    variable.setValue(intValue);
+                    variableFound = true;
+                    System.out.println("Updated input variable " + name + " to " + intValue + " in extra input variables set");
+                    break;
+                }
+            }
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid value format for input variable " + name + ": " + value);
+            throw new IllegalArgumentException("Invalid value format: " + value);
+        }
+    }
 }

@@ -61,6 +61,9 @@ public class ExecutionServlet extends HttpServlet {
                 case "/parentChain":
                     handleGetParentChain(request, response);
                     break;
+                case "/updateInput":
+                    handleUpdateInput(request, response);
+                    break;
                 default:
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     break;
@@ -326,6 +329,36 @@ public class ExecutionServlet extends HttpServlet {
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Failed to get parent chain: " + e.getMessage()));
+        }
+    }
+
+    private void handleUpdateInput(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        String inputName = request.getParameter("name");
+        String inputValue = request.getParameter("value");
+
+        HttpSession session = request.getSession();
+        S_Emulator engine = (S_Emulator) session.getAttribute("engine");
+        String currentTarget = (String) session.getAttribute("currentTarget");
+
+        if (engine == null || currentTarget == null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(GSON.toJson("No active execution session"));
+            return;
+        }
+
+        try {
+            // Update the input variable in the engine
+            engine.updateInputVariable(inputName, inputValue);
+
+            // Return updated execution state
+            ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
+            response.getWriter().write(GSON.toJson(executionState));
+
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(GSON.toJson("Input update failed: " + e.getMessage()));
         }
     }
 

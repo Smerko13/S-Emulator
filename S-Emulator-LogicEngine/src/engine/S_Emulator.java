@@ -72,4 +72,6 @@ public interface S_Emulator {
     double getAverageCreditCost();
 
     List<String> getParentCommandChain(int commandId, int expansionLevel);
+
+    void updateInputVariable(String name, String value);
 }
