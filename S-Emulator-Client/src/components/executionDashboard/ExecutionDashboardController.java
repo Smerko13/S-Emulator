@@ -188,6 +188,7 @@ public class ExecutionDashboardController {
             List<String> names = s.getFunctionNames();
             headerComponentController.updateFunctionSelector(names);
             headerComponentController.setSelectedFunction(s.getSelectedFunction());
+            headerComponentController.setProgramOrFunctionName(s.getSelectedFunction());
             headerComponentController.setDegreeLabels(s.getCurrentDegree(), s.getMaxDegree());
         }
 

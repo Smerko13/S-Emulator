@@ -457,6 +457,13 @@ public class Program implements S_Emulator , Serializable, Cloneable {
     }
 
     @Override
+    public void setCurrentDegree(int degree) {
+        if (degree >= 0 && degree <= getMaxExpansionDepth()) {
+            this.currentDegree = degree;
+        }
+    }
+
+    @Override
     public int getCycleSum() {
         return cycleSum;
     }

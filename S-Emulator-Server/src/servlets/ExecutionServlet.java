@@ -45,6 +45,7 @@ public class ExecutionServlet extends HttpServlet {
                 case "/execute":
                     handleExecute(request, response);
                     break;
+                case "/degree":
                 case "/setDegree":
                     handleSetDegree(request, response);
                     break;
@@ -160,13 +161,38 @@ public class ExecutionServlet extends HttpServlet {
         }
 
         try {
-            // Handle degree change logic here
-            // This would depend on your engine's degree management implementation
+            int newDegree = engine.getCurrentDegree(); // Start with current degree
 
-            // Return updated execution state
+            if (valueStr != null && !valueStr.trim().isEmpty()) {
+                // Direct degree setting
+                newDegree = Integer.parseInt(valueStr);
+                System.out.println("ExecutionServlet: Setting degree directly to: " + newDegree);
+            } else if (deltaStr != null && !deltaStr.trim().isEmpty()) {
+                // Delta change (expand/collapse)
+                int delta = Integer.parseInt(deltaStr);
+                newDegree = engine.getCurrentDegree() + delta;
+                System.out.println("ExecutionServlet: Changing degree by delta " + delta + " from " + engine.getCurrentDegree() + " to " + newDegree);
+            }
+
+            // Ensure degree is within valid bounds
+            int maxDegree = engine.getMaxExpansionDepth();
+            if (newDegree < 0) {
+                newDegree = 0;
+            } else if (newDegree > maxDegree) {
+                newDegree = maxDegree;
+            }
+
+            // Set the new degree in the engine
+            engine.setCurrentDegree(newDegree);
+            System.out.println("ExecutionServlet: Degree set to: " + newDegree);
+
+            // Return updated execution state with instructions and variables at the new degree
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
             response.getWriter().write(GSON.toJson(executionState));
 
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(GSON.toJson("Invalid degree value"));
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Failed to set degree: " + e.getMessage()));
@@ -310,6 +336,23 @@ public class ExecutionServlet extends HttpServlet {
         return null; // Program not found
     }
 
+    private void setEngineCurrentDegree(S_Emulator engine, int targetDegree) {
+        int currentDegree = engine.getCurrentDegree();
+
+        if (targetDegree > currentDegree) {
+            // Need to increase degree
+            for (int i = currentDegree; i < targetDegree; i++) {
+                engine.increaseDegree();
+            }
+        } else if (targetDegree < currentDegree) {
+            // Need to decrease degree
+            for (int i = currentDegree; i > targetDegree; i--) {
+                engine.decreaseDegree();
+            }
+        }
+        // If targetDegree == currentDegree, no change needed
+    }
+
     private Program loadProgram(String programName) {
         // This method is now deprecated - use loadProgramFromContext instead
         return null;
@@ -388,20 +431,41 @@ public class ExecutionServlet extends HttpServlet {
 
     private List<VariableDTO> getVariablesFromEngine(S_Emulator engine) {
         List<VariableDTO> variables = new ArrayList<>();
+        Set<String> relevantVariableNames = new HashSet<>();
 
-        // Use the correct method from S_Emulator interface to get variables
-        Set<Variable> variableSet = engine.getVariables();
-        System.out.println("ExecutionServlet: Retrieved " + variableSet.size() + " variables from engine");
+        // Get commands at the current degree level
+        List<Command> commands = engine.getCommandsAtDesiredLevel(engine.getCurrentDegree());
 
-        for (Variable variable : variableSet) {
-            VariableDTO varDTO = new VariableDTO();
-            varDTO.setName(variable.getName());
-            varDTO.setValue(variable.getValue());
-            varDTO.setType(variable.getClass().getSimpleName());
-            variables.add(varDTO);
-            System.out.println("ExecutionServlet: Added variable: " + variable.getName() + " = " + variable.getValue());
+        // Collect all variable names used in the current degree's commands
+        for (Command command : commands) {
+            Variable[] assocVars = command.getAssociatedVariables();
+            if (assocVars != null) {
+                for (Variable var : assocVars) {
+                    if (var != null) {
+                        relevantVariableNames.add(var.getName());
+                    }
+                }
+            }
         }
 
+        // Get all variables from engine
+        Set<Variable> allVariableSet = engine.getVariables();
+        System.out.println("ExecutionServlet: Retrieved " + allVariableSet.size() + " total variables from engine");
+        System.out.println("ExecutionServlet: Filtering to show only variables used in current degree commands: " + relevantVariableNames);
+
+        // Only include variables that are used in the current degree's commands
+        for (Variable variable : allVariableSet) {
+            if (relevantVariableNames.contains(variable.getName())) {
+                VariableDTO varDTO = new VariableDTO();
+                varDTO.setName(variable.getName());
+                varDTO.setValue(variable.getValue());
+                varDTO.setType(variable.getClass().getSimpleName());
+                variables.add(varDTO);
+                System.out.println("ExecutionServlet: Added relevant variable: " + variable.getName() + " = " + variable.getValue());
+            }
+        }
+
+        System.out.println("ExecutionServlet: Filtered variables list contains " + variables.size() + " variables for current degree");
         return variables;
     }
 

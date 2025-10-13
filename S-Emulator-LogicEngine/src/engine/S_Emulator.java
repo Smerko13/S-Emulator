@@ -51,6 +51,8 @@ public interface S_Emulator {
 
     void decreaseDegree();
 
+    void setCurrentDegree(int degree);
+
     void prepareForDebugging();
 
     void stepOver();

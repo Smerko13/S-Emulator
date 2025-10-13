@@ -16,13 +16,13 @@ public class HeaderController {
     @FXML private Button CollapseButton;            // already in FXML
     @FXML private Label creditsLabel;
     @FXML private Label userNameLabel;
-    @FXML private ComboBox<String> FunctionAndProgramSelector;
     @FXML private TextField currentDegreeTextField;
     @FXML private Label DegreeLabel;
     @FXML private Button ExpandButton;
 
     private ExecutionDashboardController parent;   // <-- replace BaseController
     private final UserSession userSession;
+    private String currentProgramName; // Store the current program name
 
     public HeaderController() {
         userSession = UserSession.getInstance();
@@ -58,38 +58,40 @@ public class HeaderController {
 
     // called by dashboard when a fresh state arrives
     public void updateFunctionSelector(List<String> names) {
-        if (FunctionAndProgramSelector != null) {
-            FunctionAndProgramSelector.getItems().setAll(names == null ? List.of() : names);
-        }
+        // No longer needed, as we are not using FunctionAndProgramSelector
     }
 
     // existing button handlers can delegate to parent
     @FXML private void CollapseProgram() {
-        if (parent != null && FunctionAndProgramSelector != null && FunctionAndProgramSelector.getValue() != null)
-            parent.collapseProgram(FunctionAndProgramSelector.getValue());
+        if (parent != null && currentProgramName != null) {
+            parent.collapseProgram(currentProgramName);
+        }
     }
+
     @FXML private void ExpandProgram() {
-        if (parent != null && FunctionAndProgramSelector != null && FunctionAndProgramSelector.getValue() != null)
-            parent.expandProgram(FunctionAndProgramSelector.getValue());
+        if (parent != null && currentProgramName != null) {
+            parent.expandProgram(currentProgramName);
+        }
     }
+
     @FXML private void degreeInserted() {
-        if (parent == null || FunctionAndProgramSelector == null) return;
-        String sel = FunctionAndProgramSelector.getValue();
-        if (sel == null || currentDegreeTextField == null) return;
+        if (parent == null || currentDegreeTextField == null || currentProgramName == null) return;
         try {
             int v = Integer.parseInt(currentDegreeTextField.getText().trim());
-            parent.setCurrentDegree(sel, v);
-        } catch (NumberFormatException ignored) { }
+            parent.setCurrentDegree(currentProgramName, v);
+        } catch (NumberFormatException ignored) {
+            // Reset to current value if invalid input
+            // This will be updated when the server responds
+        }
     }
 
     // helper the dashboard calls
-    public Object getSelectedFunction() {
-        return FunctionAndProgramSelector != null ? FunctionAndProgramSelector.getValue() : null;
+    public String getSelectedFunction() {
+        return currentProgramName;
     }
 
     public void setSelectedFunction(String name) {
-        if (name == null || FunctionAndProgramSelector == null) return;
-        FunctionAndProgramSelector.getSelectionModel().select(name);
+        this.currentProgramName = name;
     }
 
     public void setDegreeLabels(int current, int max) {

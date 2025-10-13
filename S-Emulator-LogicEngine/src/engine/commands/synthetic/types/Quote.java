@@ -22,16 +22,18 @@ public class Quote extends SyntheticCommand implements Cloneable {
         super(instruction, program);
         this.commandName = "QUOTE";
         String name = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
-        for (Program e : this.associatedProgram.subFunctions) {
-            if (e.getCurrentProgramName().equals(name)) {
-                this.userString = e.getUserString();
-                this.functionName = e.getCurrentProgramName();
-                break;
-            }
-        }
+//        for (Program e : this.associatedProgram.subFunctions) {
+//            if (e.getCurrentProgramName().equals(name)) {
+//                this.userString = e.getUserString();
+//                this.functionName = e.getCurrentProgramName();
+//                break;
+//            }
+//        }
 //        if (this.functionName == null) {
 //            throw new IllegalArgumentException("Function name not found for Quote command: " + name);
 //        }
+        this.functionName = name;
+        this.userString = instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue();
         this.functionArguments = instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue();
         this.argumentList = initializeArgumentList(this.functionArguments);
         initializeAssociatedVariables();
