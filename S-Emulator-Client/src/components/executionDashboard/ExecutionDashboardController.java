@@ -80,7 +80,52 @@ public class ExecutionDashboardController {
      * Run whole program/function (no client-side compute).
      */
     public void executeProgram() {
-        callAndApply(HttpUrl.parse(Constants.EXEC_EXECUTE).newBuilder().build());
+        executeProgram(Architecture.GENERATION_I); // Default to cheapest architecture
+    }
+
+    /**
+     * Run whole program/function with specific architecture.
+     */
+    public void executeProgram(Architecture architecture) {
+        System.out.println("ExecutionDashboardController: executeProgram called with architecture: " + architecture.name());
+
+        // Create ExecuteProgramRequest with architecture
+        ExecuteProgramRequest request = new ExecuteProgramRequest(selectedFunction, architecture);
+        String requestJson = GSON_INSTANCE.toJson(request);
+
+        System.out.println("Sending execute request: " + requestJson);
+
+        // Make POST request to execution endpoint with architecture information
+        HttpUrl url = HttpUrl.parse(Constants.EXEC_EXECUTE).newBuilder().build();
+
+        HttpClientUtil.runAsyncPost(url.toString(), requestJson, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                System.err.println("Execute program request failed: " + e.getMessage());
+                Platform.runLater(() -> pushError("Network error: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String json = response.body() != null ? response.body().string() : "";
+                System.out.println("Execute program response: " + response.code() + " - " + json);
+
+                if (!response.isSuccessful()) {
+                    Platform.runLater(() -> pushError("Execution failed: " + shorten(json)));
+                    return;
+                }
+
+                try {
+                    ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
+                    System.out.println("Program executed successfully with architecture: " + architecture.name());
+                    Platform.runLater(() -> applyStateToPanels(state));
+                } catch (Exception e) {
+                    System.err.println("Error parsing execution response: " + e.getMessage());
+                    e.printStackTrace();
+                    Platform.runLater(() -> pushError("Error processing execution results"));
+                }
+            }
+        });
     }
 
     /**
@@ -275,40 +320,20 @@ public class ExecutionDashboardController {
         return t.length() > 400 ? t.substring(0, 400) + " …" : t;
     }
 
-    public void updateInputValue(String name, int value) {
-        System.out.println("==================== UPDATE INPUT VALUE ====================");
-        System.out.println("updateInputValue called with name: '" + name + "', value: " + value);
+    /**
+     * Update input variable value on the server
+     */
+    public void updateInputValue(String variableName, int value) {
+        System.out.println("ExecutionDashboardController: updateInputValue called - " + variableName + " = " + value);
 
         HttpUrl url = HttpUrl.parse(Constants.EXEC_UPDATE_INPUT)
                 .newBuilder()
-                .addQueryParameter("name", name)
+                .addQueryParameter("name", variableName)
                 .addQueryParameter("value", String.valueOf(value))
                 .build();
 
-        System.out.println("Sending input variable update to: " + url.toString());
-
-        HttpClientUtil.runAsync(url.toString(), new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                System.err.println("Failed to update input variable " + name + ": " + e.getMessage());
-                Platform.runLater(() -> pushError("Failed to update input variable " + name + ": " + e.getMessage()));
-            }
-
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                String responseBody = response.body() != null ? response.body().string() : "";
-                System.out.println("Input variable update response: " + response.code() + " - " + responseBody);
-
-                if (!response.isSuccessful()) {
-                    System.err.println("Server error updating input variable " + name + ": " + responseBody);
-                    Platform.runLater(() -> pushError("Server error updating input variable " + name + ": " + shorten(responseBody)));
-                } else {
-                    System.out.println("Successfully updated input variable " + name + " = " + value + " on server");
-                }
-            }
-        });
-
-        System.out.println("==================== UPDATE INPUT VALUE COMPLETE ====================");
+        System.out.println("Sending input update request: " + url.toString());
+        callAndApply(url);
     }
 
     /**

@@ -76,6 +76,13 @@ public class ExecutionServlet extends HttpServlet {
         }
     }
 
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // POST requests use the same handling logic as GET requests
+        doGet(request, response);
+    }
+
     private void handleOpen(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
@@ -128,8 +135,15 @@ public class ExecutionServlet extends HttpServlet {
             throws IOException {
 
         HttpSession session = request.getSession();
+        String username = (String) session.getAttribute("username");
         S_Emulator engine = (S_Emulator) session.getAttribute("engine");
         String currentTarget = (String) session.getAttribute("currentTarget");
+
+        if (username == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write(GSON.toJson("User not logged in"));
+            return;
+        }
 
         if (engine == null || currentTarget == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -138,16 +152,153 @@ public class ExecutionServlet extends HttpServlet {
         }
 
         try {
-            // Execute the program - use the correct method from S_Emulator interface
+            // Parse the request body to get architecture information
+            ExecuteProgramRequest execRequest = null;
+            if ("POST".equalsIgnoreCase(request.getMethod())) {
+                StringBuilder requestBody = new StringBuilder();
+                String line;
+                while ((line = request.getReader().readLine()) != null) {
+                    requestBody.append(line);
+                }
+
+                if (requestBody.length() > 0) {
+                    System.out.println("ExecutionServlet: Received execution request body: " + requestBody.toString());
+                    execRequest = GSON.fromJson(requestBody.toString(), ExecuteProgramRequest.class);
+                }
+            }
+
+            // Default to Generation I if no architecture specified
+            Architecture architecture = (execRequest != null && execRequest.architecture != null)
+                ? execRequest.architecture
+                : Architecture.GENERATION_I;
+
+            System.out.println("ExecutionServlet: Executing with architecture: " + architecture.name() + " (Cost: " + architecture.getCost() + " credits)");
+
+            // Get user and validate credits
+            ServerContext context = ServerContext.getInstance();
+            User user = context.getUser(username);
+
+            if (user == null) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write(GSON.toJson("User not found"));
+                return;
+            }
+
+            // Check if user has enough credits
+            if (!user.hasEnoughCredits(architecture.getCost())) {
+                response.setStatus(HttpServletResponse.SC_PAYMENT_REQUIRED);
+                response.getWriter().write(GSON.toJson("Insufficient credits. Required: " + architecture.getCost() + ", Available: " + user.getCredits()));
+                return;
+            }
+
+            // Validate that the program can run on the selected architecture
+            String validationError = validateProgramForArchitecture(engine, architecture);
+            if (validationError != null) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write(GSON.toJson(validationError));
+                return;
+            }
+
+            // Deduct credits BEFORE execution
+            boolean creditDeducted = user.deductCredits(architecture.getCost());
+            if (!creditDeducted) {
+                response.setStatus(HttpServletResponse.SC_PAYMENT_REQUIRED);
+                response.getWriter().write(GSON.toJson("Failed to deduct credits"));
+                return;
+            }
+
+            System.out.println("ExecutionServlet: Credits deducted successfully. User " + username + " now has " + user.getCredits() + " credits");
+
+            // Execute the program with the selected architecture
             engine.executeProgram(engine.getCurrentDegree(), true);
+
+            System.out.println("ExecutionServlet: Program executed successfully with architecture: " + architecture.name());
 
             // Return updated execution state
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
             response.getWriter().write(GSON.toJson(executionState));
 
         } catch (Exception e) {
+            System.err.println("ExecutionServlet: Error during execution: " + e.getMessage());
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Execution failed: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Validates that the program can run on the specified architecture by checking
+     * if all commands are supported by the architecture generation.
+     */
+    private String validateProgramForArchitecture(S_Emulator engine, Architecture architecture) {
+        try {
+            // Get all commands from the current program
+            List<Command> commands = engine.getCommands();
+            if (commands == null || commands.isEmpty()) {
+                return null; // No commands to validate
+            }
+
+            // Check each command against architecture capabilities
+            for (Command command : commands) {
+                if (!isCommandSupportedByArchitecture(command, architecture)) {
+                    return "Program contains unsupported command '" + command.getClass().getSimpleName() +
+                           "' for architecture " + architecture.name() + ". Please select a higher generation architecture.";
+                }
+            }
+
+            return null; // All commands supported
+        } catch (Exception e) {
+            System.err.println("Error validating program for architecture: " + e.getMessage());
+            return "Error validating program compatibility: " + e.getMessage();
+        }
+    }
+
+    /**
+     * Checks if a specific command is supported by the given architecture generation.
+     * Each generation supports all commands from previous generations plus new ones.
+     */
+    private boolean isCommandSupportedByArchitecture(Command command, Architecture architecture) {
+        String commandType = command.getClass().getSimpleName().toUpperCase();
+
+        switch (architecture) {
+            case GENERATION_I:
+                // Only basic commands
+                return commandType.equals("NEUTRAL") ||
+                       commandType.equals("INCREASE") ||
+                       commandType.equals("DECREASE") ||
+                       commandType.equals("JUMPNOTZERO") ||
+                       commandType.equals("JUMP_NOT_ZERO");
+
+            case GENERATION_II:
+                // Generation I + new synthetic commands
+                return isCommandSupportedByArchitecture(command, Architecture.GENERATION_I) ||
+                       commandType.equals("ZEROVARIABLE") ||
+                       commandType.equals("ZERO_VARIABLE") ||
+                       commandType.equals("CONSTANTASSIGNMENT") ||
+                       commandType.equals("CONSTANT_ASSIGNMENT") ||
+                       commandType.equals("GOTOLABEL") ||
+                       commandType.equals("GOTO_LABEL");
+
+            case GENERATION_III:
+                // Generation II + new synthetic commands
+                return isCommandSupportedByArchitecture(command, Architecture.GENERATION_II) ||
+                       commandType.equals("ASSIGNMENT") ||
+                       commandType.equals("JUMPZERO") ||
+                       commandType.equals("JUMP_ZERO") ||
+                       commandType.equals("JUMPEQUALCONSTANT") ||
+                       commandType.equals("JUMP_EQUAL_CONSTANT") ||
+                       commandType.equals("JUMPEQUALVARIABLE") ||
+                       commandType.equals("JUMP_EQUAL_VARIABLE");
+
+            case GENERATION_IV:
+                // Generation III + new synthetic commands
+                return isCommandSupportedByArchitecture(command, Architecture.GENERATION_III) ||
+                       commandType.equals("QUOTE") ||
+                       commandType.equals("JUMPEQUALFUNCTION") ||
+                       commandType.equals("JUMP_EQUAL_FUNCTION");
+
+            default:
+                return false;
         }
     }
 

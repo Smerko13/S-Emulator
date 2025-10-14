@@ -2,29 +2,90 @@
 package components.executionDashboard.executionPanel;
 
 import api.dto.VariableDTO;
+import api.dto.Architecture;
 import components.executionDashboard.ExecutionDashboardController;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import javafx.collections.FXCollections;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
-public class ExecutionPanelController {
+public class ExecutionPanelController implements Initializable {
 
     @FXML private Button backToMainDashBoardButton;
-    @FXML private ComboBox architectureComboBox;
+    @FXML private ComboBox<Architecture> architectureComboBox;
     @FXML private Button newRunButton, stepOverButton, continueButton, stopDebugButton, startDebugButton, programExecuteButton;
     @FXML private TableView<VariableDTO> inputVarsTable;
     @FXML private TableView<VariableDTO> allVarsTable;
     @FXML private Label cyclesLabel;
 
     private ExecutionDashboardController parent;
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        System.out.println("==================== EXECUTION PANEL INITIALIZATION ====================");
+
+        // Initialize architecture ComboBox
+        if (architectureComboBox != null) {
+            System.out.println("Initializing architecture ComboBox with available architectures");
+
+            // Populate ComboBox with all available architectures
+            architectureComboBox.setItems(FXCollections.observableArrayList(Architecture.values()));
+
+            // Set default selection to Generation I (cheapest)
+            architectureComboBox.setValue(Architecture.GENERATION_I);
+
+            // Add listener to log architecture changes
+            architectureComboBox.setOnAction(e -> {
+                Architecture selected = architectureComboBox.getValue();
+                if (selected != null) {
+                    System.out.println("Architecture changed to: " + selected.name() + " (Cost: " + selected.getCost() + " credits)");
+                }
+            });
+
+            System.out.println("Architecture ComboBox initialized successfully with default: " + Architecture.GENERATION_I.name());
+        } else {
+            System.err.println("Architecture ComboBox is null - check FXML binding");
+        }
+
+        System.out.println("==================== EXECUTION PANEL INITIALIZATION COMPLETE ====================");
+    }
+
+    /**
+     * Gets the currently selected architecture from the ComboBox
+     * @return Selected architecture, defaults to GENERATION_I if none selected
+     */
+    public Architecture getSelectedArchitecture() {
+        if (architectureComboBox != null && architectureComboBox.getValue() != null) {
+            Architecture selected = architectureComboBox.getValue();
+            System.out.println("Retrieved selected architecture: " + selected.name() + " (Cost: " + selected.getCost() + " credits)");
+            return selected;
+        }
+
+        System.out.println("No architecture selected, defaulting to GENERATION_I");
+        return Architecture.GENERATION_I;
+    }
+
+    /**
+     * Sets the selected architecture in the ComboBox
+     * @param architecture The architecture to select
+     */
+    public void setSelectedArchitecture(Architecture architecture) {
+        if (architectureComboBox != null && architecture != null) {
+            System.out.println("Setting architecture ComboBox to: " + architecture.name());
+            architectureComboBox.setValue(architecture);
+        }
+    }
 
     public void setVariables(java.util.List<VariableDTO> allVars,
                              java.util.List<VariableDTO> inputVars,
@@ -249,6 +310,10 @@ public class ExecutionPanelController {
         System.out.println("==================== EXECUTE BUTTON PRESSED ====================");
         System.out.println("Execute button pressed - collecting input variables and executing program");
 
+        // Get the selected architecture and validate credits
+        Architecture selectedArchitecture = getSelectedArchitecture();
+        System.out.println("Selected architecture for execution: " + selectedArchitecture.name() + " (Cost: " + selectedArchitecture.getCost() + " credits)");
+
         // Collect and update input variable values before execution
         if (inputVarsTable != null && inputVarsTable.getItems() != null) {
             System.out.println("Input variables table found with " + inputVarsTable.getItems().size() + " variables");
@@ -284,13 +349,13 @@ public class ExecutionPanelController {
             }
         }
 
-        // Execute the program using the parent controller's method
+        // Execute the program using the parent controller's method with selected architecture
         // This will make an HTTP call to the server and update all UI components
-        // The server will execute with the current degree and updated input variables
-        System.out.println("Calling parent.executeProgram() to trigger server execution...");
-        parent.executeProgram();
+        // The server will execute with the current degree, updated input variables, and selected architecture
+        System.out.println("Calling parent.executeProgram() with architecture " + selectedArchitecture.name() + " to trigger server execution...");
+        parent.executeProgram(selectedArchitecture);
 
-        System.out.println("Program execution request sent to server");
+        System.out.println("Program execution request sent to server with architecture: " + selectedArchitecture.name());
         System.out.println("==================== EXECUTE REQUEST COMPLETE ====================");
     }
 
@@ -373,3 +438,4 @@ public class ExecutionPanelController {
         }
     }
 }
+

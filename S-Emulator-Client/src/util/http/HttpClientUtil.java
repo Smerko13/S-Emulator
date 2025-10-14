@@ -2,8 +2,10 @@ package util.http;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 
 import java.util.function.Consumer;
 
@@ -31,6 +33,19 @@ public class HttpClientUtil {
 
         Call call = HttpClientUtil.HTTP_CLIENT.newCall(request);
 
+        call.enqueue(callback);
+    }
+
+    public static void runAsyncPost(String finalUrl, String jsonBody, Callback callback) {
+        MediaType JSON = MediaType.get("application/json; charset=utf-8");
+        RequestBody body = RequestBody.create(jsonBody, JSON);
+
+        Request request = new Request.Builder()
+                .url(finalUrl)
+                .post(body)
+                .build();
+
+        Call call = HttpClientUtil.HTTP_CLIENT.newCall(request);
         call.enqueue(callback);
     }
 
