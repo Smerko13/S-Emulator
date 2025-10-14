@@ -321,6 +321,16 @@ public class ExecutionServlet extends HttpServlet {
                     }
                     engine.stepOver();
                     System.out.println("Stepped to next instruction");
+
+                    // Check if program has completed after step - if so, exit debug mode
+                    if (engine instanceof Program) {
+                        Program program = (Program) engine;
+                        if (!program.isInDebugMode()) {
+                            session.setAttribute("debugMode", false);
+                            program.stopDebugging();
+                            System.out.println("Debug mode completed after step - exiting debug mode");
+                        }
+                    }
                     break;
 
                 case "cont":
@@ -333,19 +343,22 @@ public class ExecutionServlet extends HttpServlet {
                     }
                     // Continue by executing the rest of the program
                     engine.executeProgram(engine.getCurrentDegree(), true);
+
+                    // Ensure debug mode is properly terminated after continuation
                     session.setAttribute("debugMode", false);
-                    // Also stop debugging in the program
                     if (engine instanceof Program) {
-                        ((Program) engine).stopDebugging();
+                        Program program = (Program) engine;
+                        program.stopDebugging();
                     }
-                    System.out.println("Continued execution to completion");
+                    System.out.println("Continued execution to completion - debug mode terminated");
                     break;
 
                 case "stop":
                     // Stop debugging - reset to normal mode
                     session.setAttribute("debugMode", false);
                     if (engine instanceof Program) {
-                        ((Program) engine).stopDebugging();
+                        Program program = (Program) engine;
+                        program.stopDebugging();
                     }
                     engine.reset(); // Reset to initial state
                     System.out.println("Debug mode stopped and program reset");
