@@ -3,6 +3,7 @@ package util.http;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -43,6 +44,24 @@ public class HttpClientUtil {
         Request request = new Request.Builder()
                 .url(finalUrl)
                 .post(body)
+                .build();
+
+        Call call = HttpClientUtil.HTTP_CLIENT.newCall(request);
+        call.enqueue(callback);
+    }
+
+    public static void runAsyncMultipartPost(String finalUrl, java.io.File file, Callback callback) {
+        MediaType XML = MediaType.get("application/xml");
+        RequestBody fileBody = RequestBody.create(file, XML);
+
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", file.getName(), fileBody)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(finalUrl)
+                .post(requestBody)
                 .build();
 
         Call call = HttpClientUtil.HTTP_CLIENT.newCall(request);

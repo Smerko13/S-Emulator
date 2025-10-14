@@ -142,6 +142,14 @@ public class HeaderController {
         alert.showAndWait();
     }
 
+    public void setUploadStatus(String status) {
+        Platform.runLater(() -> {
+            if (filePathTextField != null) {
+                filePathTextField.setText(status);
+            }
+        });
+    }
+
     public void cleanup() {
         if (creditsRefreshTimer != null) {
             creditsRefreshTimer.cancel();

@@ -96,43 +96,136 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
 
 
     public boolean sendFileToServerForValidation(File selectedFile) {
-        try {
-            // Read the XML content
-            String xmlContent = Files.readString(selectedFile.toPath(), StandardCharsets.UTF_8);
-            System.out.println("CLIENT - XML Content Length: " + xmlContent.length());
-            System.out.println("CLIENT - First 200 chars: " + xmlContent.substring(0, Math.min(200, xmlContent.length())));
-
-            // Check byte array size
-            byte[] xmlBytes = xmlContent.getBytes(StandardCharsets.UTF_8);
-            System.out.println("CLIENT - XML bytes length: " + xmlBytes.length);
-            System.out.println("CLIENT - Current User ID: " + getCurrentUserId());
-
-            // Create HTTP client and request
-            HttpClient client = HttpClient.newHttpClient();
-
-            // Build the request with XML content in the body - program name will be extracted from XML on server
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(FULL_SERVER_PATH + "/" + VALIDATION_ENDPOINT + "?userId=" + getCurrentUserId()))
-                    .header("Content-Type", "application/xml; charset=utf-8")
-                    .POST(HttpRequest.BodyPublishers.ofString(xmlContent, StandardCharsets.UTF_8))
-                    .build();
-
-            System.out.println("CLIENT - Sending request to: " + request.uri());
-            System.out.println("CLIENT - Request headers: " + request.headers().map());
-
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            System.out.println("CLIENT - Response status: " + response.statusCode());
-            System.out.println("CLIENT - Response body: " + response.body());
-            System.out.println("CLIENT - Response headers: " + response.headers().map());
-
-            return response.statusCode() == 200;
-
-        } catch (Exception e) {
-            System.out.println("CLIENT - Exception: " + e.getMessage());
-            e.printStackTrace();
+        if (selectedFile == null || !selectedFile.exists()) {
+            showUploadError("File not found", "The selected file does not exist.");
             return false;
         }
+
+        if (!selectedFile.getName().toLowerCase().endsWith(".xml")) {
+            showUploadError("Invalid file type", "Only XML files are allowed.");
+            return false;
+        }
+
+        // Show upload progress
+        Platform.runLater(() -> {
+            if (headerPanelController != null) {
+                headerPanelController.setUploadStatus("Uploading file...");
+            }
+        });
+
+        // Perform asynchronous upload using the multipart HTTP client utility
+        util.http.HttpClientUtil.runAsyncMultipartPost(UPLOAD, selectedFile, new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                System.err.println("Upload failed: " + e.getMessage());
+                Platform.runLater(() -> {
+                    showUploadError("Upload Failed", "Network error: " + e.getMessage());
+                    if (headerPanelController != null) {
+                        headerPanelController.setUploadStatus("Upload failed");
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                String responseBody = response.body() != null ? response.body().string() : "";
+
+                Platform.runLater(() -> {
+                    if (response.isSuccessful()) {
+                        handleUploadSuccess(responseBody, selectedFile.getName());
+                    } else {
+                        handleUploadError(response.code(), responseBody);
+                    }
+                });
+            }
+        });
+
+        return true; // Indicates upload was initiated successfully
+    }
+
+    private void handleUploadSuccess(String responseBody, String fileName) {
+        try {
+            // Simple JSON parsing to extract success information
+            if (responseBody.contains("\"success\":true")) {
+                String message = "File uploaded successfully!";
+
+                // Extract program name if available
+                if (responseBody.contains("\"programName\":")) {
+                    int start = responseBody.indexOf("\"programName\":\"") + 15;
+                    int end = responseBody.indexOf("\"", start);
+                    if (end > start) {
+                        String programName = responseBody.substring(start, end);
+                        message = "Program '" + programName + "' uploaded successfully!";
+                    }
+                }
+
+                showUploadSuccess("Upload Successful", message);
+
+                if (headerPanelController != null) {
+                    headerPanelController.setUploadStatus("Upload completed: " + fileName);
+                }
+
+                // Refresh the programs list to show the new program
+                refreshProgramsList();
+
+            } else {
+                showUploadError("Upload Failed", "Server did not confirm successful upload.");
+            }
+        } catch (Exception e) {
+            showUploadError("Response Error", "Error processing server response: " + e.getMessage());
+        }
+    }
+
+    private void handleUploadError(int statusCode, String responseBody) {
+        String errorMessage = "Upload failed";
+
+        try {
+            // Extract error message from JSON response
+            if (responseBody.contains("Validation failed:")) {
+                int start = responseBody.indexOf("Validation failed:");
+                int end = responseBody.indexOf("\"", start);
+                if (end > start) {
+                    errorMessage = responseBody.substring(start, end);
+                }
+            } else if (responseBody.contains("\"")) {
+                // Extract any quoted error message
+                int start = responseBody.indexOf("\"") + 1;
+                int end = responseBody.lastIndexOf("\"");
+                if (end > start) {
+                    errorMessage = responseBody.substring(start, end);
+                }
+            }
+        } catch (Exception e) {
+            errorMessage = "Upload failed with status code: " + statusCode;
+        }
+
+        showUploadError("Upload Failed", errorMessage);
+
+        if (headerPanelController != null) {
+            headerPanelController.setUploadStatus("Upload failed");
+        }
+    }
+
+    private void showUploadSuccess(String title, String message) {
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showUploadError(String title, String message) {
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void refreshProgramsList() {
+        // This would trigger a refresh of the programs panel to show newly uploaded programs
+        // Implementation depends on how the programs panel is structured
+        System.out.println("Refreshing programs list after successful upload");
     }
 
 
