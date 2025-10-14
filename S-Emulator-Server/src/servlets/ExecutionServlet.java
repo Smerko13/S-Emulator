@@ -212,11 +212,27 @@ public class ExecutionServlet extends HttpServlet {
             // Execute the program with the selected architecture
             engine.executeProgram(engine.getCurrentDegree(), true);
 
-            // Increment execution count for the user
-            user.incrementExecutionCount();
+            // Capture execution results for history tracking
+            int finalYValue = getFinalYValue(engine);
+            int cpuCyclesUsed = engine.getCycleSum();
+            String executionType = determineExecutionType(currentTarget, engine);
+            String architectureTypeStr = architecture.name().replace("GENERATION_", "");
+            String executionLevel = "Run"; // This is a normal execution, not debug
+
+            // Add detailed execution record to user's history
+            user.addExecutionRecord(
+                executionType,           // "Main Program" or "Helper Function"
+                currentTarget,           // Program/function name
+                architectureTypeStr,     // "I", "II", "III", "IV"
+                executionLevel,          // "Run" or "Debug"
+                finalYValue,             // Final value of variable y
+                cpuCyclesUsed           // Total cycles consumed
+            );
 
             System.out.println("ExecutionServlet: Program executed successfully with architecture: " + architecture.name());
             System.out.println("ExecutionServlet: User " + username + " total executions: " + user.getTotalExecutions());
+            System.out.println("ExecutionServlet: Execution record added - Type: " + executionType +
+                             ", Y-value: " + finalYValue + ", Cycles: " + cpuCyclesUsed);
 
             // Return updated execution state
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
@@ -868,5 +884,65 @@ public class ExecutionServlet extends HttpServlet {
         }
 
         return inputVariables;
+    }
+
+    /**
+     * Get the final value of variable 'y' after execution
+     */
+    private int getFinalYValue(S_Emulator engine) {
+        try {
+            Set<Variable> variables = engine.getVariables();
+            for (Variable variable : variables) {
+                if ("y".equalsIgnoreCase(variable.getName()) || "Y".equals(variable.getName())) {
+                    return variable.getValue();
+                }
+            }
+            // If no 'y' variable found, check for output variable
+            for (Variable variable : variables) {
+                if (variable instanceof OutputVariable) {
+                    return variable.getValue();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting final Y value: " + e.getMessage());
+        }
+        return 0; // Default if no Y variable found
+    }
+
+    /**
+     * Determine if the execution target is a main program or helper function
+     */
+    private String determineExecutionType(String targetName, S_Emulator engine) {
+        try {
+            ServerContext context = ServerContext.getInstance();
+            Map<String, S_Emulator> allPrograms = context.getAllStoredPrograms();
+
+            // Check if this target is a main program (exists as a key in stored programs)
+            for (Map.Entry<String, S_Emulator> entry : allPrograms.entrySet()) {
+                String compositeKey = entry.getKey(); // userId_programName format
+                String[] keyParts = compositeKey.split("_", 2);
+                String storedProgramName = keyParts.length > 1 ? keyParts[1] : "";
+
+                if (targetName.equals(storedProgramName)) {
+                    return "Main Program";
+                }
+
+                // Also check the actual program name
+                S_Emulator emulator = entry.getValue();
+                if (emulator instanceof Program) {
+                    Program program = (Program) emulator;
+                    if (targetName.equals(program.getCurrentProgramName())) {
+                        return "Main Program";
+                    }
+                }
+            }
+
+            // If not found as main program, it's likely a helper function
+            return "Helper Function";
+
+        } catch (Exception e) {
+            System.err.println("Error determining execution type: " + e.getMessage());
+            return "Unknown";
+        }
     }
 }

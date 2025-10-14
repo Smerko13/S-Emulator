@@ -1,12 +1,15 @@
 package components.mainDashboard.users;
 
 import components.mainDashboard.clientMainController;
+import api.dto.ExecutionHistoryDTO;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
@@ -35,8 +38,20 @@ public class UsersController {
     @FXML private TableColumn<UserRow, Number>  creditsUsedColumn;
     @FXML private TableColumn<UserRow, Number>  executionsColumn;
 
+    // Execution history table components
+    @FXML private TableView<ExecutionHistoryRow> statsTable;
+    @FXML private TableColumn<ExecutionHistoryRow, Number> executionNumberColumn;
+    @FXML private TableColumn<ExecutionHistoryRow, String> runTypeColumn;
+    @FXML private TableColumn<ExecutionHistoryRow, String> nameColumn;
+    @FXML private TableColumn<ExecutionHistoryRow, String> architectureColumn;
+    @FXML private TableColumn<ExecutionHistoryRow, String> expansionLevelColumn;
+    @FXML private TableColumn<ExecutionHistoryRow, Number> cyclesColumn;
+    @FXML private TableColumn<ExecutionHistoryRow, Number> outputColumn;
+
     private final ObservableList<UserRow> rows = FXCollections.observableArrayList();
+    private final ObservableList<ExecutionHistoryRow> historyRows = FXCollections.observableArrayList();
     private clientMainController mainController;
+    private String selectedUserId = null;
 
     private Timer timer;
 
@@ -46,7 +61,9 @@ public class UsersController {
 
     @FXML
     public void initialize() {
-        // Table wiring
+        System.out.println("UsersController: Initializing users table and execution history table");
+
+        // Users table wiring
         userNameColumn.setCellValueFactory(c -> c.getValue().userNameProperty());
         programCountColumn.setCellValueFactory(c -> c.getValue().programsUploadedProperty());
         FunctionCountColumn.setCellValueFactory(c -> c.getValue().functionsUploadedProperty());
@@ -55,6 +72,30 @@ public class UsersController {
         executionsColumn.setCellValueFactory(c -> c.getValue().totalExecutionsProperty());
 
         usersTable.setItems(rows);
+
+        // Execution history table wiring
+        executionNumberColumn.setCellValueFactory(c -> c.getValue().runIdProperty());
+        runTypeColumn.setCellValueFactory(c -> c.getValue().executionTypeProperty());
+        nameColumn.setCellValueFactory(c -> c.getValue().programFunctionNameProperty());
+        architectureColumn.setCellValueFactory(c -> c.getValue().architectureTypeProperty());
+        expansionLevelColumn.setCellValueFactory(c -> c.getValue().executionLevelProperty());
+        cyclesColumn.setCellValueFactory(c -> c.getValue().cpuCyclesUsedProperty());
+        outputColumn.setCellValueFactory(c -> c.getValue().finalYValueProperty());
+
+        statsTable.setItems(historyRows);
+
+        // Add selection listener to users table
+        usersTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                String userName = newSelection.userNameProperty().get();
+                System.out.println("UsersController: User selected: " + userName);
+                selectedUserId = userName;
+                loadExecutionHistory(userName);
+            }
+        });
+
+        // Load current user's history initially
+        loadCurrentUserHistory();
     }
 
     /** start polling /userslist every REFRESH_RATE ms */
@@ -100,8 +141,139 @@ public class UsersController {
         if (timer != null) { timer.cancel(); timer = null; }
     }
 
-    // Your button handlers can stay empty for now
-    public void reRunButtonPressed(javafx.event.ActionEvent e) {}
-    public void showStatusButtonPressed(javafx.event.ActionEvent e) {}
-    public void unselectedUserPressed(javafx.event.ActionEvent e) {}
+    /**
+     * Load execution history for a specific user
+     */
+    private void loadExecutionHistory(String userName) {
+        System.out.println("UsersController: Loading execution history for user: " + userName);
+
+        String url = Constants.EXECUTION_HISTORY + "?userId=" + userName;
+        HttpClientUtil.runAsync(url, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                System.err.println("Failed to load execution history for " + userName + ": " + e.getMessage());
+                Platform.runLater(() -> {
+                    historyRows.clear();
+                });
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String body = response.body() != null ? response.body().string() : "[]";
+                System.out.println("UsersController: Received execution history response: " + body);
+
+                if (!response.isSuccessful()) {
+                    System.err.println("Server error loading execution history: " + response.code());
+                    Platform.runLater(() -> historyRows.clear());
+                    return;
+                }
+
+                ExecutionHistoryDTO[] historyArray;
+                try {
+                    historyArray = GSON_INSTANCE.fromJson(body, ExecutionHistoryDTO[].class);
+                } catch (Exception e) {
+                    System.err.println("Error parsing execution history JSON: " + e.getMessage());
+                    historyArray = new ExecutionHistoryDTO[0];
+                }
+
+                ExecutionHistoryDTO[] finalArray = historyArray;
+                Platform.runLater(() -> {
+                    historyRows.clear();
+                    for (ExecutionHistoryDTO dto : finalArray) {
+                        ExecutionHistoryRow row = new ExecutionHistoryRow(
+                            dto.runId,
+                            dto.executionType,
+                            dto.programFunctionName,
+                            dto.architectureType,
+                            dto.executionLevel,
+                            dto.cpuCyclesUsed,
+                            dto.finalYValue
+                        );
+                        historyRows.add(row);
+                    }
+                    System.out.println("UsersController: Loaded " + historyRows.size() + " execution records for " + userName);
+                });
+            }
+        });
+    }
+
+    /**
+     * Load execution history for the current logged-in user
+     */
+    private void loadCurrentUserHistory() {
+        System.out.println("UsersController: Loading current user's execution history");
+
+        HttpClientUtil.runAsync(Constants.EXECUTION_HISTORY, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                System.err.println("Failed to load current user execution history: " + e.getMessage());
+                Platform.runLater(() -> {
+                    historyRows.clear();
+                });
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String body = response.body() != null ? response.body().string() : "[]";
+                System.out.println("UsersController: Received current user history response: " + body);
+
+                if (!response.isSuccessful()) {
+                    System.err.println("Server error loading current user history: " + response.code());
+                    Platform.runLater(() -> historyRows.clear());
+                    return;
+                }
+
+                ExecutionHistoryDTO[] historyArray;
+                try {
+                    historyArray = GSON_INSTANCE.fromJson(body, ExecutionHistoryDTO[].class);
+                } catch (Exception e) {
+                    System.err.println("Error parsing current user history JSON: " + e.getMessage());
+                    historyArray = new ExecutionHistoryDTO[0];
+                }
+
+                ExecutionHistoryDTO[] finalArray = historyArray;
+                Platform.runLater(() -> {
+                    historyRows.clear();
+                    for (ExecutionHistoryDTO dto : finalArray) {
+                        ExecutionHistoryRow row = new ExecutionHistoryRow(
+                            dto.runId,
+                            dto.executionType,
+                            dto.programFunctionName,
+                            dto.architectureType,
+                            dto.executionLevel,
+                            dto.cpuCyclesUsed,
+                            dto.finalYValue
+                        );
+                        historyRows.add(row);
+                    }
+                    System.out.println("UsersController: Loaded " + historyRows.size() + " execution records for current user");
+                });
+            }
+        });
+    }
+
+    /**
+     * Handle unselect user button - revert to showing current user's history
+     */
+    public void unselectedUserPressed(javafx.event.ActionEvent e) {
+        System.out.println("UsersController: Unselect user pressed - reverting to current user's history");
+
+        // Clear user table selection
+        usersTable.getSelectionModel().clearSelection();
+        selectedUserId = null;
+
+        // Load current user's execution history
+        loadCurrentUserHistory();
+    }
+
+    // Button handlers for future implementation
+    public void reRunButtonPressed(javafx.event.ActionEvent e) {
+        System.out.println("UsersController: Re-Run button pressed (to be implemented)");
+        // TODO: Implement re-run functionality
+    }
+
+    public void showStatusButtonPressed(javafx.event.ActionEvent e) {
+        System.out.println("UsersController: Show Status button pressed (to be implemented)");
+        // TODO: Implement show status functionality
+    }
 }

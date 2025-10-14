@@ -1,7 +1,10 @@
 package servlets;
 
 import engine.S_Emulator;
+import api.dto.ExecutionHistoryDTO;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 
 public class User {
@@ -10,6 +13,7 @@ public class User {
     private int totalCreditsUsed; // Track total credits consumed
     private int totalExecutions; // Track total program executions
     private final Map<String, S_Emulator> programs; // programName -> S_Emulator
+    private final List<ExecutionHistoryDTO> executionHistory; // Detailed execution history
 
     public User(String userName, int initialCredits) {
         this.userName = userName;
@@ -17,6 +21,7 @@ public class User {
         this.totalCreditsUsed = 0;
         this.totalExecutions = 0;
         this.programs = new ConcurrentHashMap<>();
+        this.executionHistory = new ArrayList<>();
     }
 
     public User(String userName) {
@@ -67,6 +72,28 @@ public class User {
 
     public void incrementExecutionCount() {
         totalExecutions++;
+    }
+
+    /**
+     * Add a new execution record to the user's history
+     */
+    public void addExecutionRecord(String executionType, String programFunctionName,
+                                   String architectureType, String executionLevel,
+                                   int finalYValue, int cpuCyclesUsed) {
+        int runId = totalExecutions + 1; // Run ID is the next execution number
+        ExecutionHistoryDTO record = new ExecutionHistoryDTO(
+                runId, executionType, programFunctionName,
+                architectureType, executionLevel, finalYValue, cpuCyclesUsed
+        );
+        executionHistory.add(record);
+        incrementExecutionCount();
+    }
+
+    /**
+     * Get the complete execution history for this user
+     */
+    public List<ExecutionHistoryDTO> getExecutionHistory() {
+        return new ArrayList<>(executionHistory); // Return defensive copy
     }
 
     // Program management methods
