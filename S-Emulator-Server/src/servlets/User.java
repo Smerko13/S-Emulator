@@ -7,11 +7,15 @@ import java.util.Map;
 public class User {
     private final String userName;
     private int credits;
+    private int totalCreditsUsed; // Track total credits consumed
+    private int totalExecutions; // Track total program executions
     private final Map<String, S_Emulator> programs; // programName -> S_Emulator
 
     public User(String userName, int initialCredits) {
         this.userName = userName;
         this.credits = initialCredits;
+        this.totalCreditsUsed = 0;
+        this.totalExecutions = 0;
         this.programs = new ConcurrentHashMap<>();
     }
 
@@ -40,6 +44,7 @@ public class User {
     public boolean deductCredits(int amount) {
         if (hasEnoughCredits(amount)) {
             credits -= amount;
+            totalCreditsUsed += amount; // Track credits used
             return true;
         }
         return false;
@@ -49,6 +54,19 @@ public class User {
         if (amount > 0) {
             credits += amount;
         }
+    }
+
+    // Statistics tracking methods
+    public int getTotalCreditsUsed() {
+        return totalCreditsUsed;
+    }
+
+    public int getTotalExecutions() {
+        return totalExecutions;
+    }
+
+    public void incrementExecutionCount() {
+        totalExecutions++;
     }
 
     // Program management methods

@@ -212,7 +212,11 @@ public class ExecutionServlet extends HttpServlet {
             // Execute the program with the selected architecture
             engine.executeProgram(engine.getCurrentDegree(), true);
 
+            // Increment execution count for the user
+            user.incrementExecutionCount();
+
             System.out.println("ExecutionServlet: Program executed successfully with architecture: " + architecture.name());
+            System.out.println("ExecutionServlet: User " + username + " total executions: " + user.getTotalExecutions());
 
             // Return updated execution state
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
@@ -471,6 +475,18 @@ public class ExecutionServlet extends HttpServlet {
                         return;
                     }
                     engine.stepOver();
+
+                    // Increment execution count for debug step operations
+                    String username = (String) session.getAttribute("username");
+                    if (username != null) {
+                        ServerContext context = ServerContext.getInstance();
+                        User user = context.getUser(username);
+                        if (user != null) {
+                            user.incrementExecutionCount();
+                            System.out.println("ExecutionServlet: Debug step - User " + username + " total executions: " + user.getTotalExecutions());
+                        }
+                    }
+
                     System.out.println("Stepped to next instruction");
 
                     // Check if program has completed after step - if so, exit debug mode
