@@ -8,6 +8,8 @@ import engine.arguments.types.WorkVariable;
 import engine.commands.Command;
 import engine.commands.base.types.Neutral;
 import engine.commands.synthetic.SyntheticCommand;
+import engine.commands.synthetic.types.Assignment;
+import engine.commands.synthetic.types.ConstantAssignment;
 import schema.SInstruction;
 
 import java.util.*;
@@ -22,22 +24,42 @@ public class Quote extends SyntheticCommand implements Cloneable {
         super(instruction, program);
         this.commandName = "QUOTE";
         String name = instruction.getSInstructionArguments().getSInstructionArgument().getFirst().getValue();
-//        for (Program e : this.associatedProgram.subFunctions) {
-//            if (e.getCurrentProgramName().equals(name)) {
-//                this.userString = e.getUserString();
-//                this.functionName = e.getCurrentProgramName();
-//                break;
-//            }
-//        }
-//        if (this.functionName == null) {
-//            throw new IllegalArgumentException("Function name not found for Quote command: " + name);
-//        }
-        this.functionName = name;
-        this.userString = instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue();
+        for (Program e : this.associatedProgram.subFunctions) {
+            if (e.getCurrentProgramName().equals(name)) {
+                this.userString = e.getUserString();
+                this.functionName = e.getCurrentProgramName();
+                break;
+            }
+        }
+        if (this.functionName == null) {
+            this.functionName = name;
+            this.userString = name;
+        }
         this.functionArguments = instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue();
         this.argumentList = initializeArgumentList(this.functionArguments);
         initializeAssociatedVariables();
         this.cycles = 5 + calculateSubFunctionCycles(this.functionName);
+        // Remove the premature levelOfExpansion calculation - let getExpansionDepth() handle it
+    }
+
+    public Quote(Variable assignedVariable, String functionName, List<String> functionArguments, String label, Command parentCommand, Program program) {
+        super(assignedVariable, label, parentCommand, program);
+        this.commandName = "QUOTE";
+        this.functionName = functionName;
+        for(Program e : this.associatedProgram.subFunctions) {
+            if(e.getCurrentProgramName().equals(functionName)) {
+                this.userString = e.getUserString();
+                break;
+            }
+        }
+        if (this.userString == null) {
+            this.userString = functionName;
+        }
+        this.argumentList = functionArguments;
+        this.functionArguments = String.join(",", functionArguments);
+        initializeAssociatedVariables();
+        this.cycles = 5 + calculateSubFunctionCycles(this.functionName);
+        // Remove the premature levelOfExpansion calculation - let getExpansionDepth() handle it
     }
 
     private int calculateSubFunctionCycles(String functionName) {
@@ -49,27 +71,11 @@ public class Quote extends SyntheticCommand implements Cloneable {
         return 0;
     }
 
-    public Quote(Variable assignedVariable, String functionName, List<String> functionArguments, String label, Command parentCommand, Program program) {
-        super(assignedVariable, label, parentCommand, program);
-        this.commandName = "QUOTE";
-        this.functionName = functionName; // fix needed
-        for(Program e : this.associatedProgram.subFunctions) {
-            if(e.getCurrentProgramName().equals(functionName)) {
-                this.userString = e.getUserString();
-                break;
-            }
-        }
-        this.argumentList = functionArguments;
-        this.functionArguments = String.join(",", functionArguments);
-        initializeAssociatedVariables();
-        this.cycles = 5 + calculateSubFunctionCycles(this.functionName);
-    }
-
     private void initializeAssociatedVariables() {
-        List<String> tempList = new ArrayList<>(List.of(this.functionArguments.split(",")));
-        if (functionArguments.isEmpty()) {
+        if (functionArguments == null || functionArguments.isEmpty()) {
             return;
         }
+        List<String> tempList = new ArrayList<>(List.of(this.functionArguments.split(",")));
         tempList.removeIf(s -> s.charAt(0) == '('); //remove function calls
         for (String arg : tempList) {
             if (arg.startsWith("x") || arg.startsWith("z") || arg.startsWith("y")) {
@@ -130,17 +136,32 @@ public class Quote extends SyntheticCommand implements Cloneable {
         if(!this.didInitialize) {
             expansionLogic();
             this.didInitialize = true;
+            // V2 RESTORE: Set levelOfExpansion after expansion is complete
+            this.levelOfExpansion = calculateActualExpansionDepth();
         }
+    }
+
+    // Helper method to calculate actual expansion depth like v2 did
+    private int calculateActualExpansionDepth() {
+        int maxDepth = 1;
+        for (Command cmd : this.getExpandedCommands()) {
+            int cmdDepth = cmd.getExpansionDepth();
+            if (cmdDepth >= maxDepth) {
+                maxDepth = cmdDepth + 1;
+            }
+        }
+        return maxDepth;
     }
 
     private void expansionLogic() {
         String newOutputVarName = null;
-        WorkVariable outputTempVar = null;  // <-- add this
+        WorkVariable outputTempVar = null;
 
         if(!this.label.trim().isEmpty()) {
             this.ExpandedCommands.add(new Neutral(this.associatedProgram.getOutputVar(),this.label,this, this.associatedProgram));
         }
 
+        // RESTORE V2 LOGIC: Process ALL subfunctions in loop, find matching one
         for(Program e : this.associatedProgram.subFunctions) {
             Set<Variable> functionHelpers = new LinkedHashSet<>();
             String SubFunctionName = e.getCurrentProgramName();
@@ -149,6 +170,8 @@ public class Quote extends SyntheticCommand implements Cloneable {
             this.associatedProgram.labels.add(newLabel);
             String exitLabel = newLabel + SubFunctionName + "_EXIT";
             this.associatedProgram.labels.add(exitLabel);
+
+            // Check if this is the target function (either by name or userString)
             if(SubFunctionName.equals(functionName) || e.getUserString().equals(functionName)) {
                 outputTempVar = null;
                 Map<String,String> inputBind = new HashMap<>(); // e.g. "x1" -> "z155"
@@ -177,7 +200,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     }
                 }
 
-// 2. Map each label to a new label
+                // 2. Map each label to a new label
                 Map<String, String> labelMap = new HashMap<>();
                 for (String lbl : allLabels) {
                     if ("EXIT".equals(lbl)) {
@@ -197,7 +220,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     exitLabelRequired = true;
                 }
 
-// 3. Replace labels in commands
+                // 3. Replace labels in commands
                 for (Command cmd : subFunctionCommands) {
                     if(labelMap.containsKey(cmd.getLabel().trim())) {
                         cmd.replaceLabel(cmd.getLabel(), labelMap.get(cmd.getLabel().trim()));
@@ -233,7 +256,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
                         newOutputVarName = freshName;
                         WorkVariable newWorkVar = new WorkVariable(newOutputVarName);
-                        outputTempVar = newWorkVar;                    // <-- add this
+                        outputTempVar = newWorkVar;
                         functionHelpers.add(newWorkVar);
                         this.associatedProgram.getVariables().add(newWorkVar);
                         for (Command cmd : subFunctionCommands) {
@@ -248,7 +271,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         for (Command cmd : subFunctionCommands) {
                             cmd.replaceVariable(v, newWorkVar);
                         }
-                        inputBind.put(formalName, newWorkVarName); // <-- ADD THIS
+                        inputBind.put(formalName, newWorkVarName);
                         if(index >= this.argumentList.size()) {break;}
                         String arg = this.argumentList.get(index++);
                         if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
@@ -271,7 +294,6 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         } else {
                             throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                         }
-
                     }
                 }
 
@@ -309,7 +331,6 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     );
                 }
 
-
                 for (Variable v : functionHelpers) {
                     // assign 0 directly instead of looping ZeroVariable
                     this.ExpandedCommands.add(
@@ -317,11 +338,229 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     );
                 }
 
+                // Found and processed the target function, break out of the loop
+                break;
             }
         }
+
+        // If not found in local subfunctions, try global functions as fallback
+        if (this.ExpandedCommands.isEmpty() ||
+            (this.ExpandedCommands.size() == 1 && this.ExpandedCommands.get(0) instanceof Neutral)) {
+            Program targetFunction = getGlobalFunction(functionName);
+            if (targetFunction != null) {
+                // Process global function using the same logic as above
+                processTargetFunction(targetFunction);
+            }
+        }
+
         expandFurther();
     }
 
+    // Helper method to process a target function (reduces code duplication)
+    private void processTargetFunction(Program targetFunction) {
+        Set<Variable> functionHelpers = new LinkedHashSet<>();
+        String SubFunctionName = targetFunction.getCurrentProgramName();
+        boolean exitLabelRequired = false;
+        String newLabel = generateNewLabel();
+        this.associatedProgram.labels.add(newLabel);
+        String exitLabel = newLabel + SubFunctionName + "_EXIT";
+        this.associatedProgram.labels.add(exitLabel);
+
+        WorkVariable outputTempVar = null;
+        String newOutputVarName = null; // Fix: Declare the missing variable
+        Map<String,String> inputBind = new HashMap<>();
+        Program clonedSubFunction = targetFunction.clone();
+
+        List<Command> subFunctionCommands = clonedSubFunction.getCommands();
+        for (Command cmd : subFunctionCommands) {
+            cmd.setParent(this);
+            cmd.setAssociatedEngine(this.associatedProgram);
+        }
+
+        // 1. Gather all labels
+        Set<String> allLabels = new HashSet<>();
+        for (Command cmd : subFunctionCommands) {
+            for(String lbl : cmd.getAssociatedLabels()) {
+                allLabels.add(lbl.trim());
+            }
+        }
+
+        boolean exitReferencedViaTarget = false;
+        for (Command cmd : subFunctionCommands) {
+            String tgt = cmd.getTargetLabel();
+            if (tgt != null && "EXIT".equals(tgt.trim())) {
+                exitReferencedViaTarget = true;
+                break;
+            }
+        }
+
+        // 2. Map each label to a new label
+        Map<String, String> labelMap = new HashMap<>();
+        for (String lbl : allLabels) {
+            if ("EXIT".equals(lbl)) {
+                labelMap.put(lbl, exitLabel);
+                exitLabelRequired = true;
+            } else if (lbl.trim().isEmpty()) {
+                labelMap.put(lbl, lbl); // Keep neutral label as is
+            } else {
+                String newLbl = generateNewLabel();
+                this.associatedProgram.labels.add(newLbl);
+                labelMap.put(lbl, newLbl);
+            }
+        }
+
+        if (exitReferencedViaTarget || allLabels.contains("EXIT")) {
+            labelMap.put("EXIT", exitLabel);
+            exitLabelRequired = true;
+        }
+
+        // 3. Replace labels in commands
+        for (Command cmd : subFunctionCommands) {
+            if(labelMap.containsKey(cmd.getLabel().trim())) {
+                cmd.replaceLabel(cmd.getLabel(), labelMap.get(cmd.getLabel().trim()));
+            }
+            if(cmd.getTargetLabel() == null) {continue;}
+            if (labelMap.containsKey(cmd.getTargetLabel().trim())) {
+                cmd.replaceLabel(cmd.getTargetLabel(), labelMap.get(cmd.getTargetLabel().trim()));
+            }
+        }
+
+        int index = 0;
+        for(Variable v : clonedSubFunction.getVariables()) {
+            if (v instanceof WorkVariable) {
+                String newWorkVarName = generateNewWorkVariableName();
+                WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
+                functionHelpers.add(newWorkVar);
+                this.associatedProgram.getVariables().add(newWorkVar);
+                for (Command cmd : subFunctionCommands) {
+                    cmd.replaceVariable(v, newWorkVar);
+                }
+            } else if (v instanceof OutputVariable) {
+                String freshName;
+                boolean clash;
+                do {
+                    freshName = generateNewWorkVariableName();
+                    clash = freshName.equals(this.variable.getName());
+                    if (!clash) {
+                        for (Variable vv : this.associatedProgram.getVariables()) {
+                            if (vv.getName().equals(freshName)) { clash = true; break; }
+                        }
+                    }
+                } while (clash);
+
+                newOutputVarName = freshName; // Now this variable is properly declared
+                WorkVariable newWorkVar = new WorkVariable(newOutputVarName);
+                outputTempVar = newWorkVar;
+                functionHelpers.add(newWorkVar);
+                this.associatedProgram.getVariables().add(newWorkVar);
+                for (Command cmd : subFunctionCommands) {
+                    cmd.replaceVariable(v, newWorkVar);
+                }
+            } else if (v instanceof InputVariable) {
+                String formalName = v.getName();           // "x1", "x2", ...
+                String newWorkVarName = generateNewWorkVariableName();
+                WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
+                functionHelpers.add(newWorkVar);
+                this.associatedProgram.getVariables().add(newWorkVar);
+                for (Command cmd : subFunctionCommands) {
+                    cmd.replaceVariable(v, newWorkVar);
+                }
+                inputBind.put(formalName, newWorkVarName);
+                if(index >= this.argumentList.size()) {break;}
+                String arg = this.argumentList.get(index++);
+                if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
+                    for (Variable var : this.associatedProgram.getVariables()) {
+                        if (var.getName().equals(arg)) {
+                            this.ExpandedCommands.add(new Assignment(newWorkVar, "   ", var, this, this.associatedProgram));
+                            break;
+                        }
+                    }
+                } else if (arg.charAt(0) == '(') {
+                    String functionName = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
+                    String functionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
+                    List<String> subArgumentList = initializeArgumentList(functionArguments);
+                    if(checkParentCommand(this) && functionName.equals("Minus") && subArgumentList.equals(List.of("x1","x2"))) {
+                        subArgumentList = List.of("x2","x1");
+                    } else if (checkParentCommand(this) && functionName.equals("NOT") && subArgumentList.equals(List.of("(Minus,x1,x2)"))) {
+                        subArgumentList = List.of("(Minus,x2,x1)");
+                    }
+                    this.ExpandedCommands.add(new Quote(newWorkVar, functionName, subArgumentList, "   ", this, this.associatedProgram));
+                } else {
+                    throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
+                }
+            }
+        }
+
+        for (Command cmd : subFunctionCommands) {
+            if (cmd instanceof Quote q) {
+                // rewrite list entries
+                List<String> newArgs = new ArrayList<>(q.argumentList.size());
+                for (String a : q.argumentList) newArgs.add(rewriteArgsWithBindings(a, inputBind));
+                q.argumentList = newArgs;
+
+                // keep functionArguments string in sync if you use it elsewhere
+                q.functionArguments = rewriteArgsWithBindings(q.functionArguments, inputBind);
+            }
+        }
+
+        for(Command cmd : subFunctionCommands) {
+            if(checkParentCommand(cmd) && cmd instanceof Quote) {
+                Quote quoteCmd = (Quote) cmd;
+                if(quoteCmd.functionArguments.equals("(Minus,x1,x2)")) {
+                    quoteCmd.functionArguments="(Minus,x2,x1)";
+                    quoteCmd.argumentList= List.of("(Minus,x2,x1)");
+                } else if(quoteCmd.functionArguments.equals("x1,x2")) {
+                    quoteCmd.functionArguments = "x2,x1";
+                    quoteCmd.argumentList = List.of("x2","x1");
+                }
+            }
+        }
+
+        this.ExpandedCommands.addAll(subFunctionCommands);
+
+        if (outputTempVar != null) {
+            String anchor = exitLabelRequired ? exitLabel : "   ";
+            this.ExpandedCommands.add(
+                    new Assignment(this.variable, anchor, outputTempVar, this, this.associatedProgram)
+            );
+        }
+
+        for (Variable v : functionHelpers) {
+            // assign 0 directly instead of looping ZeroVariable
+            this.ExpandedCommands.add(
+                    new ConstantAssignment(v, 0, "   ", this, this.associatedProgram)
+            );
+        }
+    }
+
+    private Program getGlobalFunction(String functionName) {
+        try {
+            servlets.ServerContext context = servlets.ServerContext.getInstance();
+            java.util.Map<String, engine.S_Emulator> allPrograms = context.getAllStoredPrograms();
+
+            for (engine.S_Emulator program : allPrograms.values()) {
+                if (program instanceof Program) {
+                    Program prog = (Program) program;
+                    // Check both program name and user string
+                    if (prog.getCurrentProgramName().equals(functionName) ||
+                        (prog.getUserString() != null && prog.getUserString().equals(functionName))) {
+                        return prog;
+                    }
+
+                    // Also check subfunctions within each program
+                    for (Program subFunc : prog.subFunctions) {
+                        if (subFunc.getCurrentProgramName().equals(functionName) ||
+                            (subFunc.getUserString() != null && subFunc.getUserString().equals(functionName))) {
+                            return subFunc;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Could not access global context: " + e.getMessage());
+        }
+        return null;
+    }
 
     private boolean checkParentCommand(Command cmd) {
         Command current = cmd.getParentCommand();
@@ -338,189 +577,6 @@ public class Quote extends SyntheticCommand implements Cloneable {
         }
         // Always recurse if not found
         return checkParentCommand(current);
-    }
-
-    @Override
-    public String execute() {
-        int result = 0;
-        Set<Variable> snapshot = takeValueSnapshot(this.associatedProgram.getVariables());
-        for (Program e : this.associatedProgram.subFunctions) {
-            if (e.getCurrentProgramName().equals(functionName)  || e.getUserString().equals(functionName)) {
-                List<Variable> varsToPass = new ArrayList<>();
-                for (String arg : argumentList) {
-                    if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
-                        for (Variable v : this.associatedProgram.getVariables()) {
-                            if (v.getName().equals(arg)) {
-                                varsToPass.add(v);
-                                break;
-                            }
-                        }
-                    } else if (arg.charAt(0) == '(') {
-                        varsToPass.add(handleFunctionCall(arg));
-                        for (Variable var : this.associatedProgram.variables) {
-                            for (Variable snapshotVar : snapshot) {
-                                if (var.getName().equals(snapshotVar.getName())) {
-                                    var.setValue(snapshotVar.getValue());
-                                    break;
-                                }
-                            }
-                        }
-
-                    } else {
-                        throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
-                    }
-                }
-                result = e.executeFunction(varsToPass, functionName, this.associatedProgram);
-                break;
-            }
-        }
-        for (Variable var : this.associatedProgram.variables) {
-            for (Variable snapshotVar : snapshot) {
-                if (var.getName().equals(snapshotVar.getName())) {
-                    var.setValue(snapshotVar.getValue());
-                    break;
-                }
-            }
-        }
-        this.variable.setValue(result);
-        return null;
-    }
-
-    private Set<Variable> takeValueSnapshot(Set<Variable> variables) {
-        Set<Variable> snapshot = new HashSet<>();
-        for (Variable var : variables) {
-            Variable varCopy;
-            if (var instanceof InputVariable) {
-                varCopy = var.clone();
-            } else if (var instanceof OutputVariable) {
-                varCopy = var.clone();
-            } else if (var instanceof WorkVariable) {
-                varCopy = var.clone();
-            } else {
-                throw new IllegalArgumentException("Unknown variable type: " + var.getClass().getName());
-            }
-            varCopy.setValue(var.getValue());
-            snapshot.add(varCopy);
-        }
-        return snapshot;
-    }
-
-
-    private Variable handleFunctionCall(String arg) {
-        //handle function calls inside arguments
-        Variable var = null;
-        Set<Variable> snapshot = takeValueSnapshot(this.associatedProgram.getVariables());
-        List<Variable> subVarsToPass;
-        for (Program subE : this.associatedProgram.subFunctions) {
-            String name = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
-            if (subE.getCurrentProgramName().equals(name)) {
-                subVarsToPass = new ArrayList<>();
-                String subFunctionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
-                List<String> subArgumentList = initializeArgumentList(subFunctionArguments);
-                for (String subArg : subArgumentList) {
-                    if (subArg.charAt(0) == 'x' || subArg.charAt(0) == 'y' || subArg.charAt(0) == 'z') {
-                        for (Variable v : this.associatedProgram.getVariables()) {
-                            if (v.getName().equals(subArg)) {
-                                subVarsToPass.add(v);
-                                break;
-                            }
-                        }
-                    } else if (subArg.charAt(0) == '(') {
-                        subVarsToPass.add(handleFunctionCall(subArg));
-                        for (Variable varz : this.associatedProgram.variables) {
-                            for (Variable snapshotVar : snapshot) {
-                                if (varz.getName().equals(snapshotVar.getName())) {
-                                    varz.setValue(snapshotVar.getValue());
-                                    break;
-                                }
-                            }
-                        }
-
-                    } else {
-                        throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
-                    }
-                }
-                int resultOfSubFunction = subE.executeFunction(subVarsToPass, name, this.associatedProgram);
-                var = new WorkVariable("temp");
-                var.setValue(resultOfSubFunction);
-                break;
-            }
-        }
-        return var;
-    }
-
-    @Override
-    public boolean isValid() {
-        return true;
-    }
-
-    @Override
-    public String getTargetLabel() {
-        return "";
-    }
-
-    @Override
-    public Set<Variable> getAllVariables() {
-        return Set.copyOf(this.associatedVariables);
-    }
-
-    @Override
-    public Collection<String> getAssociatedLabels() {
-        return List.of(this.label);
-    }
-
-    @Override
-    public void replaceLabel(String lbl, String newLabel) {
-        if (newLabel == null) {
-            return;
-        }
-        if(this.label != null) {
-            if (this.label.equals(lbl)) {
-                this.label = newLabel;
-                this.associatedLabels.remove(lbl);
-                this.associatedLabels.add(newLabel);
-            }
-        }
-    }
-
-    @Override
-    public String toString() {
-        if(userString == null) {
-            if (functionArguments.isEmpty()) {
-                return variable.getName() + " <- (" + this.functionName + ")";
-            } else {
-                return variable.getName() + " <- (" + this.functionName + "," + functionArguments + ")";
-            }
-        }
-        if (functionArguments.isEmpty()) {
-            return variable.getName() + " <- (" + userString + ")";
-        } else {
-            return variable.getName() + " <- (" + userString + "," + functionArguments + ")";
-        }
-    }
-
-    @Override
-    public int getExpansionDepth() {
-        int maxDepth = 1; // Start with 1 for the current command
-        for (Command cmd : this.getExpandedCommands()) {
-            if (cmd.getExpansionDepth() > maxDepth) {
-                maxDepth = cmd.getExpansionDepth() + 1; // Add 1 for the current command
-            }
-        }
-        return maxDepth;
-    }
-
-    // Java
-    @Override
-    public Quote clone() {
-        Quote cloned = (Quote) super.clone();
-        // Deep copy mutable fields
-        cloned.argumentList = new ArrayList<>(this.argumentList);
-        // Strings are immutable, so direct assignment is fine
-        cloned.functionName = this.functionName;
-        cloned.functionArguments = this.functionArguments;
-        // Associated variables and other fields are handled by SyntheticCommand's clone
-        return cloned;
     }
 
     private String rewriteArgsWithBindings(String s, Map<String, String> bind) {
@@ -563,4 +619,229 @@ public class Quote extends SyntheticCommand implements Cloneable {
         return out.toString();
     }
 
+    @Override
+    public String execute() {
+        int result = 0;
+        Set<Variable> snapshot = takeValueSnapshot(this.associatedProgram.getVariables());
+
+        // V3 CHANGE: First try local subFunctions, then try global functions
+        Program targetFunction = null;
+
+        // Check local subfunctions first
+        for (Program e : this.associatedProgram.subFunctions) {
+            if (e.getCurrentProgramName().equals(functionName) || e.getUserString().equals(functionName)) {
+                targetFunction = e;
+                break;
+            }
+        }
+
+        // If not found locally, try global functions from server
+        if (targetFunction == null) {
+            targetFunction = getGlobalFunction(functionName);
+        }
+
+        if (targetFunction != null) {
+            List<Variable> varsToPass = new ArrayList<>();
+            for (String arg : argumentList) {
+                if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
+                    for (Variable v : this.associatedProgram.getVariables()) {
+                        if (v.getName().equals(arg)) {
+                            varsToPass.add(v);
+                            break;
+                        }
+                    }
+                } else if (arg.charAt(0) == '(') {
+                    varsToPass.add(handleFunctionCall(arg));
+                    for (Variable var : this.associatedProgram.variables) {
+                        for (Variable snapshotVar : snapshot) {
+                            if (var.getName().equals(snapshotVar.getName())) {
+                                var.setValue(snapshotVar.getValue());
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
+                }
+            }
+            result = targetFunction.executeFunction(varsToPass, functionName, this.associatedProgram);
+        }
+
+        for (Variable var : this.associatedProgram.variables) {
+            for (Variable snapshotVar : snapshot) {
+                if (var.getName().equals(snapshotVar.getName())) {
+                    var.setValue(snapshotVar.getValue());
+                    break;
+                }
+            }
+        }
+        this.variable.setValue(result);
+        return null;
+    }
+
+    private Set<Variable> takeValueSnapshot(Set<Variable> variables) {
+        Set<Variable> snapshot = new HashSet<>();
+        for (Variable var : variables) {
+            Variable varCopy;
+            if (var instanceof InputVariable) {
+                varCopy = var.clone();
+            } else if (var instanceof OutputVariable) {
+                varCopy = var.clone();
+            } else if (var instanceof WorkVariable) {
+                varCopy = var.clone();
+            } else {
+                throw new IllegalArgumentException("Unknown variable type: " + var.getClass().getName());
+            }
+            varCopy.setValue(var.getValue());
+            snapshot.add(varCopy);
+        }
+        return snapshot;
+    }
+
+    private Variable handleFunctionCall(String arg) {
+        //handle function calls inside arguments
+        Variable var = null;
+        Set<Variable> snapshot = takeValueSnapshot(this.associatedProgram.getVariables());
+        List<Variable> subVarsToPass;
+
+        String name = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
+
+        // V3 CHANGE: First try local subFunctions, then try global functions
+        Program targetFunction = null;
+
+        // Check local subfunctions first
+        for (Program subE : this.associatedProgram.subFunctions) {
+            if (subE.getCurrentProgramName().equals(name)) {
+                targetFunction = subE;
+                break;
+            }
+        }
+
+        // If not found locally, try global functions from server
+        if (targetFunction == null) {
+            targetFunction = getGlobalFunction(name);
+        }
+
+        if (targetFunction != null) {
+            subVarsToPass = new ArrayList<>();
+            String subFunctionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
+            List<String> subArgumentList = initializeArgumentList(subFunctionArguments);
+            for (String subArg : subArgumentList) {
+                if (subArg.charAt(0) == 'x' || subArg.charAt(0) == 'y' || subArg.charAt(0) == 'z') {
+                    for (Variable v : this.associatedProgram.getVariables()) {
+                        if (v.getName().equals(subArg)) {
+                            subVarsToPass.add(v);
+                            break;
+                        }
+                    }
+                } else if (subArg.charAt(0) == '(') {
+                    subVarsToPass.add(handleFunctionCall(subArg));
+                    for (Variable varz : this.associatedProgram.variables) {
+                        for (Variable snapshotVar : snapshot) {
+                            if (varz.getName().equals(snapshotVar.getName())) {
+                                varz.setValue(snapshotVar.getValue());
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
+                }
+            }
+            int resultOfSubFunction = targetFunction.executeFunction(subVarsToPass, name, this.associatedProgram);
+            var = new WorkVariable("temp");
+            var.setValue(resultOfSubFunction);
+        }
+
+        return var;
+    }
+
+    // Public getter methods for external access
+    public String getFunctionName() {
+        return functionName;
+    }
+
+    public String getFunctionArguments() {
+        return functionArguments;
+    }
+
+    public List<String> getArgumentList() {
+        return argumentList;
+    }
+
+    @Override
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
+    public String getTargetLabel() {
+        return "";
+    }
+
+    @Override
+    public Set<Variable> getAllVariables() {
+        return Set.copyOf(this.associatedVariables);
+    }
+
+    @Override
+    public Collection<String> getAssociatedLabels() {
+        return List.of(this.label);
+    }
+
+    @Override
+    public void replaceLabel(String lbl, String newLabel) {
+        if (newLabel == null) {
+            return;
+        }
+        if (this.label != null && this.label.equals(lbl)) {
+            this.label = newLabel;
+            this.associatedLabels.remove(lbl);
+            this.associatedLabels.add(newLabel);
+        }
+    }
+
+    @Override
+    public String toString() {
+        // Display format: V ← (FunctionName, arg1, arg2, ...)
+        if (functionArguments == null || functionArguments.isEmpty()) {
+            return variable.getName() + " <- (" + userString + ")";
+        } else {
+            return variable.getName() + " <- (" + userString + "," + functionArguments + ")";
+        }
+    }
+
+    @Override
+    public int getExpansionDepth() {
+        // CRITICAL FIX: Always calculate dynamically, never rely on levelOfExpansion field
+        // This ensures we get the actual depth regardless of initialization timing
+        if (!this.didInitialize) {
+            // If not initialized yet, force initialization
+            initializeExpandedCommands();
+        }
+
+        // Calculate actual depth from expanded commands
+        int maxDepth = 1;
+        for (Command cmd : this.getExpandedCommands()) {
+            int cmdDepth = cmd.getExpansionDepth();
+            if (cmdDepth >= maxDepth) {
+                maxDepth = cmdDepth + 1;
+            }
+        }
+
+        // Also update the field for consistency
+        this.levelOfExpansion = maxDepth;
+        return maxDepth;
+    }
+
+    @Override
+    public Quote clone() {
+        Quote cloned = (Quote) super.clone();
+        cloned.argumentList = new ArrayList<>(this.argumentList);
+        cloned.functionName = this.functionName;
+        cloned.functionArguments = this.functionArguments;
+        cloned.userString = this.userString;
+        return cloned;
+    }
 }
+

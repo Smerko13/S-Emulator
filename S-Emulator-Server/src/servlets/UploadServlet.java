@@ -217,32 +217,38 @@ public class UploadServlet extends HttpServlet {
             List<Command> allCommands = program.getCommands();
 
             for (Command command : allCommands) {
-                // Check if this is a function call command (synthetic commands that reference other functions)
-                String commandType = command.getClass().getSimpleName().toUpperCase();
+                // Check if this is a QUOTE command specifically
+                if (command instanceof engine.commands.synthetic.types.Quote) {
+                    engine.commands.synthetic.types.Quote quoteCommand =
+                        (engine.commands.synthetic.types.Quote) command;
 
-                // Function calls are typically represented as QUOTE commands or other synthetic commands
-                // that reference function names in their associated variables or parameters
-                if (commandType.equals("QUOTE") || commandType.equals("JUMPEQUALFUNCTION") ||
-                    commandType.equals("JUMP_EQUAL_FUNCTION")) {
+                    // Extract the main function name using public getter
+                    if (quoteCommand.getFunctionName() != null && !quoteCommand.getFunctionName().trim().isEmpty()) {
+                        referencedFunctions.add(quoteCommand.getFunctionName());
+                    }
 
-                    // Extract function name from command parameters
-                    Variable[] associatedVars = command.getAssociatedVariables();
-                    if (associatedVars != null) {
-                        for (Variable var : associatedVars) {
-                            if (var != null && var.getName() != null) {
-                                // Function names might be stored in variable names or values
-                                String potentialFunctionName = var.getName();
-                                if (isValidFunctionName(potentialFunctionName)) {
-                                    referencedFunctions.add(potentialFunctionName);
-                                }
+                    // Extract function names from the arguments using public getter
+                    if (quoteCommand.getFunctionArguments() != null && !quoteCommand.getFunctionArguments().trim().isEmpty()) {
+                        extractFunctionNamesFromArguments(quoteCommand.getFunctionArguments(), referencedFunctions);
+                    }
+
+                    // Also check the argument list for nested function calls using public getter
+                    if (quoteCommand.getArgumentList() != null) {
+                        for (String arg : quoteCommand.getArgumentList()) {
+                            if (arg != null && arg.trim().startsWith("(") && arg.trim().endsWith(")")) {
+                                // This is a nested function call
+                                extractFunctionNamesFromArguments(arg, referencedFunctions);
                             }
                         }
                     }
+                }
 
-                    // Also check command string representation for function references
+                // Handle other command types that might reference functions
+                String commandType = command.getClass().getSimpleName().toUpperCase();
+                if (commandType.equals("JUMPEQUALFUNCTION") || commandType.equals("JUMP_EQUAL_FUNCTION")) {
+                    // Extract function name from command string representation
                     String commandStr = command.toString();
                     if (commandStr != null) {
-                        // Extract function names from command string (implementation depends on command format)
                         extractFunctionNamesFromCommandString(commandStr, referencedFunctions);
                     }
                 }
@@ -255,43 +261,95 @@ public class UploadServlet extends HttpServlet {
 
         } catch (Exception e) {
             System.err.println("Error extracting function references: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return referencedFunctions;
     }
 
+    private void extractFunctionNamesFromArguments(String functionArguments, Set<String> referencedFunctions) {
+        if (functionArguments == null || functionArguments.trim().isEmpty()) {
+            return;
+        }
+
+        // Handle nested function calls like "(Minus,x1,x2)" or "(NOT,(EQUAL,x2,x1))"
+        int i = 0;
+        StringBuilder currentFunction = new StringBuilder();
+        boolean inFunction = false;
+        int parenthesesDepth = 0;
+
+        for (char c : functionArguments.toCharArray()) {
+            if (c == '(') {
+                parenthesesDepth++;
+                if (!inFunction) {
+                    inFunction = true;
+                    currentFunction.setLength(0);
+                } else {
+                    currentFunction.append(c);
+                }
+            } else if (c == ')') {
+                parenthesesDepth--;
+                if (parenthesesDepth == 0 && inFunction) {
+                    // End of a function call, extract the function name
+                    String functionCall = currentFunction.toString();
+                    String functionName = extractFunctionNameFromCall(functionCall);
+                    if (functionName != null && isValidFunctionName(functionName)) {
+                        referencedFunctions.add(functionName);
+                    }
+                    inFunction = false;
+                } else if (inFunction) {
+                    currentFunction.append(c);
+                }
+            } else if (inFunction) {
+                currentFunction.append(c);
+            }
+        }
+    }
+
+    private String extractFunctionNameFromCall(String functionCall) {
+        if (functionCall == null || functionCall.trim().isEmpty()) {
+            return null;
+        }
+
+        // Extract the function name (everything before the first comma or end of string)
+        int commaIndex = functionCall.indexOf(',');
+        if (commaIndex != -1) {
+            return functionCall.substring(0, commaIndex).trim();
+        } else {
+            return functionCall.trim();
+        }
+    }
+
     private boolean isValidFunctionName(String name) {
-        // Basic validation for function names
+        // Updated validation for function names to allow underscores and be more permissive
         return name != null && !name.trim().isEmpty() &&
-               name.matches("[a-zA-Z][a-zA-Z0-9_]*"); // Valid identifier pattern
+               name.matches("[a-zA-Z][a-zA-Z0-9_]*"); // Valid identifier pattern with underscores
     }
 
     private void extractFunctionNamesFromCommandString(String commandStr, Set<String> referencedFunctions) {
-        // This method would parse the command string to find function references
-        // Implementation depends on how function calls are formatted in command strings
+        // This method parses the command string to find function references
+        // Updated to handle the actual format used by Quote commands
 
-        // Example patterns that might indicate function calls:
-        // - "CALL functionName"
-        // - "QUOTE functionName"
-        // - "functionName()"
-
-        if (commandStr.contains("CALL ")) {
-            String[] parts = commandStr.split("CALL ");
-            for (int i = 1; i < parts.length; i++) {
-                String[] tokens = parts[i].trim().split("\\s+");
-                if (tokens.length > 0 && isValidFunctionName(tokens[0])) {
-                    referencedFunctions.add(tokens[0]);
-                }
-            }
+        if (commandStr == null || commandStr.trim().isEmpty()) {
+            return;
         }
 
-        if (commandStr.contains("QUOTE ")) {
-            String[] parts = commandStr.split("QUOTE ");
-            for (int i = 1; i < parts.length; i++) {
-                String[] tokens = parts[i].trim().split("\\s+");
-                if (tokens.length > 0 && isValidFunctionName(tokens[0])) {
-                    referencedFunctions.add(tokens[0]);
+        // Look for patterns like "y <- (functionName,args)" or "y <- (functionName)"
+        if (commandStr.contains("(") && commandStr.contains(")")) {
+            int startParen = commandStr.indexOf('(');
+            int endParen = commandStr.lastIndexOf(')');
+
+            if (startParen < endParen && startParen != -1) {
+                String functionCall = commandStr.substring(startParen + 1, endParen);
+
+                // Extract the function name (everything before the first comma or end of string)
+                String functionName = extractFunctionNameFromCall(functionCall);
+                if (functionName != null && isValidFunctionName(functionName)) {
+                    referencedFunctions.add(functionName);
                 }
+
+                // Also recursively extract any nested function calls
+                extractFunctionNamesFromArguments("(" + functionCall + ")", referencedFunctions);
             }
         }
     }

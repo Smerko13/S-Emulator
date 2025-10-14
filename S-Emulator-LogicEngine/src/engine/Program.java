@@ -183,12 +183,13 @@ public class Program implements S_Emulator , Serializable, Cloneable {
                 for (Command cmd : subProgram.commands) {
                     subProgram.variables.addAll(List.of(cmd.getAssociatedVariables()));
                 }
-                // Initialize expanded commands for synthetic commands in sub-functions
-                for(Command cmd : subProgram.commands) {
-                    if (cmd instanceof SyntheticCommand) {
-                        ((SyntheticCommand) cmd).initializeExpandedCommands();
-                    }
-                }
+                // V2 RESTORE: DON'T initialize expanded commands for sub-functions here
+                // Let the Quote commands handle expansion themselves to get proper depth calculation
+                // for(Command cmd : subProgram.commands) {
+                //     if (cmd instanceof SyntheticCommand) {
+                //         ((SyntheticCommand) cmd).initializeExpandedCommands();
+                //     }
+                // }
                 this.subFunctions.add(subProgram);
             }
         }
