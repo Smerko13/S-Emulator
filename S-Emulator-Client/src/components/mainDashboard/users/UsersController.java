@@ -96,49 +96,68 @@ public class UsersController {
 
         // Load current user's history initially
         loadCurrentUserHistory();
+        startAutoRefresh();
     }
 
-    /** start polling /userslist every REFRESH_RATE ms */
-    public void startUsersAutoRefresh() {
+    private void startAutoRefresh() {
         if (timer != null) return;
         timer = new Timer(true);
-        timer.schedule(new TimerTask() {
-            @Override public void run() {
-                HttpClientUtil.runAsync(Constants.USERS_LIST, new Callback() {
-                    @Override public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                        if (mainController != null) mainController.updateHttpLine("userslist failed: " + e.getMessage());
-                    }
-                    @Override
-                    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                        String body = response.body() != null ? response.body().string() : "[]";
-                        UserSummary[] arr;
-                        try {
-                            arr = GSON_INSTANCE.fromJson(body, UserSummary[].class);
-                        } catch (Exception e) {
-                            arr = new UserSummary[0];
-                        }
-
-                        UserSummary[] finalArr = arr;
-                        Platform.runLater(() -> {
-                            rows.setAll(Arrays.stream(finalArr).map(dto -> {
-                                var r = new UserRow(dto.username);
-                                r.programsUploadedProperty().set(dto.programs);
-                                r.functionsUploadedProperty().set(dto.functions);
-                                r.creditsAvailableProperty().set(dto.creditsAvailable);
-                                r.creditsUsedProperty().set(dto.creditsUsed);
-                                r.totalExecutionsProperty().set(dto.executions);
-                                return r;
-                            }).toList());
-                        });
-                    }
-
-                });
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                loadUsersList();
             }
-        }, 0, REFRESH_RATE);
+        }, 0, REFRESH_RATE); // Refresh every REFRESH_RATE ms
     }
 
-    public void stopUsersAutoRefresh() {
-        if (timer != null) { timer.cancel(); timer = null; }
+    private void loadUsersList() {
+        System.out.println("UsersController: loadUsersList() called");
+        HttpClientUtil.runAsync(Constants.USERS_LIST, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                System.out.println("UsersController: loadUsersList failed: " + e.getMessage());
+                if (mainController != null) mainController.updateHttpLine("userslist failed: " + e.getMessage());
+            }
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String body = response.body() != null ? response.body().string() : "[]";
+                System.out.println("UsersController: loadUsersList response: " + body);
+                UserSummary[] summaries;
+                try {
+                    summaries = GSON_INSTANCE.fromJson(body, UserSummary[].class);
+                    System.out.println("UsersController: Parsed " + summaries.length + " users");
+                    for (UserSummary summary : summaries) {
+                        System.out.println("  - " + summary.username + ": programs=" + summary.programs +
+                                         ", functions=" + summary.functions + ", credits=" + summary.creditsAvailable +
+                                         ", used=" + summary.creditsUsed + ", executions=" + summary.executions);
+                    }
+                } catch (Exception e) {
+                    System.out.println("UsersController: Error parsing JSON: " + e.getMessage());
+                    summaries = new UserSummary[0];
+                }
+                UserSummary[] finalSummaries = summaries;
+                Platform.runLater(() -> {
+                    System.out.println("UsersController: Updating table with " + finalSummaries.length + " users");
+                    rows.setAll(Arrays.stream(finalSummaries).map(dto -> {
+                        UserRow r = new UserRow(dto.username);
+                        r.programsUploadedProperty().set(dto.programs);
+                        r.functionsUploadedProperty().set(dto.functions);
+                        r.creditsAvailableProperty().set(dto.creditsAvailable);
+                        r.creditsUsedProperty().set(dto.creditsUsed);
+                        r.totalExecutionsProperty().set(dto.executions);
+                        return r;
+                    }).toList());
+                    System.out.println("UsersController: Table updated, now has " + rows.size() + " rows");
+                });
+            }
+        });
+    }
+
+    public void cleanup() {
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
     }
 
     /**
@@ -275,5 +294,17 @@ public class UsersController {
     public void showStatusButtonPressed(javafx.event.ActionEvent e) {
         System.out.println("UsersController: Show Status button pressed (to be implemented)");
         // TODO: Implement show status functionality
+    }
+
+    public void startUsersAutoRefresh() {
+        startAutoRefresh();
+    }
+
+    public void stopUsersAutoRefresh() {
+        cleanup();
+    }
+
+    public void refreshUsersList() {
+        loadUsersList();
     }
 }

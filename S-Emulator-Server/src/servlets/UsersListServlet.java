@@ -27,24 +27,22 @@ public class UsersListServlet extends HttpServlet {
             Map<String, User> allUsers = context.getAllUsers();
 
             List<UserSummary> summaries = new ArrayList<>();
-
             for (User user : allUsers.values()) {
                 UserSummary summary = createUserSummary(user);
                 summaries.add(summary);
 
                 System.out.println("UsersListServlet: User " + user.getUserName() +
-                    " - Programs: " + summary.programs +
-                    ", Functions: " + summary.functions +
-                    ", Credits: " + summary.creditsAvailable +
-                    ", Used: " + summary.creditsUsed +
-                    ", Executions: " + summary.executions);
+                        " - Programs: " + summary.programs +
+                        ", Functions: " + summary.functions +
+                        ", Credits: " + summary.creditsAvailable +
+                        ", Used: " + summary.creditsUsed +
+                        ", Executions: " + summary.executions);
             }
 
             resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
             resp.setContentType("application/json");
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(GSON.toJson(summaries));
-
         } catch (Exception e) {
             System.err.println("Error in UsersListServlet: " + e.getMessage());
             e.printStackTrace();
@@ -68,16 +66,12 @@ public class UsersListServlet extends HttpServlet {
         for (S_Emulator emulator : userPrograms.values()) {
             if (emulator instanceof Program) {
                 Program program = (Program) emulator;
-
-                // Each stored program counts as a main program
                 mainPrograms++;
-
-                // Count helper functions in this program
                 helperFunctions += program.subFunctions.size();
             }
         }
 
         return new UserSummary(username, mainPrograms, helperFunctions,
-                              currentCredits, creditsUsed, totalExecutions);
+                currentCredits, creditsUsed, totalExecutions);
     }
 }

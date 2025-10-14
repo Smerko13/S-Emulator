@@ -68,6 +68,8 @@ public class LoginServlet extends HttpServlet {
                         response.getWriter().write("{\"error\":\"Username already exists in the system\"}");
                     } else {
                         userManager.addUser(usernameFromParameter);
+                        // Register user in ServerContext as well
+                        servlets.ServerContext.getInstance().getOrCreateUser(usernameFromParameter);
                         request.getSession(true).setAttribute(Constants.USERNAME, usernameFromParameter);
                         response.setStatus(HttpServletResponse.SC_OK);
                         response.setContentType("application/json");
