@@ -10,6 +10,10 @@ import java.util.List;
 
 public class HistoryPanelController {
 
+    @FXML private TableColumn idColumn;
+    @FXML private TableColumn typeColumn;
+    @FXML private TableColumn cyclesColumn;
+    @FXML private TableColumn labelColumn;
     @FXML private TableView<String> historyTable;     // simplest: swap to String rows
     @FXML private TableColumn<String, String> instructionColumn;
 
