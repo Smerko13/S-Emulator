@@ -12,6 +12,8 @@ public class InstructionDTO {
     private String label;
     private String text;
     private List<HistoryChainDTO> historyChain;
+    private boolean incompatibleArchitecture;
+    private Architecture requiredArchitecture;
 
     // Constructors
     public InstructionDTO() {}
@@ -25,6 +27,7 @@ public class InstructionDTO {
         this.cycles = 1; // Default cycles
         this.label = null; // Default no label
         this.text = instruction; // Default text is the instruction
+        this.incompatibleArchitecture = false;
     }
 
     // Getters and Setters
@@ -103,6 +106,22 @@ public class InstructionDTO {
         this.historyChain = historyChain;
     }
 
+    public boolean isIncompatibleArchitecture() {
+        return incompatibleArchitecture;
+    }
+
+    public void setIncompatibleArchitecture(boolean incompatibleArchitecture) {
+        this.incompatibleArchitecture = incompatibleArchitecture;
+    }
+
+    public Architecture getRequiredArchitecture() {
+        return requiredArchitecture;
+    }
+
+    public void setRequiredArchitecture(Architecture requiredArchitecture) {
+        this.requiredArchitecture = requiredArchitecture;
+    }
+
     @Override
     public String toString() {
         return "InstructionDTO{" +
@@ -114,6 +133,8 @@ public class InstructionDTO {
                 ", label='" + label + '\'' +
                 ", text='" + text + '\'' +
                 ", highlighted=" + highlighted +
+                ", incompatibleArchitecture=" + incompatibleArchitecture +
+                ", requiredArchitecture=" + requiredArchitecture +
                 ", historyChain=" + historyChain +
                 '}';
     }

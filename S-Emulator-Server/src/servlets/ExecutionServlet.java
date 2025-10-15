@@ -1,6 +1,7 @@
 package servlets;
 
 import api.dto.*;
+import api.util.ArchitectureValidator;
 import com.google.gson.Gson;
 import engine.S_Emulator;
 import engine.Program;
@@ -191,10 +192,14 @@ public class ExecutionServlet extends HttpServlet {
             }
 
             // Validate that the program can run on the selected architecture
-            String validationError = validateProgramForArchitecture(engine, architecture);
-            if (validationError != null) {
+            ArchitectureValidationDTO validation = validateProgramForArchitectureDTO(engine, architecture);
+            if (!validation.isValid()) {
+                // Return structured validation error with incompatible instruction IDs
+                ExecuteProgramResponse errorResponse = new ExecuteProgramResponse(validation);
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write(GSON.toJson(validationError));
+                response.getWriter().write(GSON.toJson(errorResponse));
+                System.out.println("Execution blocked: " + validation.getErrorMessage());
+                System.out.println("Incompatible instructions: " + validation.getIncompatibleInstructionIds());
                 return;
             }
 
@@ -269,6 +274,40 @@ public class ExecutionServlet extends HttpServlet {
         } catch (Exception e) {
             System.err.println("Error validating program for architecture: " + e.getMessage());
             return "Error validating program compatibility: " + e.getMessage();
+        }
+    }
+
+    /**
+     * NEW: DTO-based validation that returns structured error with incompatible instruction IDs
+     */
+    private ArchitectureValidationDTO validateProgramForArchitectureDTO(S_Emulator engine, Architecture architecture) {
+        try {
+            // Get instructions with required architecture set
+            List<InstructionDTO> instructions = getInstructionsFromEngine(engine);
+
+            // Use the ArchitectureValidator to validate
+            ArchitectureValidationDTO validation = ArchitectureValidator.validate(instructions, architecture);
+
+            if (!validation.isValid()) {
+                System.out.println("Architecture validation failed: " + validation.getErrorMessage());
+                System.out.println("Incompatible instruction IDs: " + validation.getIncompatibleInstructionIds());
+                System.out.println("Required architecture: " + validation.getRequiredArchitecture().name());
+                System.out.println("Provided architecture: " + validation.getProvidedArchitecture().name());
+            }
+
+            return validation;
+
+        } catch (Exception e) {
+            System.err.println("Error validating program for architecture: " + e.getMessage());
+            e.printStackTrace();
+            // Return error validation result
+            return new ArchitectureValidationDTO(
+                false,
+                "Error validating program compatibility: " + e.getMessage(),
+                new ArrayList<>(),
+                Architecture.GENERATION_I,
+                architecture
+            );
         }
     }
 
@@ -819,11 +858,68 @@ public class ExecutionServlet extends HttpServlet {
             instruction.setLabel(command.getLabel()); // Use actual label from command
             instruction.setText(command.toString()); // Display text for the instruction
 
+            // *** NEW: Set the required architecture for this command ***
+            Architecture requiredArch = getRequiredArchitectureForCommand(command);
+            instruction.setRequiredArchitecture(requiredArch);
+            System.out.println("ExecutionServlet: Command " + command.getId() + " (" +
+                command.getClass().getSimpleName() + ") requires " + requiredArch.name());
+
             instructions.add(instruction);
             System.out.println("ExecutionServlet: Added instruction " + command.getId() + ": " + command.toString());
         }
 
         return instructions;
+    }
+
+    /**
+     * Determine the required architecture for a command based on its type.
+     * IMPORTANT: QUOTE commands (function calls) require Generation IV!
+     */
+    private Architecture getRequiredArchitectureForCommand(Command command) {
+        String commandType = command.getClass().getSimpleName().toUpperCase();
+
+        // *** GENERATION IV - QUOTE and Function Calls (CHECK FIRST!) ***
+        // Programs like "divide 2" use QUOTE to call helper functions
+        if (commandType.equals("QUOTE") ||
+            commandType.equals("JUMPEQUALFUNCTION") ||
+            commandType.equals("JUMP_EQUAL_FUNCTION")) {
+            System.out.println("ARCHITECTURE CHECK: " + commandType + " requires GENERATION_IV");
+            return Architecture.GENERATION_IV;
+        }
+
+        // Generation III - Advanced synthetic commands
+        if (commandType.equals("ASSIGNMENT") ||
+            commandType.equals("JUMPZERO") ||
+            commandType.equals("JUMP_ZERO") ||
+            commandType.equals("JUMPEQUALCONSTANT") ||
+            commandType.equals("JUMP_EQUAL_CONSTANT") ||
+            commandType.equals("JUMPEQUALVARIABLE") ||
+            commandType.equals("JUMP_EQUAL_VARIABLE")) {
+            return Architecture.GENERATION_III;
+        }
+
+        // Generation II - Synthetic commands (first tier)
+        if (commandType.equals("ZEROVARIABLE") ||
+            commandType.equals("ZERO_VARIABLE") ||
+            commandType.equals("CONSTANTASSIGNMENT") ||
+            commandType.equals("CONSTANT_ASSIGNMENT") ||
+            commandType.equals("GOTOLABEL") ||
+            commandType.equals("GOTO_LABEL")) {
+            return Architecture.GENERATION_II;
+        }
+
+        // Generation I - Basic commands only
+        if (commandType.equals("NEUTRAL") ||
+            commandType.equals("INCREASE") ||
+            commandType.equals("DECREASE") ||
+            commandType.equals("JUMPNOTZERO") ||
+            commandType.equals("JUMP_NOT_ZERO")) {
+            return Architecture.GENERATION_I;
+        }
+
+        // Default to Generation I if unknown
+        System.out.println("WARNING: Unknown command type '" + commandType + "', defaulting to GENERATION_I");
+        return Architecture.GENERATION_I;
     }
 
     private List<VariableDTO> getVariablesFromEngine(S_Emulator engine) {

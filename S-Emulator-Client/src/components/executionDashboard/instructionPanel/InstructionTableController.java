@@ -31,6 +31,7 @@ public class InstructionTableController {
 
     private final ObservableList<InstructionDTO> rows = FXCollections.observableArrayList();
     private Integer debugHighlightId = null;
+    private List<Integer> incompatibleInstructionIds = null;
 
     @FXML
     private void initialize() {
@@ -51,8 +52,12 @@ public class InstructionTableController {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setStyle("");
+                } else if (incompatibleInstructionIds != null && incompatibleInstructionIds.contains(item.getId())) {
+                    // Incompatible architecture - highlight in RED
+                    setStyle("-fx-background-color: #ffebee; -fx-text-fill: #c62828; -fx-font-weight: bold; -fx-border-color: #d32f2f; -fx-border-width: 0 0 0 4;");
                 } else if (debugHighlightId != null && item.getId() == debugHighlightId) {
-                    setStyle("-fx-background-color: red;");
+                    // Debug highlight - yellow/orange
+                    setStyle("-fx-background-color: #fff3cd; -fx-text-fill: #856404;");
                 } else {
                     setStyle("");
                 }
@@ -82,6 +87,24 @@ public class InstructionTableController {
     public void setInstructions(List<InstructionDTO> list, Integer highlightedId) {
         rows.setAll(list == null ? List.of() : list);
         this.debugHighlightId = highlightedId;
+        instructionTableView.refresh();
+    }
+
+    /**
+     * Highlight instructions that are incompatible with the selected architecture
+     */
+    public void highlightIncompatibleInstructions(List<Integer> instructionIds) {
+        System.out.println("InstructionTableController: Highlighting " +
+            (instructionIds != null ? instructionIds.size() : 0) + " incompatible instructions");
+        this.incompatibleInstructionIds = instructionIds;
+        instructionTableView.refresh();
+    }
+
+    /**
+     * Clear incompatible instruction highlights
+     */
+    public void clearIncompatibleHighlights() {
+        this.incompatibleInstructionIds = null;
         instructionTableView.refresh();
     }
 

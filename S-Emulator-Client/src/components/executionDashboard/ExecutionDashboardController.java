@@ -111,11 +111,57 @@ public class ExecutionDashboardController {
                 System.out.println("Execute program response: " + response.code() + " - " + json);
 
                 if (!response.isSuccessful()) {
+                    // Try to parse as ExecuteProgramResponse to get validation error details
+                    try {
+                        ExecuteProgramResponse errorResponse = GSON_INSTANCE.fromJson(json, ExecuteProgramResponse.class);
+                        if (errorResponse != null && errorResponse.validationError != null && !errorResponse.validationError.isValid()) {
+                            // Architecture validation failed - show detailed error
+                            ArchitectureValidationDTO validation = errorResponse.validationError;
+                            System.err.println("Architecture validation failed: " + validation.getErrorMessage());
+                            System.err.println("Incompatible instruction IDs: " + validation.getIncompatibleInstructionIds());
+                            System.err.println("Required architecture: " + validation.getRequiredArchitecture());
+                            System.err.println("Provided architecture: " + validation.getProvidedArchitecture());
+
+                            Platform.runLater(() -> {
+                                // Show error message to user
+                                showArchitectureValidationError(validation);
+
+                                // Highlight incompatible instructions in red
+                                if (instructionTableComponentController != null && validation.getIncompatibleInstructionIds() != null) {
+                                    instructionTableComponentController.highlightIncompatibleInstructions(
+                                        validation.getIncompatibleInstructionIds()
+                                    );
+                                }
+                            });
+                            return;
+                        }
+                    } catch (Exception parseError) {
+                        // If parsing fails, just show generic error
+                        System.err.println("Could not parse validation error: " + parseError.getMessage());
+                    }
+
                     Platform.runLater(() -> pushError("Execution failed: " + shorten(json)));
                     return;
                 }
 
                 try {
+                    // Check if response contains validation error even on success (shouldn't happen, but be safe)
+                    ExecuteProgramResponse execResponse = GSON_INSTANCE.fromJson(json, ExecuteProgramResponse.class);
+                    if (execResponse != null && execResponse.validationError != null && !execResponse.validationError.isValid()) {
+                        // Validation failed
+                        ArchitectureValidationDTO validation = execResponse.validationError;
+                        Platform.runLater(() -> {
+                            showArchitectureValidationError(validation);
+                            if (instructionTableComponentController != null && validation.getIncompatibleInstructionIds() != null) {
+                                instructionTableComponentController.highlightIncompatibleInstructions(
+                                    validation.getIncompatibleInstructionIds()
+                                );
+                            }
+                        });
+                        return;
+                    }
+
+                    // Try to parse as ExecutionStateDTO for successful execution
                     ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
                     System.out.println("Program executed successfully with architecture: " + architecture.name());
                     Platform.runLater(() -> applyStateToPanels(state));
@@ -312,6 +358,31 @@ public class ExecutionDashboardController {
     private void pushError(String msg) {
         // You can route this to a status line if you have one
         System.err.println("[EXEC] " + msg);
+    }
+
+    /**
+     * Show architecture validation error dialog to user
+     */
+    private void showArchitectureValidationError(ArchitectureValidationDTO validation) {
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+        alert.setTitle("Architecture Validation Error");
+        alert.setHeaderText("Insufficient Architecture Selected");
+
+        StringBuilder content = new StringBuilder();
+        content.append(validation.getErrorMessage()).append("\n\n");
+        content.append("Required: ").append(validation.getRequiredArchitecture().getDisplayName())
+               .append(" (").append(validation.getRequiredArchitecture().getCost()).append(" credits)\n");
+        content.append("Selected: ").append(validation.getProvidedArchitecture().getDisplayName())
+               .append(" (").append(validation.getProvidedArchitecture().getCost()).append(" credits)\n\n");
+
+        if (validation.getIncompatibleInstructionIds() != null && !validation.getIncompatibleInstructionIds().isEmpty()) {
+            content.append("Incompatible instructions have been highlighted in red.\n");
+            content.append("Please select ").append(validation.getRequiredArchitecture().getDisplayName())
+                   .append(" or higher to execute this program.");
+        }
+
+        alert.setContentText(content.toString());
+        alert.showAndWait();
     }
 
     private static String shorten(String s) {
