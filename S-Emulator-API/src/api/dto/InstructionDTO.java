@@ -1,5 +1,7 @@
 package api.dto;
 
+import java.util.List;
+
 public class InstructionDTO {
     private int id;
     private String instruction;
@@ -9,6 +11,7 @@ public class InstructionDTO {
     private int cycles;
     private String label;
     private String text;
+    private List<HistoryChainDTO> historyChain;
 
     // Constructors
     public InstructionDTO() {}
@@ -92,6 +95,14 @@ public class InstructionDTO {
         this.text = text;
     }
 
+    public List<HistoryChainDTO> getHistoryChain() {
+        return historyChain;
+    }
+
+    public void setHistoryChain(List<HistoryChainDTO> historyChain) {
+        this.historyChain = historyChain;
+    }
+
     @Override
     public String toString() {
         return "InstructionDTO{" +
@@ -103,6 +114,7 @@ public class InstructionDTO {
                 ", label='" + label + '\'' +
                 ", text='" + text + '\'' +
                 ", highlighted=" + highlighted +
+                ", historyChain=" + historyChain +
                 '}';
     }
 }

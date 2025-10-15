@@ -352,7 +352,7 @@ public class ExecutionDashboardController {
                 System.err.println("Failed to fetch parent chain: " + e.getMessage());
                 Platform.runLater(() -> {
                     if (historyPanelComponentController != null) {
-                        historyPanelComponentController.setTraceLines(List.of("Error fetching parent chain: " + e.getMessage()));
+                        historyPanelComponentController.setHistoryChain(List.of());
                     }
                 });
             }
@@ -365,31 +365,34 @@ public class ExecutionDashboardController {
                 if (!response.isSuccessful()) {
                     Platform.runLater(() -> {
                         if (historyPanelComponentController != null) {
-                            historyPanelComponentController.setTraceLines(List.of("Server error: " + shorten(json)));
+                            historyPanelComponentController.setHistoryChain(List.of());
                         }
                     });
                     return;
                 }
 
                 try {
-                    // Parse the JSON array of strings
-                    String[] parentChainArray = GSON_INSTANCE.fromJson(json, String[].class);
-                    List<String> parentChain = Arrays.asList(parentChainArray);
+                    // Parse the JSON array of HistoryChainDTO objects
+                    HistoryChainDTO[] parentChainArray = GSON_INSTANCE.fromJson(json, HistoryChainDTO[].class);
+                    List<HistoryChainDTO> parentChain = Arrays.asList(parentChainArray);
 
                     Platform.runLater(() -> {
                         if (historyPanelComponentController != null) {
                             if (parentChain.isEmpty()) {
-                                historyPanelComponentController.setTraceLines(List.of("No parent command chain found for command ID: " + commandId));
+                                System.out.println("No parent command chain found for command ID: " + commandId);
+                                historyPanelComponentController.setHistoryChain(List.of());
                             } else {
-                                historyPanelComponentController.setTraceLines(parentChain);
+                                System.out.println("Displaying " + parentChain.size() + " history chain entries");
+                                historyPanelComponentController.setHistoryChain(parentChain);
                             }
                         }
                     });
                 } catch (Exception e) {
                     System.err.println("Error parsing parent chain JSON: " + e.getMessage());
+                    e.printStackTrace();
                     Platform.runLater(() -> {
                         if (historyPanelComponentController != null) {
-                            historyPanelComponentController.setTraceLines(List.of("Error parsing parent chain data"));
+                            historyPanelComponentController.setHistoryChain(List.of());
                         }
                     });
                 }

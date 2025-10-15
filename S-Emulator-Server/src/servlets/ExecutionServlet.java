@@ -590,7 +590,7 @@ public class ExecutionServlet extends HttpServlet {
             int currentDegree = engine.getCurrentDegree();
 
             // Get the parent command chain for the specified command
-            List<String> parentChain = engine.getParentCommandChain(commandId, currentDegree);
+            List<HistoryChainDTO> parentChain = engine.getParentCommandChainDTO(commandId, currentDegree);
 
             response.getWriter().write(GSON.toJson(parentChain));
 

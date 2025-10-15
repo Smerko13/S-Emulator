@@ -1,5 +1,6 @@
 package engine;
 
+import api.dto.HistoryChainDTO;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
@@ -766,6 +767,158 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         }
 
         return parentChain;
+    }
+
+    @Override
+    public List<HistoryChainDTO> getParentCommandChainDTO(int commandId, int expansionLevel) {
+        List<HistoryChainDTO> historyChain = new ArrayList<>();
+
+        if (expansionLevel == 0) {
+            // At root level, just show the command itself
+            List<Command> rootCommands = getCommandsAtDesiredLevel(0);
+            Command rootCommand = null;
+            for (Command cmd : rootCommands) {
+                if (cmd.getId() == commandId) {
+                    rootCommand = cmd;
+                    break;
+                }
+            }
+
+            if (rootCommand != null) {
+                HistoryChainDTO dto = new HistoryChainDTO();
+                dto.setStepNumber(1);
+                dto.setCommandId(rootCommand.getId());
+                dto.setCommandType(getCommandTypeString(rootCommand)); // "basic" or "synthetic"
+                dto.setCommandName(rootCommand.getType());
+                dto.setArguments(getCommandArguments(rootCommand));
+                dto.setExpandedFrom("Root Level");
+                dto.setLevel(0);
+                dto.setCycles(rootCommand.getCycles());
+                dto.setInstructionText(rootCommand.toString());
+                dto.setLabel(rootCommand.getLabel()); // Set the command's label
+                historyChain.add(dto);
+            }
+
+            return historyChain;
+        }
+
+        // Build the command chain by reconstructing the expansion process
+        List<Command> currentLevelCommands = getCommandsAtDesiredLevel(expansionLevel);
+        Command targetCommand = null;
+        for (Command cmd : currentLevelCommands) {
+            if (cmd.getId() == commandId) {
+                targetCommand = cmd;
+                break;
+            }
+        }
+
+        if (targetCommand == null) {
+            System.out.println("Command with ID " + commandId + " not found at expansion level " + expansionLevel);
+            return historyChain;
+        }
+
+        // Trace back through the expansion levels
+        Command currentTraceCommand = targetCommand;
+        List<HistoryChainDTO> reversedChain = new ArrayList<>();
+
+        for (int level = expansionLevel - 1; level >= 0; level--) {
+            if (currentTraceCommand == null) break;
+
+            // Find the parent command that this command expanded from
+            Command parentCommand = findParentAtLevel(currentTraceCommand, level);
+
+            if (parentCommand != null) {
+                // Get the commands at this level to find the correct ID
+                List<Command> levelCommands = getCommandsAtDesiredLevel(level);
+                for (Command cmd : levelCommands) {
+                    if (isSameCommand(cmd, parentCommand)) {
+                        HistoryChainDTO dto = new HistoryChainDTO();
+                        dto.setStepNumber(reversedChain.size() + 1);
+                        dto.setCommandId(cmd.getId()); // Use the actual command ID from the level
+                        dto.setCommandType(getCommandTypeString(cmd)); // "basic" or "synthetic"
+                        dto.setCommandName(cmd.getType());
+                        dto.setArguments(getCommandArguments(cmd));
+                        dto.setExpandedFrom(level == 0 ? "Root Level" : "Level " + level);
+                        dto.setLevel(level);
+                        dto.setCycles(cmd.getCycles()); // Get actual cycles from the command
+                        dto.setInstructionText(cmd.toString()); // Get full instruction text
+                        dto.setLabel(cmd.getLabel()); // Set the command's label
+
+                        reversedChain.add(dto);
+                        currentTraceCommand = cmd;
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        // Reverse the chain so root is first
+        for (int i = reversedChain.size() - 1; i >= 0; i--) {
+            HistoryChainDTO dto = reversedChain.get(i);
+            dto.setStepNumber(reversedChain.size() - i);
+            historyChain.add(dto);
+        }
+
+        // Add the target command itself as the final entry
+        HistoryChainDTO targetDto = new HistoryChainDTO();
+        targetDto.setStepNumber(historyChain.size() + 1);
+        targetDto.setCommandId(targetCommand.getId());
+        targetDto.setCommandType(getCommandTypeString(targetCommand)); // "basic" or "synthetic"
+        targetDto.setCommandName(targetCommand.getType());
+        targetDto.setArguments(getCommandArguments(targetCommand));
+        if (!historyChain.isEmpty()) {
+            HistoryChainDTO parent = historyChain.get(historyChain.size() - 1);
+            targetDto.setExpandedFrom(parent.getCommandName() + " (Level " + parent.getLevel() + ")");
+        } else {
+            targetDto.setExpandedFrom("Root Level");
+        }
+        targetDto.setLevel(expansionLevel);
+        targetDto.setCycles(targetCommand.getCycles());
+        targetDto.setInstructionText(targetCommand.toString());
+        targetDto.setLabel(targetCommand.getLabel()); // Set the command's label
+        historyChain.add(targetDto);
+
+        System.out.println("Built history chain with " + historyChain.size() + " entries for command " + commandId);
+
+        return historyChain;
+    }
+
+    /**
+     * Helper method to get command type as "basic" or "synthetic"
+     */
+    private String getCommandTypeString(Command command) {
+        if (command instanceof BaseCommand) {
+            return "basic";
+        } else if (command instanceof SyntheticCommand) {
+            return "synthetic";
+        }
+        return "unknown";
+    }
+
+    /**
+     * Helper method to extract command arguments as a string
+     */
+    private String getCommandArguments(Command command) {
+        if (command == null) return "";
+
+        Variable[] vars = command.getAssociatedVariables();
+        if (vars == null || vars.length == 0) {
+            return "";
+        }
+
+        StringBuilder args = new StringBuilder();
+        for (int i = 0; i < vars.length; i++) {
+            if (vars[i] != null) {
+                args.append(vars[i].getName());
+                if (i < vars.length - 1) {
+                    args.append(", ");
+                }
+            }
+        }
+
+        return args.toString();
     }
 
     private Command findParentAtLevel(Command targetCommand, int level) {
