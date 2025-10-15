@@ -815,7 +815,7 @@ public class ExecutionServlet extends HttpServlet {
             instruction.setArguments(arguments);
 
             // Set the additional fields expected by InstructionTableController
-            instruction.setType(command.getClass().getSimpleName()); // e.g., "Increase", "Decrease", etc.
+            instruction.setType(command.getType()); // e.g., "Increase", "Decrease", etc.
             instruction.setCycles(command.getCycles()); // Use actual cycles from command
             instruction.setLabel(command.getLabel()); // Use actual label from command
             instruction.setText(command.toString()); // Display text for the instruction
@@ -853,7 +853,7 @@ public class ExecutionServlet extends HttpServlet {
 
         // Only include variables that are used in the current degree's commands
         for (Variable variable : allVariableSet) {
-            if (relevantVariableNames.contains(variable.getName())) {
+            if (relevantVariableNames.contains(variable.getName()) && !(variable instanceof InputVariable)) {
                 VariableDTO varDTO = new VariableDTO();
                 varDTO.setName(variable.getName());
                 varDTO.setValue(variable.getValue());
