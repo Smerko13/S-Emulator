@@ -8,7 +8,6 @@ import engine.commands.Command;
 import engine.arguments.Variable;
 import engine.arguments.types.InputVariable;
 import engine.arguments.types.OutputVariable;
-import engine.arguments.types.WorkVariable;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
