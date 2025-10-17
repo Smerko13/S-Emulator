@@ -172,22 +172,15 @@ public class ExecutionServlet extends HttpServlet {
                 ? execRequest.architecture
                 : Architecture.GENERATION_I;
 
-            System.out.println("ExecutionServlet: Executing with architecture: " + architecture.name() + " (Cost: " + architecture.getCost() + " credits)");
+            System.out.println("ExecutionServlet: Executing with architecture: " + architecture.name() + " (Base Cost: " + architecture.getCost() + " credits)");
 
-            // Get user and validate credits
+            // Get user
             ServerContext context = ServerContext.getInstance();
             User user = context.getUser(username);
 
             if (user == null) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().write(GSON.toJson("User not found"));
-                return;
-            }
-
-            // Check if user has enough credits
-            if (!user.hasEnoughCredits(architecture.getCost())) {
-                response.setStatus(HttpServletResponse.SC_PAYMENT_REQUIRED);
-                response.getWriter().write(GSON.toJson("Insufficient credits. Required: " + architecture.getCost() + ", Available: " + user.getCredits()));
                 return;
             }
 
@@ -202,16 +195,6 @@ public class ExecutionServlet extends HttpServlet {
                 System.out.println("Incompatible instructions: " + validation.getIncompatibleInstructionIds());
                 return;
             }
-
-            // Deduct credits BEFORE execution
-            boolean creditDeducted = user.deductCredits(architecture.getCost());
-            if (!creditDeducted) {
-                response.setStatus(HttpServletResponse.SC_PAYMENT_REQUIRED);
-                response.getWriter().write(GSON.toJson("Failed to deduct credits"));
-                return;
-            }
-
-            System.out.println("ExecutionServlet: Credits deducted successfully. User " + username + " now has " + user.getCredits() + " credits");
 
             // Capture ORIGINAL input values BEFORE execution (for Re-Run functionality)
             List<VariableDTO> originalInputs = new ArrayList<>();
@@ -228,9 +211,29 @@ public class ExecutionServlet extends HttpServlet {
             // Execute the program with the selected architecture
             engine.executeProgram(engine.getCurrentDegree(), true);
 
+            // Calculate total cost = architecture cost + cycleSum
+            int cpuCyclesUsed = engine.getCycleSum();
+            int totalCost = architecture.getCost() + cpuCyclesUsed;
+
+            // Check if user has enough credits for the total cost
+            if (!user.hasEnoughCredits(totalCost)) {
+                response.setStatus(HttpServletResponse.SC_PAYMENT_REQUIRED);
+                response.getWriter().write(GSON.toJson("Insufficient credits. Required: " + totalCost + " (Architecture: " + architecture.getCost() + " + Cycles: " + cpuCyclesUsed + "), Available: " + user.getCredits()));
+                return;
+            }
+
+            // Deduct credits AFTER execution based on architecture cost + cycles
+            boolean creditDeducted = user.deductCredits(totalCost);
+            if (!creditDeducted) {
+                response.setStatus(HttpServletResponse.SC_PAYMENT_REQUIRED);
+                response.getWriter().write(GSON.toJson("Failed to deduct credits"));
+                return;
+            }
+
+            System.out.println("ExecutionServlet: Credits deducted successfully. Total cost: " + totalCost + " (Architecture: " + architecture.getCost() + " + Cycles: " + cpuCyclesUsed + "). User " + username + " now has " + user.getCredits() + " credits");
+
             // Capture execution results for history tracking
             int finalYValue = getFinalYValue(engine);
-            int cpuCyclesUsed = engine.getCycleSum();
             String executionType = determineExecutionType(currentTarget, engine);
             String architectureTypeStr = architecture.name().replace("GENERATION_", "");
             String executionLevel = "Run"; // This is a normal execution, not debug
@@ -535,6 +538,7 @@ public class ExecutionServlet extends HttpServlet {
         HttpSession session = request.getSession();
         S_Emulator engine = (S_Emulator) session.getAttribute("engine");
         String currentTarget = (String) session.getAttribute("currentTarget");
+        String username = (String) session.getAttribute("username");
 
         if (engine == null || currentTarget == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -542,16 +546,61 @@ public class ExecutionServlet extends HttpServlet {
             return;
         }
 
+        if (username == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write(GSON.toJson("User not logged in"));
+            return;
+        }
+
         try {
             System.out.println("Debug operation: " + operation);
+            ServerContext context = ServerContext.getInstance();
+            User user = context.getUser(username);
+
+            if (user == null) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write(GSON.toJson("User not found"));
+                return;
+            }
 
             // Handle debug operations
             switch (operation) {
                 case "start":
+                    // Parse architecture from request body
+                    Architecture architecture = Architecture.GENERATION_I; // Default
+                    if ("POST".equalsIgnoreCase(request.getMethod())) {
+                        StringBuilder requestBody = new StringBuilder();
+                        String line;
+                        while ((line = request.getReader().readLine()) != null) {
+                            requestBody.append(line);
+                        }
+                        if (requestBody.length() > 0) {
+                            ExecuteProgramRequest execRequest = GSON.fromJson(requestBody.toString(), ExecuteProgramRequest.class);
+                            if (execRequest != null && execRequest.architecture != null) {
+                                architecture = execRequest.architecture;
+                            }
+                        }
+                    }
+
+                    // Validate architecture compatibility
+                    ArchitectureValidationDTO validation = validateProgramForArchitectureDTO(engine, architecture);
+                    if (!validation.isValid()) {
+                        ExecuteProgramResponse errorResponse = new ExecuteProgramResponse(validation);
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write(GSON.toJson(errorResponse));
+                        System.out.println("Debug blocked: " + validation.getErrorMessage());
+                        return;
+                    }
+
+                    // Store architecture for this debug session
+                    session.setAttribute("debugArchitecture", architecture);
+                    session.setAttribute("debugPreviousCycles", 0); // Track cycles from previous steps
+                    session.setAttribute("debugArchitectureCharged", false); // Track if architecture cost has been charged
+
                     // Start debugging mode - prepare the engine for step-by-step execution
                     engine.prepareForDebugging();
                     session.setAttribute("debugMode", true);
-                    System.out.println("Debug mode started");
+                    System.out.println("Debug mode started with architecture: " + architecture.name() + " (cost will be charged on first step or continue)");
                     break;
 
                 case "step":
@@ -562,28 +611,84 @@ public class ExecutionServlet extends HttpServlet {
                         response.getWriter().write(GSON.toJson("Not in debug mode"));
                         return;
                     }
-                    engine.stepOver();
 
-                    // Increment execution count for debug step operations
-                    String username = (String) session.getAttribute("username");
-                    if (username != null) {
-                        ServerContext context = ServerContext.getInstance();
-                        User user = context.getUser(username);
-                        if (user != null) {
-                            user.incrementExecutionCount();
-                            System.out.println("ExecutionServlet: Debug step - User " + username + " total executions: " + user.getTotalExecutions());
-                        }
+                    // Get debug architecture and previous cycles
+                    Architecture debugArch = (Architecture) session.getAttribute("debugArchitecture");
+                    if (debugArch == null) {
+                        debugArch = Architecture.GENERATION_I; // Fallback
+                    }
+                    Integer previousCycles = (Integer) session.getAttribute("debugPreviousCycles");
+                    if (previousCycles == null) {
+                        previousCycles = 0;
+                    }
+                    Boolean architectureCharged = (Boolean) session.getAttribute("debugArchitectureCharged");
+                    if (architectureCharged == null) {
+                        architectureCharged = false;
                     }
 
-                    System.out.println("Stepped to next instruction");
+                    // Execute the step
+                    engine.stepOver();
+
+                    // Calculate cost for this step
+                    int currentCycles = engine.getCycleSum();
+                    int newCycles = currentCycles - previousCycles;
+                    int stepCost = debugArch.getCost() + currentCycles; // Total cost so far
+
+                    // Check if user has enough credits
+                    if (!user.hasEnoughCredits(stepCost)) {
+                        response.setStatus(HttpServletResponse.SC_PAYMENT_REQUIRED);
+                        response.getWriter().write(GSON.toJson("Insufficient credits. Required: " + stepCost + " (Architecture: " + debugArch.getCost() + " + Cycles: " + currentCycles + "), Available: " + user.getCredits()));
+
+                        // Stop debugging due to insufficient credits
+                        session.setAttribute("debugMode", false);
+                        if (engine instanceof Program) {
+                            ((Program) engine).stopDebugging();
+                        }
+                        return;
+                    }
+
+                    // Deduct incremental cost: architecture cost (if not yet charged) + new cycles
+                    int incrementalCost = architectureCharged ? newCycles : (debugArch.getCost() + newCycles);
+                    user.deductCredits(incrementalCost);
+
+                    // Mark architecture as charged after first step
+                    if (!architectureCharged) {
+                        session.setAttribute("debugArchitectureCharged", true);
+                        System.out.println("Debug step 1: Architecture cost charged (" + debugArch.getCost() + ") + cycles (" + newCycles + ") = " + incrementalCost + " credits");
+                    } else {
+                        System.out.println("Debug step: Cycles charged (" + newCycles + ") = " + incrementalCost + " credits");
+                    }
+
+                    // Update previous cycles for next step
+                    session.setAttribute("debugPreviousCycles", currentCycles);
+
+                    System.out.println("User " + username + " now has " + user.getCredits() + " credits remaining");
+
+                    // Increment execution count for debug step operations
+                    user.incrementExecutionCount();
+                    System.out.println("ExecutionServlet: Debug step - User " + username + " total executions: " + user.getTotalExecutions());
 
                     // Check if program has completed after step - if so, exit debug mode
                     if (engine instanceof Program) {
                         Program program = (Program) engine;
                         if (!program.isInDebugMode()) {
+                            // Program completed - record execution history
+                            int finalYValue = getFinalYValue(engine);
+                            String executionType = determineExecutionType(currentTarget, engine);
+                            String architectureTypeStr = debugArch.name().replace("GENERATION_", "");
+
+                            user.addExecutionRecord(
+                                executionType,
+                                currentTarget,
+                                architectureTypeStr,
+                                "Debug",
+                                finalYValue,
+                                currentCycles
+                            );
+
                             session.setAttribute("debugMode", false);
                             program.stopDebugging();
-                            System.out.println("Debug mode completed after step - exiting debug mode");
+                            System.out.println("Debug mode completed after step - exiting debug mode. Total cost: " + (debugArch.getCost() + currentCycles));
                         }
                     }
                     break;
@@ -596,8 +701,86 @@ public class ExecutionServlet extends HttpServlet {
                         response.getWriter().write(GSON.toJson("Not in debug mode"));
                         return;
                     }
+
+                    // Get debug architecture and previous cycles
+                    debugArch = (Architecture) session.getAttribute("debugArchitecture");
+                    if (debugArch == null) {
+                        debugArch = Architecture.GENERATION_I;
+                    }
+                    previousCycles = (Integer) session.getAttribute("debugPreviousCycles");
+                    if (previousCycles == null) {
+                        previousCycles = 0;
+                    }
+                    architectureCharged = (Boolean) session.getAttribute("debugArchitectureCharged");
+                    if (architectureCharged == null) {
+                        architectureCharged = false;
+                    }
+
                     // Continue by executing the rest of the program
                     engine.executeProgram(engine.getCurrentDegree(), true);
+
+                    // Calculate final cost
+                    int finalCycles = engine.getCycleSum();
+                    int remainingCycles = finalCycles - previousCycles;
+
+                    // Total cost includes architecture (if not charged yet) + all cycles
+                    int totalCostNeeded = debugArch.getCost() + finalCycles;
+
+                    // Check if user has enough credits for completion
+                    if (!user.hasEnoughCredits(totalCostNeeded)) {
+                        response.setStatus(HttpServletResponse.SC_PAYMENT_REQUIRED);
+                        response.getWriter().write(GSON.toJson("Insufficient credits to complete. Required: " + totalCostNeeded + " (Architecture: " + debugArch.getCost() + " + Cycles: " + finalCycles + "), Available: " + user.getCredits()));
+                        return;
+                    }
+
+                    // Deduct remaining cost: architecture (if not charged) + remaining cycles
+                    int remainingCost = architectureCharged ? remainingCycles : (debugArch.getCost() + remainingCycles);
+                    user.deductCredits(remainingCost);
+
+                    if (!architectureCharged) {
+                        System.out.println("Debug continue: Architecture cost charged (" + debugArch.getCost() + ") + remaining cycles (" + remainingCycles + ") = " + remainingCost + " credits");
+                        session.setAttribute("debugArchitectureCharged", true);
+                    } else {
+                        System.out.println("Debug continue: Remaining cycles charged (" + remainingCycles + ") = " + remainingCost + " credits");
+                    }
+
+                    System.out.println("Debug completed. Total cost: " + totalCostNeeded + ". User " + username + " now has " + user.getCredits() + " credits");
+
+                    // Record execution history
+                    int finalYValue = getFinalYValue(engine);
+                    String executionType = determineExecutionType(currentTarget, engine);
+                    String architectureTypeStr = debugArch.name().replace("GENERATION_", "");
+
+                    user.addExecutionRecord(
+                        executionType,
+                        currentTarget,
+                        architectureTypeStr,
+                        "Debug",
+                        finalYValue,
+                        finalCycles
+                    );
+
+                    // Capture and store detailed execution data
+                    List<VariableDTO> finalVariables = new ArrayList<>();
+                    Set<Variable> variables = engine.getVariables();
+                    for (Variable var : variables) {
+                        String varType = var instanceof InputVariable ? "Input" :
+                                        var instanceof OutputVariable ? "Output" : "Work";
+                        VariableDTO varDTO = new VariableDTO(var.getName(), var.getValue(), varType);
+                        finalVariables.add(varDTO);
+                    }
+
+                    ExecutionDetailsDTO detailsDTO = new ExecutionDetailsDTO(
+                        user.getTotalExecutions(),
+                        executionType,
+                        currentTarget,
+                        architectureTypeStr,
+                        "Debug",
+                        finalCycles,
+                        finalVariables,
+                        new ArrayList<>()
+                    );
+                    user.addExecutionDetails(detailsDTO);
 
                     // Ensure debug mode is properly terminated after continuation
                     session.setAttribute("debugMode", false);
@@ -609,14 +792,17 @@ public class ExecutionServlet extends HttpServlet {
                     break;
 
                 case "stop":
-                    // Stop debugging - reset to normal mode
+                    // Stop debugging - reset to normal mode (no credit deduction)
                     session.setAttribute("debugMode", false);
+                    session.removeAttribute("debugArchitecture");
+                    session.removeAttribute("debugPreviousCycles");
+                    session.removeAttribute("debugArchitectureCharged");
                     if (engine instanceof Program) {
                         Program program = (Program) engine;
                         program.stopDebugging();
                     }
                     engine.reset(); // Reset to initial state
-                    System.out.println("Debug mode stopped and program reset");
+                    System.out.println("Debug mode stopped and program reset (no credits deducted)");
                     break;
 
                 default:
