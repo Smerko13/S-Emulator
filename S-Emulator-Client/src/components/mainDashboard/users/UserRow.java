@@ -20,11 +20,28 @@ public class UserRow {
         this.totalExecutions = new SimpleIntegerProperty(0);
     }
 
-    public SimpleStringProperty userNameProperty() { return userName; }
-    public SimpleIntegerProperty programsUploadedProperty() { return programsUploaded; }
-    public SimpleIntegerProperty functionsUploadedProperty() { return functionsUploaded; }
-    public SimpleIntegerProperty creditsAvailableProperty() { return creditsAvailable; }
-    public SimpleIntegerProperty creditsUsedProperty() { return creditsUsed; }
-    public SimpleIntegerProperty totalExecutionsProperty() { return totalExecutions; }
+    public SimpleStringProperty userNameProperty() {
+        return userName;
+    }
+
+    public SimpleIntegerProperty programsUploadedProperty() {
+        return programsUploaded;
+    }
+
+    public SimpleIntegerProperty functionsUploadedProperty() {
+        return functionsUploaded;
+    }
+
+    public SimpleIntegerProperty creditsAvailableProperty() {
+        return creditsAvailable;
+    }
+
+    public SimpleIntegerProperty creditsUsedProperty() {
+        return creditsUsed;
+    }
+
+    public SimpleIntegerProperty totalExecutionsProperty() {
+        return totalExecutions;
+    }
 }
 

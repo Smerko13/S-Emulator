@@ -143,7 +143,6 @@ public class ProgramsAndFunctionsController implements Initializable {
         });
     }
 
-    // ADD THIS MISSING METHOD
     public void loadProgramsAndFunctions() {
         CompletableFuture.supplyAsync(this::fetchProgramsFromServer)
                 .thenAccept(this::updateTablesOnUIThread)
@@ -153,7 +152,6 @@ public class ProgramsAndFunctionsController implements Initializable {
                 });
     }
 
-    // ADD THIS MISSING METHOD
     private String fetchProgramsFromServer() {
         try {
             HttpClient client = HttpClient.newHttpClient();
@@ -182,7 +180,6 @@ public class ProgramsAndFunctionsController implements Initializable {
         });
     }
 
-    // ADD THIS MISSING METHOD
     private void parseAndUpdateTables(String jsonResponse) {
         System.out.println("Received JSON: " + jsonResponse);
 

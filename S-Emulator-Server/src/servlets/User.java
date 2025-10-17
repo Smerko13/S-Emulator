@@ -2,6 +2,7 @@ package servlets;
 
 import engine.S_Emulator;
 import api.dto.ExecutionHistoryDTO;
+import api.dto.ExecutionDetailsDTO;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ public class User {
     private int totalExecutions; // Track total program executions
     private final Map<String, S_Emulator> programs; // programName -> S_Emulator
     private final List<ExecutionHistoryDTO> executionHistory; // Detailed execution history
+    private final Map<Integer, ExecutionDetailsDTO> executionDetails; // runId -> ExecutionDetailsDTO
 
     public User(String userName, int initialCredits) {
         this.userName = userName;
@@ -22,6 +24,7 @@ public class User {
         this.totalExecutions = 0;
         this.programs = new ConcurrentHashMap<>();
         this.executionHistory = new ArrayList<>();
+        this.executionDetails = new ConcurrentHashMap<>();
     }
 
     public User(String userName) {
@@ -94,6 +97,20 @@ public class User {
      */
     public List<ExecutionHistoryDTO> getExecutionHistory() {
         return new ArrayList<>(executionHistory); // Return defensive copy
+    }
+
+    /**
+     * Add detailed execution information with all variables
+     */
+    public void addExecutionDetails(ExecutionDetailsDTO details) {
+        executionDetails.put(details.runId, details);
+    }
+
+    /**
+     * Get detailed execution information for a specific run
+     */
+    public ExecutionDetailsDTO getExecutionDetails(int runId) {
+        return executionDetails.get(runId);
     }
 
     // Program management methods

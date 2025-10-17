@@ -233,6 +233,27 @@ public class ExecutionServlet extends HttpServlet {
                 cpuCyclesUsed           // Total cycles consumed
             );
 
+            // Capture and store detailed execution data with all final variables
+            List<VariableDTO> finalVariables = new ArrayList<>();
+            Set<Variable> variables = engine.getVariables();
+            for (Variable var : variables) {
+                String varType = var instanceof InputVariable ? "Input" :
+                                var instanceof OutputVariable ? "Output" : "Work";
+                VariableDTO varDTO = new VariableDTO(var.getName(), var.getValue(), varType);
+                finalVariables.add(varDTO);
+            }
+
+            ExecutionDetailsDTO detailsDTO = new ExecutionDetailsDTO(
+                user.getTotalExecutions(),  // runId matches the execution number
+                executionType,
+                currentTarget,
+                architectureTypeStr,
+                executionLevel,
+                cpuCyclesUsed,
+                finalVariables
+            );
+            user.addExecutionDetails(detailsDTO);
+
             System.out.println("ExecutionServlet: Program executed successfully with architecture: " + architecture.name());
             System.out.println("ExecutionServlet: User " + username + " total executions: " + user.getTotalExecutions());
             System.out.println("ExecutionServlet: Execution record added - Type: " + executionType +

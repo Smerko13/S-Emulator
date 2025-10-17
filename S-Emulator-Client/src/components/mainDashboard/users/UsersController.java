@@ -1,16 +1,23 @@
 package components.mainDashboard.users;
 
+import api.dto.ProgramInfoDTO;
+import components.executionDashboard.ExecutionDashboardController;
 import components.mainDashboard.clientMainController;
 import api.dto.ExecutionHistoryDTO;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.stage.Stage;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
@@ -307,13 +314,73 @@ public class UsersController {
 
     // Button handlers for future implementation
     public void reRunButtonPressed(javafx.event.ActionEvent e) {
-        System.out.println("UsersController: Re-Run button pressed (to be implemented)");
-        // TODO: Implement re-run functionality
     }
 
     public void showStatusButtonPressed(javafx.event.ActionEvent e) {
-        System.out.println("UsersController: Show Status button pressed (to be implemented)");
-        // TODO: Implement show status functionality
+        ExecutionHistoryRow selected = statsTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            System.out.println("UsersController: No execution selected");
+            return;
+        }
+
+        int runId = selected.getRunId();
+        System.out.println("UsersController: Fetching execution details for runId: " + runId);
+
+        // Build URL with runId and optionally userId
+        String url = Constants.EXECUTION_DETAILS + "?runId=" + runId;
+        if (selectedUserId != null) {
+            url += "&userId=" + selectedUserId;
+        }
+
+        HttpClientUtil.runAsync(url, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException ex) {
+                System.err.println("Failed to load execution details for runId " + runId + ": " + ex.getMessage());
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error");
+                    alert.setHeaderText("Failed to Load Execution Details");
+                    alert.setContentText("Could not retrieve execution details: " + ex.getMessage());
+                    alert.showAndWait();
+                });
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String body = response.body() != null ? response.body().string() : null;
+
+                if (!response.isSuccessful()) {
+                    System.err.println("Server error loading execution details: " + response.code());
+                    Platform.runLater(() -> {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error");
+                        alert.setHeaderText("Server Error");
+                        alert.setContentText("Server returned error code: " + response.code());
+                        alert.showAndWait();
+                    });
+                    return;
+                }
+
+                try {
+                    api.dto.ExecutionDetailsDTO details = GSON_INSTANCE.fromJson(body, api.dto.ExecutionDetailsDTO.class);
+                    Platform.runLater(() -> {
+                        // Get the main stage from the button's scene
+                        Stage ownerStage = (Stage) ((Button) e.getSource()).getScene().getWindow();
+                        ExecutionStatusDialog.show(details, ownerStage);
+                    });
+                } catch (Exception ex) {
+                    System.err.println("Error parsing execution details JSON: " + ex.getMessage());
+                    ex.printStackTrace();
+                    Platform.runLater(() -> {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error");
+                        alert.setHeaderText("Parse Error");
+                        alert.setContentText("Could not parse execution details: " + ex.getMessage());
+                        alert.showAndWait();
+                    });
+                }
+            }
+        });
     }
 
     public void startUsersAutoRefresh() {
