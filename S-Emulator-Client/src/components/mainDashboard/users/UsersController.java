@@ -6,6 +6,7 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.beans.property.SimpleStringProperty;
@@ -30,6 +31,8 @@ import static util.Constants.REFRESH_RATE;
 
 public class UsersController {
 
+    @FXML private Button showStatusButton;
+    @FXML private Button reRunButton;
     @FXML private TableView<UserRow> usersTable;
     @FXML private TableColumn<UserRow, String>  userNameColumn;
     @FXML private TableColumn<UserRow, Number>  programCountColumn;
@@ -83,6 +86,23 @@ public class UsersController {
         outputColumn.setCellValueFactory(c -> c.getValue().finalYValueProperty());
 
         statsTable.setItems(historyRows);
+
+        // Initially disable buttons until an execution is selected
+        showStatusButton.setDisable(true);
+        reRunButton.setDisable(true);
+
+        // Add selection listener to execution history table
+        statsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            boolean hasSelection = newSelection != null;
+            showStatusButton.setDisable(!hasSelection);
+            reRunButton.setDisable(!hasSelection);
+
+            if (newSelection != null) {
+                System.out.println("UsersController: Execution selected - runId: " + newSelection.runIdProperty().get());
+            } else {
+                System.out.println("UsersController: Execution deselected");
+            }
+        });
 
         // Add selection listener to users table
         usersTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {

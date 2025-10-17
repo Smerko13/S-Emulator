@@ -12,13 +12,13 @@ public class ExecutionHistoryDTO {
     public ExecutionHistoryDTO() {}
 
     public ExecutionHistoryDTO(int runId, String executionType, String programFunctionName,
-                              String architectureType, String executionLevel,
+                              String architectureType, String executionDegree,
                               int finalYValue, int cpuCyclesUsed) {
         this.runId = runId;
         this.executionType = executionType;
         this.programFunctionName = programFunctionName;
         this.architectureType = architectureType;
-        this.executionLevel = executionLevel;
+        this.executionLevel = executionDegree;
         this.finalYValue = finalYValue;
         this.cpuCyclesUsed = cpuCyclesUsed;
     }
