@@ -9,5 +9,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="jaxb" level="project" />
     <orderEntry type="module" module-name="S-Emulator-Server" />
+    <orderEntry type="module" module-name="S-Emulator-API" />
   </component>
 </module>
