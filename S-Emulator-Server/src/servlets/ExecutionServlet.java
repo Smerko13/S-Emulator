@@ -213,6 +213,18 @@ public class ExecutionServlet extends HttpServlet {
 
             System.out.println("ExecutionServlet: Credits deducted successfully. User " + username + " now has " + user.getCredits() + " credits");
 
+            // Capture ORIGINAL input values BEFORE execution (for Re-Run functionality)
+            List<VariableDTO> originalInputs = new ArrayList<>();
+            Set<Variable> variablesBeforeExecution = engine.getVariables();
+            for (Variable var : variablesBeforeExecution) {
+                if (var instanceof InputVariable) {
+                    VariableDTO inputDTO = new VariableDTO(var.getName(), var.getValue(), "Input");
+                    inputDTO.setInput(true);
+                    originalInputs.add(inputDTO);
+                    System.out.println("ExecutionServlet: Captured original input - " + var.getName() + " = " + var.getValue());
+                }
+            }
+
             // Execute the program with the selected architecture
             engine.executeProgram(engine.getCurrentDegree(), true);
 
@@ -250,7 +262,8 @@ public class ExecutionServlet extends HttpServlet {
                 architectureTypeStr,
                 executionLevel,
                 cpuCyclesUsed,
-                finalVariables
+                finalVariables,
+                originalInputs  // NOW includes original input values from before execution
             );
             user.addExecutionDetails(detailsDTO);
 

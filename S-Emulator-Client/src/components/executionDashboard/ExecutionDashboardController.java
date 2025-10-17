@@ -69,11 +69,60 @@ public class ExecutionDashboardController {
      * Called when we first open the execution dashboard for a program/function the user chose.
      */
     public void openOnServer(String programIdOrFunctionName) {
+        openOnServer(programIdOrFunctionName, null, 0);
+    }
+
+    /**
+     * Open execution dashboard with pre-filled inputs (for Re-Run functionality)
+     */
+    public void openOnServer(String programIdOrFunctionName, List<VariableDTO> preFilledInputs, int targetDegree) {
         HttpUrl url = HttpUrl.parse(Constants.EXEC_OPEN)
                 .newBuilder()
                 .addQueryParameter("target", programIdOrFunctionName)
                 .build();
-        callAndApply(url);
+
+        HttpClientUtil.runAsync(url.toString(), new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                System.err.println("HTTP Request failed: " + e.getMessage());
+                Platform.runLater(() -> pushError("Network error: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String json = response.body() != null ? response.body().string() : "";
+                System.out.println("Received response: " + response.code() + " - " + json);
+
+                if (!response.isSuccessful()) {
+                    Platform.runLater(() -> pushError(shorten(json)));
+                    return;
+                }
+
+                try {
+                    ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
+                    System.out.println("Parsed ExecutionStateDTO - Instructions: " +
+                            (state.getInstructions() != null ? state.getInstructions().size() : "null") +
+                            ", Variables: " + (state.getAllVariables() != null ? state.getAllVariables().size() : "null"));
+
+                    Platform.runLater(() -> {
+                        applyStateToPanels(state);
+
+                        // If we have pre-filled inputs, apply them after the state is loaded
+                        if (preFilledInputs != null && !preFilledInputs.isEmpty()) {
+                            applyPreFilledInputs(preFilledInputs);
+                        }
+
+                        // If target degree is specified and different from current, set it
+                        if (targetDegree > 0 && targetDegree != state.getCurrentDegree()) {
+                            setCurrentDegree(programIdOrFunctionName, targetDegree);
+                        }
+                    });
+                } catch (Exception e) {
+                    System.err.println("Error parsing JSON response: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     /**
@@ -469,5 +518,22 @@ public class ExecutionDashboardController {
                 }
             }
         });
+    }
+
+    /**
+     * Apply pre-filled input values (used during Re-Run)
+     */
+    private void applyPreFilledInputs(List<VariableDTO> preFilledInputs) {
+        System.out.println("ExecutionDashboardController: Applying " + preFilledInputs.size() + " pre-filled inputs");
+
+        for (VariableDTO input : preFilledInputs) {
+            System.out.println("  Setting input: " + input.getName() + " = " + input.getValue());
+            updateInputValue(input.getName(), input.getValue());
+        }
+
+        // Notify the execution panel to update UI with these values
+        if (executionPanelComponentController != null) {
+            executionPanelComponentController.updateInputDisplayValues(preFilledInputs);
+        }
     }
 }

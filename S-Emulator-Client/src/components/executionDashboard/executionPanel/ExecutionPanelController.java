@@ -301,6 +301,33 @@ public class ExecutionPanelController implements Initializable {
         // start/execute/newRun can remain enabled as you prefer
     }
 
+    /**
+     * Update input display values (used during Re-Run to pre-fill inputs)
+     */
+    public void updateInputDisplayValues(java.util.List<VariableDTO> preFilledInputs) {
+        System.out.println("ExecutionPanelController: Updating input display values with " + preFilledInputs.size() + " pre-filled inputs");
+
+        if (inputVarsTable == null || inputVarsTable.getItems() == null) {
+            System.err.println("Input variables table is null or has no items");
+            return;
+        }
+
+        // Update the values in the input table
+        for (VariableDTO preFilledInput : preFilledInputs) {
+            for (VariableDTO tableInput : inputVarsTable.getItems()) {
+                if (tableInput.getName().equals(preFilledInput.getName())) {
+                    tableInput.setValue(preFilledInput.getValue());
+                    System.out.println("  Updated input display: " + tableInput.getName() + " = " + preFilledInput.getValue());
+                    break;
+                }
+            }
+        }
+
+        // Refresh the table to show updated values
+        inputVarsTable.refresh();
+        System.out.println("Input variables table refreshed with pre-filled values");
+    }
+
     public void executeButtonPressed(ActionEvent actionEvent) {
         if (parent == null) {
             System.err.println("Parent controller not set - cannot execute program");
@@ -438,4 +465,3 @@ public class ExecutionPanelController implements Initializable {
         }
     }
 }
-

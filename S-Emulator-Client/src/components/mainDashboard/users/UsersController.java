@@ -314,6 +314,145 @@ public class UsersController {
 
     // Button handlers for future implementation
     public void reRunButtonPressed(javafx.event.ActionEvent e) {
+        ExecutionHistoryRow selected = statsTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            System.out.println("UsersController: No execution selected for re-run");
+            return;
+        }
+
+        int runId = selected.getRunId();
+        System.out.println("UsersController: Re-running execution with runId: " + runId);
+
+        // Build URL with runId and optionally userId
+        String url = Constants.EXECUTION_DETAILS + "?runId=" + runId;
+        if (selectedUserId != null) {
+            url += "&userId=" + selectedUserId;
+        }
+
+        HttpClientUtil.runAsync(url, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException ex) {
+                System.err.println("Failed to load execution details for re-run " + runId + ": " + ex.getMessage());
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error");
+                    alert.setHeaderText("Failed to Load Execution Details");
+                    alert.setContentText("Could not retrieve execution details for re-run: " + ex.getMessage());
+                    alert.showAndWait();
+                });
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String body = response.body() != null ? response.body().string() : null;
+
+                if (!response.isSuccessful()) {
+                    System.err.println("Server error loading execution details for re-run: " + response.code());
+                    Platform.runLater(() -> {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error");
+                        alert.setHeaderText("Server Error");
+                        alert.setContentText("Server returned error code: " + response.code());
+                        alert.showAndWait();
+                    });
+                    return;
+                }
+
+                try {
+                    api.dto.ExecutionDetailsDTO details = GSON_INSTANCE.fromJson(body, api.dto.ExecutionDetailsDTO.class);
+                    Platform.runLater(() -> {
+                        openExecutionDashboardForReRun(details);
+                    });
+                } catch (Exception ex) {
+                    System.err.println("Error parsing execution details JSON for re-run: " + ex.getMessage());
+                    ex.printStackTrace();
+                    Platform.runLater(() -> {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error");
+                        alert.setHeaderText("Parse Error");
+                        alert.setContentText("Could not parse execution details: " + ex.getMessage());
+                        alert.showAndWait();
+                    });
+                }
+            }
+        });
+    }
+
+    /**
+     * Open the execution dashboard for re-running a previous execution
+     */
+    private void openExecutionDashboardForReRun(api.dto.ExecutionDetailsDTO details) {
+        try {
+            System.out.println("UsersController: Opening execution dashboard for re-run");
+            System.out.println("  Program: " + details.programFunctionName);
+            System.out.println("  Execution Level: " + details.executionLevel);
+            System.out.println("  Original Inputs: " + (details.originalInputs != null ? details.originalInputs.size() : 0));
+
+            // Load the execution dashboard FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(Constants.MAIN_PAGE_FXML_RESOURCE_LOCATION.replace("mainDashboard", "executionDashboard")));
+            javafx.scene.Parent executionDashboardRoot = loader.load();
+
+            // Get the controller
+            ExecutionDashboardController execController = loader.getController();
+
+            // Get the current stage
+            javafx.stage.Stage stage = (javafx.stage.Stage) statsTable.getScene().getWindow();
+
+            // Switch to execution dashboard scene
+            if (stage.getScene() == null) {
+                stage.setScene(new javafx.scene.Scene(executionDashboardRoot));
+            } else {
+                stage.getScene().setRoot(executionDashboardRoot);
+            }
+            stage.setMaximized(true);
+            stage.centerOnScreen();
+            stage.setTitle("S-Emulator - Execution Dashboard (Re-Run)");
+
+            // Use ORIGINAL INPUT VALUES from before execution (not final values after execution)
+            java.util.List<api.dto.VariableDTO> inputVariables = new java.util.ArrayList<>();
+            if (details.originalInputs != null && !details.originalInputs.isEmpty()) {
+                // Use the stored original inputs
+                inputVariables.addAll(details.originalInputs);
+                System.out.println("UsersController: Using " + details.originalInputs.size() + " original inputs from before execution:");
+                for (api.dto.VariableDTO var : details.originalInputs) {
+                    System.out.println("  Input variable for re-run: " + var.getName() + " = " + var.getValue());
+                }
+            } else {
+                // Fallback: extract inputs from finalVariables if originalInputs not available
+                System.out.println("UsersController: Warning - originalInputs not available, falling back to finalVariables");
+                if (details.finalVariables != null) {
+                    for (api.dto.VariableDTO var : details.finalVariables) {
+                        if ("Input".equalsIgnoreCase(var.getType()) || var.isInput()) {
+                            inputVariables.add(var);
+                            System.out.println("  Input variable for re-run (from final): " + var.getName() + " = " + var.getValue());
+                        }
+                    }
+                }
+            }
+
+            // Parse execution level to get the degree
+            int targetDegree = 0;
+            try {
+                targetDegree = Integer.parseInt(details.executionLevel);
+            } catch (NumberFormatException ex) {
+                System.out.println("Could not parse execution level as degree: " + details.executionLevel);
+                // Default to 0 if parsing fails
+            }
+
+            // Open the program with pre-filled ORIGINAL inputs and target degree
+            execController.openOnServer(details.programFunctionName, inputVariables, targetDegree);
+
+            System.out.println("UsersController: Execution dashboard opened successfully for re-run");
+
+        } catch (Exception ex) {
+            System.err.println("Error opening execution dashboard for re-run: " + ex.getMessage());
+            ex.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Failed to Open Execution Dashboard");
+            alert.setContentText("Could not open execution dashboard: " + ex.getMessage());
+            alert.showAndWait();
+        }
     }
 
     public void showStatusButtonPressed(javafx.event.ActionEvent e) {
