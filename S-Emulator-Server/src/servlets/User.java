@@ -82,11 +82,11 @@ public class User {
      */
     public void addExecutionRecord(String executionType, String programFunctionName,
                                    String architectureType, String executionLevel,
-                                   int finalYValue, int cpuCyclesUsed) {
+                                   int expansionDegree, int finalYValue, int cpuCyclesUsed) {
         int runId = totalExecutions + 1; // Run ID is the next execution number
         ExecutionHistoryDTO record = new ExecutionHistoryDTO(
                 runId, executionType, programFunctionName,
-                architectureType, executionLevel, finalYValue, cpuCyclesUsed
+                architectureType, executionLevel, expansionDegree, finalYValue, cpuCyclesUsed
         );
         executionHistory.add(record);
         incrementExecutionCount();

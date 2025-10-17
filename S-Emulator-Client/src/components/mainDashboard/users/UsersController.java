@@ -9,14 +9,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.stage.Stage;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -54,7 +50,7 @@ public class UsersController {
     @FXML private TableColumn<ExecutionHistoryRow, String> runTypeColumn;
     @FXML private TableColumn<ExecutionHistoryRow, String> nameColumn;
     @FXML private TableColumn<ExecutionHistoryRow, String> architectureColumn;
-    @FXML private TableColumn<ExecutionHistoryRow, String> expansionLevelColumn;
+    @FXML private TableColumn<ExecutionHistoryRow, Number> expansionLevelColumn;
     @FXML private TableColumn<ExecutionHistoryRow, Number> cyclesColumn;
     @FXML private TableColumn<ExecutionHistoryRow, Number> outputColumn;
 
@@ -88,7 +84,7 @@ public class UsersController {
         runTypeColumn.setCellValueFactory(c -> c.getValue().executionTypeProperty());
         nameColumn.setCellValueFactory(c -> c.getValue().programFunctionNameProperty());
         architectureColumn.setCellValueFactory(c -> c.getValue().architectureTypeProperty());
-        expansionLevelColumn.setCellValueFactory(c -> c.getValue().executionLevelProperty());
+        expansionLevelColumn.setCellValueFactory(c -> c.getValue().expansionDegreeProperty());  // Now shows degree number
         cyclesColumn.setCellValueFactory(c -> c.getValue().cpuCyclesUsedProperty());
         outputColumn.setCellValueFactory(c -> c.getValue().finalYValueProperty());
 
@@ -231,7 +227,7 @@ public class UsersController {
                             dto.executionType,
                             dto.programFunctionName,
                             dto.architectureType,
-                            dto.executionLevel,
+                            dto.expansionDegree,  // Now uses the degree number from DTO
                             dto.cpuCyclesUsed,
                             dto.finalYValue
                         );
@@ -286,7 +282,7 @@ public class UsersController {
                             dto.executionType,
                             dto.programFunctionName,
                             dto.architectureType,
-                            dto.executionLevel,
+                            dto.expansionDegree,  // Now uses the degree number from DTO
                             dto.cpuCyclesUsed,
                             dto.finalYValue
                         );

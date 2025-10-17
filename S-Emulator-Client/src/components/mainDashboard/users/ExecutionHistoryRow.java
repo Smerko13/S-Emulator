@@ -8,18 +8,18 @@ public class ExecutionHistoryRow {
     private final SimpleStringProperty executionType;
     private final SimpleStringProperty programFunctionName;
     private final SimpleStringProperty architectureType;
-    private final SimpleStringProperty executionLevel;
+    private final SimpleIntegerProperty expansionDegree;  // Changed from String to Integer
     private final SimpleIntegerProperty cpuCyclesUsed;
     private final SimpleIntegerProperty finalYValue;
 
     public ExecutionHistoryRow(int runId, String executionType, String programFunctionName,
-                               String architectureType, String executionLevel,
+                               String architectureType, int expansionDegree,
                                int cpuCyclesUsed, int finalYValue) {
         this.runId = new SimpleIntegerProperty(runId);
         this.executionType = new SimpleStringProperty(executionType);
         this.programFunctionName = new SimpleStringProperty(programFunctionName);
         this.architectureType = new SimpleStringProperty(architectureType);
-        this.executionLevel = new SimpleStringProperty(executionLevel);
+        this.expansionDegree = new SimpleIntegerProperty(expansionDegree);  // Now stores the degree number
         this.cpuCyclesUsed = new SimpleIntegerProperty(cpuCyclesUsed);
         this.finalYValue = new SimpleIntegerProperty(finalYValue);
     }
@@ -40,8 +40,8 @@ public class ExecutionHistoryRow {
         return architectureType;
     }
 
-    public SimpleStringProperty executionLevelProperty() {
-        return executionLevel;
+    public SimpleIntegerProperty expansionDegreeProperty() {  // Changed return type
+        return expansionDegree;
     }
 
     public SimpleIntegerProperty cpuCyclesUsedProperty() {
@@ -56,4 +56,3 @@ public class ExecutionHistoryRow {
         return runId.get();
     }
 }
-

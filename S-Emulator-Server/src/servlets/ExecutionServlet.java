@@ -240,6 +240,7 @@ public class ExecutionServlet extends HttpServlet {
             String executionType = determineExecutionType(currentTarget, engine);
             String architectureTypeStr = architecture.name().replace("GENERATION_", "");
             String executionLevel = "Run"; // This is a normal execution, not debug
+            int expansionDegree = engine.getCurrentDegree(); // Get the degree at which it was executed
 
             // Add detailed execution record to user's history
             user.addExecutionRecord(
@@ -247,6 +248,7 @@ public class ExecutionServlet extends HttpServlet {
                 currentTarget,           // Program/function name
                 architectureTypeStr,     // "I", "II", "III", "IV"
                 executionLevel,          // "Run" or "Debug"
+                expansionDegree,         // Degree (0 to maxDepth)
                 finalYValue,             // Final value of variable y
                 cpuCyclesUsed           // Total cycles consumed
             );
@@ -691,6 +693,7 @@ public class ExecutionServlet extends HttpServlet {
                                 currentTarget,
                                 architectureTypeStr,
                                 "Debug",
+                                program.getCurrentDegree(),
                                 finalYValue,
                                 currentCycles
                             );
@@ -762,12 +765,14 @@ public class ExecutionServlet extends HttpServlet {
                     int finalYValue = getFinalYValue(engine);
                     String executionType = determineExecutionType(currentTarget, engine);
                     String architectureTypeStr = debugArch.name().replace("GENERATION_", "");
+                    int expansionDegree = engine.getCurrentDegree(); // Get the degree
 
                     user.addExecutionRecord(
                         executionType,
                         currentTarget,
                         architectureTypeStr,
                         "Debug",
+                        expansionDegree,
                         finalYValue,
                         finalCycles
                     );
