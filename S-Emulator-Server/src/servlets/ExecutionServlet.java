@@ -232,6 +232,9 @@ public class ExecutionServlet extends HttpServlet {
 
             System.out.println("ExecutionServlet: Credits deducted successfully. Total cost: " + totalCost + " (Architecture: " + architecture.getCost() + " + Cycles: " + cpuCyclesUsed + "). User " + username + " now has " + user.getCredits() + " credits");
 
+            // Record execution in global statistics for this program
+            context.recordProgramExecution(currentTarget, totalCost);
+
             // Capture execution results for history tracking
             int finalYValue = getFinalYValue(engine);
             String executionType = determineExecutionType(currentTarget, engine);
@@ -672,6 +675,12 @@ public class ExecutionServlet extends HttpServlet {
                     if (engine instanceof Program) {
                         Program program = (Program) engine;
                         if (!program.isInDebugMode()) {
+                            // Program completed - calculate total cost for global tracking
+                            int totalDebugCost = debugArch.getCost() + currentCycles;
+
+                            // Record execution in global statistics
+                            context.recordProgramExecution(currentTarget, totalDebugCost);
+
                             // Program completed - record execution history
                             int finalYValue = getFinalYValue(engine);
                             String executionType = determineExecutionType(currentTarget, engine);
@@ -688,7 +697,7 @@ public class ExecutionServlet extends HttpServlet {
 
                             session.setAttribute("debugMode", false);
                             program.stopDebugging();
-                            System.out.println("Debug mode completed after step - exiting debug mode. Total cost: " + (debugArch.getCost() + currentCycles));
+                            System.out.println("Debug mode completed after step - exiting debug mode. Total cost: " + totalDebugCost);
                         }
                     }
                     break;
@@ -745,6 +754,9 @@ public class ExecutionServlet extends HttpServlet {
                     }
 
                     System.out.println("Debug completed. Total cost: " + totalCostNeeded + ". User " + username + " now has " + user.getCredits() + " credits");
+
+                    // Record execution in global statistics
+                    context.recordProgramExecution(currentTarget, totalCostNeeded);
 
                     // Record execution history
                     int finalYValue = getFinalYValue(engine);

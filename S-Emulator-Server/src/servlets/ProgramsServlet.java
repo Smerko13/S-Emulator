@@ -45,20 +45,21 @@ public class ProgramsServlet extends HttpServlet {
                 String actualProgramName = emulator.getCurrentProgramName();
                 int numInstructions = emulator.getCommandsAtDesiredLevel(0).size();
                 int maxDegree = emulator.getMaxExpansionDepth();
-                int numExecutions = emulator.getExecutionHistory().getExecutionCount();
-                double avgCreditCost = emulator.getExecutionHistory().getAverageCreditCost();
 
-                // Use actual program name from emulator if available, otherwise use extracted name
+                // Use global statistics from ServerContext instead of per-instance stats
                 String displayProgramName = (actualProgramName != null && !actualProgramName.trim().isEmpty()) ?
                                           actualProgramName : programName;
+                int numExecutions = context.getProgramExecutionCount(displayProgramName);
+                double avgCreditCost = context.getProgramAverageCreditCost(displayProgramName);
 
+                // Use actual program name from emulator if available, otherwise use extracted name
                 jsonBuilder.append("{");
                 jsonBuilder.append("\"programName\":\"").append(escapeJson(displayProgramName)).append("\",");
                 jsonBuilder.append("\"uploaderName\":\"").append(escapeJson(userId)).append("\",");
                 jsonBuilder.append("\"numOfInstructions\":").append(numInstructions).append(",");
                 jsonBuilder.append("\"maxDegree\":").append(maxDegree).append(",");
                 jsonBuilder.append("\"numOfExecutions\":").append(numExecutions).append(",");
-                jsonBuilder.append("\"avgCreditCost\":").append(avgCreditCost);
+                jsonBuilder.append("\"avgCreditCost\":").append(String.format("%.2f", avgCreditCost));
                 jsonBuilder.append("}");
 
                 firstProgram = false;

@@ -7,9 +7,35 @@ import java.util.Map;
 public class ServerContext {
     private static volatile ServerContext instance;
     private final Map<String, User> users; // userId -> User
+    private final Map<String, ProgramStats> globalProgramStats; // programName -> ProgramStats
 
     private ServerContext() {
         this.users = new ConcurrentHashMap<>();
+        this.globalProgramStats = new ConcurrentHashMap<>();
+    }
+
+    // Inner class to track global statistics for each program
+    public static class ProgramStats {
+        private int totalExecutions;
+        private int totalCreditCost;
+
+        public ProgramStats() {
+            this.totalExecutions = 0;
+            this.totalCreditCost = 0;
+        }
+
+        public synchronized void addExecution(int creditCost) {
+            totalExecutions++;
+            totalCreditCost += creditCost;
+        }
+
+        public int getTotalExecutions() {
+            return totalExecutions;
+        }
+
+        public double getAverageCreditCost() {
+            return totalExecutions > 0 ? (double) totalCreditCost / totalExecutions : 0.0;
+        }
     }
 
     public static ServerContext getInstance() {
@@ -21,6 +47,25 @@ public class ServerContext {
             }
         }
         return instance;
+    }
+
+    // Global program statistics methods
+    public void recordProgramExecution(String programName, int creditCost) {
+        ProgramStats stats = globalProgramStats.computeIfAbsent(programName, k -> new ProgramStats());
+        stats.addExecution(creditCost);
+        System.out.println("Recorded execution for program '" + programName + "': cost=" + creditCost +
+                         ", total executions=" + stats.getTotalExecutions() +
+                         ", avg cost=" + stats.getAverageCreditCost());
+    }
+
+    public int getProgramExecutionCount(String programName) {
+        ProgramStats stats = globalProgramStats.get(programName);
+        return stats != null ? stats.getTotalExecutions() : 0;
+    }
+
+    public double getProgramAverageCreditCost(String programName) {
+        ProgramStats stats = globalProgramStats.get(programName);
+        return stats != null ? stats.getAverageCreditCost() : 0.0;
     }
 
     // User management methods
