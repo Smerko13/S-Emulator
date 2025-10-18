@@ -12,6 +12,16 @@ public class SessionUtils {
         return sessionAttribute != null ? sessionAttribute.toString() : null;
     }
     
+    public static String getUserId (HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        Object sessionAttribute = session != null ? session.getAttribute(Constants.USER_ID) : null;
+        // If USER_ID is not set, fall back to USERNAME
+        if (sessionAttribute == null) {
+            sessionAttribute = session != null ? session.getAttribute(Constants.USERNAME) : null;
+        }
+        return sessionAttribute != null ? sessionAttribute.toString() : null;
+    }
+
     public static void clearSession (HttpServletRequest request) {
         request.getSession().invalidate();
     }

@@ -48,4 +48,7 @@ public class Constants {
     public static final String EXEC_STATE       = EXEC_BASE + "/state";
     public static final String EXEC_PARENT_CHAIN = EXEC_BASE + "/parentChain";   // ?commandId=...
     public static final String EXEC_UPDATE_INPUT = EXEC_BASE + "/updateInput";   // ?name=...&value=...
+
+    // Chat API endpoints
+    public static final String CHAT_MESSAGES = FULL_SERVER_PATH + "/api/chat/messages";
 }

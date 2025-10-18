@@ -1,6 +1,7 @@
 package servlets;
 
 import engine.S_Emulator;
+import engine.chat.ChatManager;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
@@ -8,10 +9,12 @@ public class ServerContext {
     private static volatile ServerContext instance;
     private final Map<String, User> users; // userId -> User
     private final Map<String, ProgramStats> globalProgramStats; // programName -> ProgramStats
+    private final ChatManager chatManager; // Global chat manager
 
     private ServerContext() {
         this.users = new ConcurrentHashMap<>();
         this.globalProgramStats = new ConcurrentHashMap<>();
+        this.chatManager = new ChatManager();
     }
 
     // Inner class to track global statistics for each program
@@ -161,5 +164,10 @@ public class ServerContext {
 
     public int getTotalUserCount() {
         return users.size();
+    }
+
+    // Chat management methods
+    public ChatManager getChatManager() {
+        return chatManager;
     }
 }

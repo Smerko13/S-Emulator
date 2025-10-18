@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox fx:id="chatContainer" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="components.chat.ChatPanelController" spacing="5" style="-fx-background-color: #f5f5f5;">
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" style="-fx-background-color: #2196F3; -fx-padding: 10;">
+        <Label text="Chat" textFill="white" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="statusLabel" text="Connecting..." textFill="white" style="-fx-font-size: 12px;"/>
+    </HBox>
+
+    <!-- Chat Messages Area -->
+    <StackPane VBox.vgrow="ALWAYS">
+        <ListView fx:id="chatListView" style="-fx-background-color: white;">
+            <VBox.margin>
+                <Insets top="5" right="5" bottom="5" left="5"/>
+            </VBox.margin>
+        </ListView>
+
+        <!-- New Messages Indicator (overlay) -->
+        <VBox fx:id="newMessagesIndicator" alignment="TOP_CENTER" pickOnBounds="false">
+            <padding>
+                <Insets top="10"/>
+            </padding>
+            <Button text="↓ New Messages ↓" onAction="#onNewMessagesClicked"
+                    style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;">
+                <font>
+                    <Font size="12"/>
+                </font>
+            </Button>
+        </VBox>
+    </StackPane>
+
+    <!-- Message Input Area -->
+    <VBox spacing="5">
+        <padding>
+            <Insets top="5" right="5" bottom="5" left="5"/>
+        </padding>
+
+        <Label text="Type your message (Enter to send, Ctrl+Enter for new line):"
+               style="-fx-font-size: 11px; -fx-text-fill: #666;"/>
+
+        <TextArea fx:id="messageInputArea" promptText="Type a message..."
+                  wrapText="true" prefRowCount="2" maxHeight="80"/>
+
+        <HBox alignment="CENTER_RIGHT" spacing="10">
+            <Button fx:id="sendButton" text="Send" onAction="#sendMessage"
+                    style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"
+                    prefWidth="80">
+                <font>
+                    <Font size="13"/>
+                </font>
+            </Button>
+        </HBox>
+    </VBox>
+</VBox>
+

@@ -1,10 +1,14 @@
 package components.mainDashboard.header;
 
+import components.chat.ChatPanelController;
 import components.mainDashboard.clientMainController;
 import components.shared.UserSession;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -18,11 +22,13 @@ public class HeaderController {
     @FXML private Button chargeCreditsButton;
     @FXML private TextField filePathTextField;
     @FXML private Button loadFileButton;
+    @FXML private Button chatButton;
     @FXML private Label creditsLabel;
     @FXML private Label userNameLabel;
     clientMainController mainController;
     private Timer creditsRefreshTimer;
     private final UserSession userSession;
+    private Stage chatStage; // Keep track of chat window
 
     public HeaderController() {
         userSession = UserSession.getInstance();
@@ -123,6 +129,48 @@ public class HeaderController {
             } else {
                 filePathTextField.setText("Invalid XML file. Please select a valid file.");
             }
+        }
+    }
+
+    @FXML
+    public void openChatButtonPressed(ActionEvent actionEvent) {
+        // If chat window is already open, just bring it to front
+        if (chatStage != null && chatStage.isShowing()) {
+            chatStage.toFront();
+            chatStage.requestFocus();
+            return;
+        }
+
+        try {
+            // Load the chat panel FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/chat/chatPanel.fxml"));
+            Parent chatRoot = loader.load();
+            ChatPanelController chatController = loader.getController();
+
+            // Get current user info
+            String userId = userSession.getUserName();
+            String username = userSession.getUserName();
+
+            // Start the chat with user credentials
+            chatController.startChat(userId, username);
+
+            // Create a new stage for the chat window
+            chatStage = new Stage();
+            chatStage.setTitle("S-Emulator - Chat");
+            chatStage.setScene(new Scene(chatRoot, 600, 500));
+
+            // When chat window is closed, stop the chat polling
+            chatStage.setOnCloseRequest(event -> {
+                chatController.stopChat();
+                chatStage = null;
+            });
+
+            chatStage.show();
+
+        } catch (Exception e) {
+            System.err.println("Error opening chat window: " + e.getMessage());
+            e.printStackTrace();
+            showAlert("Chat Error", "Failed to open chat window: " + e.getMessage());
         }
     }
 

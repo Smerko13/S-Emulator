@@ -1,92 +1,63 @@
 package util.http;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import okhttp3.*;
 
+import java.io.File;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
+/**
+ * HTTP Client Utility using OkHttp for async requests
+ */
 public class HttpClientUtil {
+    private static final SimpleCookieManager COOKIE_MANAGER = new SimpleCookieManager();
 
-    private final static SimpleCookieManager simpleCookieManager = new SimpleCookieManager();
-    private final static OkHttpClient HTTP_CLIENT =
-            new OkHttpClient.Builder()
-                    .cookieJar(simpleCookieManager)
-                    .followRedirects(false)
-                    .build();
+    // ETag cache for conditional requests
+    private static final Map<String, String> etagCache = new ConcurrentHashMap<>();
 
-    // Store ETags for each URL to support cache-friendly polling
-    private static final ConcurrentHashMap<String, String> etagCache = new ConcurrentHashMap<>();
+    private static final OkHttpClient HTTP_CLIENT = new OkHttpClient.Builder()
+            .followRedirects(true)
+            .cookieJar(COOKIE_MANAGER)
+            .build();
 
+    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+    /**
+     * Set a logging facility for cookie manager operations
+     *
+     * @param logConsumer Consumer that receives log messages
+     */
     public static void setCookieManagerLoggingFacility(Consumer<String> logConsumer) {
-        simpleCookieManager.setLogData(logConsumer);
-    }
-
-    public static void removeCookiesOf(String domain) {
-        simpleCookieManager.removeCookiesOf(domain);
-    }
-
-    public static void runAsync(String finalUrl, Callback callback) {
-        Request.Builder requestBuilder = new Request.Builder().url(finalUrl);
-
-        // Add ETag header if we have a cached value
-        String cachedETag = etagCache.get(finalUrl);
-        if (cachedETag != null) {
-            requestBuilder.header("If-None-Match", cachedETag);
-        }
-
-        Request request = requestBuilder.build();
-        Call call = HttpClientUtil.HTTP_CLIENT.newCall(request);
-        call.enqueue(callback);
-    }
-
-    public static void runAsyncPost(String finalUrl, String jsonBody, Callback callback) {
-        MediaType JSON = MediaType.get("application/json; charset=utf-8");
-        RequestBody body = RequestBody.create(jsonBody, JSON);
-
-        Request request = new Request.Builder()
-                .url(finalUrl)
-                .post(body)
-                .build();
-
-        Call call = HttpClientUtil.HTTP_CLIENT.newCall(request);
-        call.enqueue(callback);
-    }
-
-    public static void runAsyncMultipartPost(String finalUrl, java.io.File file, Callback callback) {
-        MediaType XML = MediaType.get("application/xml");
-        RequestBody fileBody = RequestBody.create(file, XML);
-
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("file", file.getName(), fileBody)
-                .build();
-
-        Request request = new Request.Builder()
-                .url(finalUrl)
-                .post(requestBody)
-                .build();
-
-        Call call = HttpClientUtil.HTTP_CLIENT.newCall(request);
-        call.enqueue(callback);
+        COOKIE_MANAGER.setLogConsumer(logConsumer);
     }
 
     /**
-     * Store the ETag from a response for future requests
+     * Cache an ETag for a specific URL
+     *
+     * @param url The URL to cache the ETag for
+     * @param etag The ETag value to cache
      */
     public static void cacheETag(String url, String etag) {
-        if (etag != null && !etag.isEmpty()) {
+        if (url != null && etag != null) {
             etagCache.put(url, etag);
         }
     }
 
     /**
-     * Clear cached ETag for a URL (useful when data is known to have changed)
+     * Get cached ETag for a URL
+     *
+     * @param url The URL to get the cached ETag for
+     * @return The cached ETag or null if not found
+     */
+    public static String getCachedETag(String url) {
+        return etagCache.get(url);
+    }
+
+    /**
+     * Clear cached ETag for a URL
+     *
+     * @param url The URL to clear the cached ETag for
      */
     public static void clearETag(String url) {
         etagCache.remove(url);
@@ -99,10 +70,80 @@ public class HttpClientUtil {
         etagCache.clear();
     }
 
+    /**
+     * Run an async GET request
+     *
+     * @param url      The URL to request
+     * @param callback The callback to handle response
+     */
+    public static void runAsync(String url, Callback callback) {
+        Request.Builder requestBuilder = new Request.Builder().url(url).get();
+
+        // Add If-None-Match header if we have a cached ETag
+        String cachedETag = getCachedETag(url);
+        if (cachedETag != null) {
+            requestBuilder.header("If-None-Match", cachedETag);
+        }
+
+        Request request = requestBuilder.build();
+        HTTP_CLIENT.newCall(request).enqueue(callback);
+    }
+
+    /**
+     * Run an async request with a custom Request object
+     *
+     * @param request  The request to execute
+     * @param callback The callback to handle response
+     */
+    public static void runAsync(Request request, Callback callback) {
+        HTTP_CLIENT.newCall(request).enqueue(callback);
+    }
+
+    /**
+     * Run an async POST request with JSON body
+     *
+     * @param url      The URL to request
+     * @param jsonBody The JSON body as a string
+     * @param callback The callback to handle response
+     */
+    public static void runAsyncPost(String url, String jsonBody, Callback callback) {
+        RequestBody body = RequestBody.create(jsonBody, JSON);
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+
+        HTTP_CLIENT.newCall(request).enqueue(callback);
+    }
+
+    /**
+     * Run an async POST request with multipart form data (file upload)
+     *
+     * @param url      The URL to request
+     * @param file     The file to upload
+     * @param callback The callback to handle response
+     */
+    public static void runAsyncMultipartPost(String url, File file, Callback callback) {
+        RequestBody fileBody = RequestBody.create(file, MediaType.parse("application/xml"));
+
+        MultipartBody multipartBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", file.getName(), fileBody)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .post(multipartBody)
+                .build();
+
+        HTTP_CLIENT.newCall(request).enqueue(callback);
+    }
+
+    /**
+     * Shutdown the HTTP client
+     */
     public static void shutdown() {
-        System.out.println("Shutting down HTTP CLIENT");
         HTTP_CLIENT.dispatcher().executorService().shutdown();
         HTTP_CLIENT.connectionPool().evictAll();
-        etagCache.clear();
     }
 }
