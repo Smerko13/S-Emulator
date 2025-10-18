@@ -4,6 +4,7 @@ import components.api.HttpStatusUpdate;
 import components.login.LoginController;
 import components.mainDashboard.header.HeaderController;
 import components.mainDashboard.users.UsersController;
+import components.mainDashboard.ProgramsAndFunctions.ProgramsAndFunctionsController;
 import components.shared.UserSession;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -30,6 +31,7 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
     private LoginController logicController;
     @FXML private UsersController usersPanelController;
     @FXML private HeaderController headerPanelController;
+    @FXML private ProgramsAndFunctionsController programsAndFunctionsPanelController;
     private final StringProperty currentUserName;
     private final UserSession userSession;
 
@@ -44,6 +46,11 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
         usersPanelController.startUsersAutoRefresh();
         headerPanelController.setMainController(this);
 
+        // Initialize Programs and Functions panel
+        if (programsAndFunctionsPanelController != null) {
+            programsAndFunctionsPanelController.setMainController(this);
+        }
+
         // Sync local userName with shared session
         currentUserName.bindBidirectional(userSession.userNameProperty());
     }
@@ -57,6 +64,9 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
     public void close() {
         if (usersPanelController != null) {
             usersPanelController.stopUsersAutoRefresh();
+        }
+        if (programsAndFunctionsPanelController != null) {
+            programsAndFunctionsPanelController.stopAutoRefresh();
         }
     }
 

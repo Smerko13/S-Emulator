@@ -3,380 +3,257 @@ package components.mainDashboard.ProgramsAndFunctions;
 import components.executionDashboard.ExecutionDashboardController;
 import components.mainDashboard.clientMainController;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.Region;
-import javafx.stage.Screen;
-import javafx.stage.Stage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import api.dto.ProgramInfoDTO;
-import api.dto.FunctionInfoDTO;
+import javafx.stage.Stage;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
+import util.Constants;
+import util.http.HttpClientUtil;
+
 import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.CompletableFuture;
 
-import static util.Constants.FULL_SERVER_PATH;
+import static util.Constants.GSON_INSTANCE;
+import static util.Constants.REFRESH_RATE;
 
-public class ProgramsAndFunctionsController implements Initializable {
-    @FXML
-    private TableColumn<ProgramInfoDTO, String> programNameColumn;
-    @FXML
-    private TableColumn<ProgramInfoDTO, String> uploaderNameColumn;
-    @FXML
-    private TableColumn<ProgramInfoDTO, Integer> numOfInstructionsColumn;
-    @FXML
-    private TableColumn<ProgramInfoDTO, Integer> maxDegreeColumn;
-    @FXML
-    private TableColumn<ProgramInfoDTO, Integer> numOfExecutionsColumn;
-    @FXML
-    private TableColumn<ProgramInfoDTO, Double> avgCreditCostColumn;
-    @FXML
-    private Button executeProgramButton;
-    @FXML
-    private TableColumn<FunctionInfoDTO, String> functionNameColumn;
-    @FXML
-    private TableColumn<FunctionInfoDTO, String> associatedProgramColumn;
-    @FXML
-    private TableColumn<FunctionInfoDTO, String> associatedUserColumn;
-    @FXML
-    private TableColumn<FunctionInfoDTO, Integer> numOfInstructionsInFunctionColumn;
-    @FXML
-    private TableColumn<FunctionInfoDTO, Integer> maxDegreeForFunctionColumn;
-    @FXML
-    private Button executeFunctionButton;
-    @FXML
-    public TableView<ProgramInfoDTO> programsTable;
-    @FXML
-    public TableView<FunctionInfoDTO> functionsTable;
-    private ObservableList<ProgramInfoDTO> programsData = FXCollections.observableArrayList();
-    private ObservableList<FunctionInfoDTO> functionsData = FXCollections.observableArrayList();
-    private clientMainController clientMainController;
-    private Timer refreshTimer;
+public class ProgramsAndFunctionsController {
+
+    // Programs Table
+    @FXML private TableView<ProgramRow> programsTable;
+    @FXML private TableColumn<ProgramRow, String> programNameColumn;
+    @FXML private TableColumn<ProgramRow, String> programUploaderColumn;
+    @FXML private TableColumn<ProgramRow, Number> programInstructionsColumn;
+    @FXML private TableColumn<ProgramRow, Number> programMaxLevelColumn;
+    @FXML private TableColumn<ProgramRow, Number> programExecutionsColumn;
+    @FXML private TableColumn<ProgramRow, Number> programAvgCostColumn;
+    @FXML private Button executeProgramButton;
+
+    // Functions Table
+    @FXML private TableView<FunctionRow> functionsTable;
+    @FXML private TableColumn<FunctionRow, String> functionNameColumn;
+    @FXML private TableColumn<FunctionRow, String> parentProgramColumn;
+    @FXML private TableColumn<FunctionRow, String> functionUploaderColumn;
+    @FXML private TableColumn<FunctionRow, Number> functionInstructionsColumn;
+    @FXML private TableColumn<FunctionRow, Number> functionMaxLevelColumn;
+    @FXML private Button executeFunctionButton;
+
+    private final ObservableList<ProgramRow> programRows = FXCollections.observableArrayList();
+    private final ObservableList<FunctionRow> functionRows = FXCollections.observableArrayList();
+    private clientMainController mainController;
+    private Timer timer;
 
     public void setMainController(clientMainController mainController) {
-        this.clientMainController = mainController;
+        this.mainController = mainController;
     }
 
+    @FXML
+    public void initialize() {
+        System.out.println("ProgramsAndFunctionsController: Initializing");
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        initializeTableColumns();
-        loadProgramsAndFunctions();
-        startAutoRefresh();
-    }
+        // Programs table wiring
+        programNameColumn.setCellValueFactory(c -> c.getValue().programNameProperty());
+        programUploaderColumn.setCellValueFactory(c -> c.getValue().uploaderNameProperty());
+        programInstructionsColumn.setCellValueFactory(c -> c.getValue().instructionCountProperty());
+        programMaxLevelColumn.setCellValueFactory(c -> c.getValue().maxLevelProperty());
+        programExecutionsColumn.setCellValueFactory(c -> c.getValue().executionsCountProperty());
+        programAvgCostColumn.setCellValueFactory(c -> c.getValue().avgCreditCostProperty());
+        programsTable.setItems(programRows);
 
-    private void startAutoRefresh() {
-        refreshTimer = new Timer(true);
-        refreshTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                loadProgramsAndFunctions();
-            }
-        }, 5000, 5000); // Refresh every 5 seconds
-    }
-
-    // Add cleanup method
-    public void cleanup() {
-        if (refreshTimer != null) {
-            refreshTimer.cancel();
-        }
-    }
-
-
-    // ADD THIS MISSING METHOD
-    private void initializeTableColumns() {
-        // Programs table columns
-        programNameColumn.setCellValueFactory(new PropertyValueFactory<>("programName"));
-        uploaderNameColumn.setCellValueFactory(new PropertyValueFactory<>("uploaderName"));
-        numOfInstructionsColumn.setCellValueFactory(new PropertyValueFactory<>("numOfInstructions"));
-        maxDegreeColumn.setCellValueFactory(new PropertyValueFactory<>("maxDegree"));
-        numOfExecutionsColumn.setCellValueFactory(new PropertyValueFactory<>("numOfExecutions"));
-        avgCreditCostColumn.setCellValueFactory(new PropertyValueFactory<>("avgCreditCost"));
-
-        // Functions table columns
-        functionNameColumn.setCellValueFactory(new PropertyValueFactory<>("functionName"));
-        associatedProgramColumn.setCellValueFactory(new PropertyValueFactory<>("associatedProgram"));
-        associatedUserColumn.setCellValueFactory(new PropertyValueFactory<>("associatedUser"));
-        numOfInstructionsInFunctionColumn.setCellValueFactory(new PropertyValueFactory<>("numOfInstructions"));
-        maxDegreeForFunctionColumn.setCellValueFactory(new PropertyValueFactory<>("maxDegree"));
-
-        // Set data to tables
-        programsTable.setItems(programsData);
-        functionsTable.setItems(functionsData);
+        // Functions table wiring
+        functionNameColumn.setCellValueFactory(c -> c.getValue().functionNameProperty());
+        parentProgramColumn.setCellValueFactory(c -> c.getValue().parentProgramProperty());
+        functionUploaderColumn.setCellValueFactory(c -> c.getValue().uploaderNameProperty());
+        functionInstructionsColumn.setCellValueFactory(c -> c.getValue().instructionCountProperty());
+        functionMaxLevelColumn.setCellValueFactory(c -> c.getValue().maxLevelProperty());
+        functionsTable.setItems(functionRows);
 
         // Initially disable execute buttons
         executeProgramButton.setDisable(true);
         executeFunctionButton.setDisable(true);
 
-        // Add selection listeners to enable/disable buttons
+        // Add selection listeners
         programsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             executeProgramButton.setDisable(newSelection == null);
-            // Clear function table selection when program is selected
-            if (newSelection != null) {
-                functionsTable.getSelectionModel().clearSelection();
-            }
         });
 
         functionsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             executeFunctionButton.setDisable(newSelection == null);
-            // Clear program table selection when function is selected
-            if (newSelection != null) {
-                programsTable.getSelectionModel().clearSelection();
+        });
+
+        // Start auto-refresh
+        startAutoRefresh();
+    }
+
+    private void startAutoRefresh() {
+        if (timer != null) return;
+        timer = new Timer(true);
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                loadProgramsAndFunctions();
+            }
+        }, 0, REFRESH_RATE); // Refresh every 2 seconds
+    }
+
+    public void stopAutoRefresh() {
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+    }
+
+    private void loadProgramsAndFunctions() {
+        System.out.println("ProgramsAndFunctionsController: Loading programs and functions");
+
+        String url = Constants.FULL_SERVER_PATH + "/programs";
+        HttpClientUtil.runAsync(url, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                System.err.println("Failed to load programs and functions: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String body = response.body() != null ? response.body().string() : "{}";
+
+                if (!response.isSuccessful()) {
+                    System.err.println("Server error loading programs: " + response.code());
+                    return;
+                }
+
+                try {
+                    ProgramsAndFunctionsResponse data = GSON_INSTANCE.fromJson(body, ProgramsAndFunctionsResponse.class);
+
+                    Platform.runLater(() -> {
+                        // Update programs table
+                        programRows.clear();
+                        if (data.programs != null) {
+                            for (ProgramData prog : data.programs) {
+                                ProgramRow row = new ProgramRow(
+                                    prog.programName,
+                                    prog.uploaderName,
+                                    prog.numOfInstructions,
+                                    prog.maxDegree,
+                                    prog.numOfExecutions,
+                                    prog.avgCreditCost
+                                );
+                                programRows.add(row);
+                            }
+                        }
+                        System.out.println("Loaded " + programRows.size() + " programs");
+
+                        // Update functions table
+                        functionRows.clear();
+                        if (data.functions != null) {
+                            for (FunctionData func : data.functions) {
+                                FunctionRow row = new FunctionRow(
+                                    func.functionName,
+                                    func.associatedProgram,
+                                    func.associatedUser,
+                                    func.numOfInstructions,
+                                    func.maxDegree
+                                );
+                                functionRows.add(row);
+                            }
+                        }
+                        System.out.println("Loaded " + functionRows.size() + " functions");
+                    });
+
+                } catch (Exception e) {
+                    System.err.println("Error parsing programs/functions JSON: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         });
     }
 
-    public void loadProgramsAndFunctions() {
-        CompletableFuture.supplyAsync(this::fetchProgramsFromServer)
-                .thenAccept(this::updateTablesOnUIThread)
-                .exceptionally(throwable -> {
-                    System.err.println("Error loading programs: " + throwable.getMessage());
-                    return null;
-                });
+    @FXML
+    public void executeProgramButtonPressed() {
+        ProgramRow selected = programsTable.getSelectionModel().getSelectedItem();
+        if (selected == null) return;
+
+        String programName = selected.programNameProperty().get();
+        System.out.println("Executing program: " + programName);
+        openExecutionDashboard(programName);
     }
 
-    private String fetchProgramsFromServer() {
+    @FXML
+    public void executeFunctionButtonPressed() {
+        FunctionRow selected = functionsTable.getSelectionModel().getSelectedItem();
+        if (selected == null) return;
+
+        String functionName = selected.functionNameProperty().get();
+        System.out.println("Executing function: " + functionName);
+        openExecutionDashboard(functionName);
+    }
+
+    private void openExecutionDashboard(String targetName) {
         try {
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(FULL_SERVER_PATH + "/programs"))
-                    .GET()
-                    .build();
+            // Load the execution dashboard FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
+            Parent executionDashboardRoot = loader.load();
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            // Get the controller
+            ExecutionDashboardController execController = loader.getController();
 
-            if (response.statusCode() == 200) {
-                return response.body();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+            // Get the current stage
+            Stage stage = (Stage) programsTable.getScene().getWindow();
 
-    // ADD THIS MISSING METHOD
-    private void updateTablesOnUIThread(String jsonResponse) {
-        Platform.runLater(() -> {
-            if (jsonResponse != null) {
-                parseAndUpdateTables(jsonResponse);
-            }
-        });
-    }
-
-    private void parseAndUpdateTables(String jsonResponse) {
-        System.out.println("Received JSON: " + jsonResponse);
-
-        try {
-            // Clear existing data
-            programsData.clear();
-            functionsData.clear();
-
-            // Parse programs
-            if (jsonResponse != null && jsonResponse.contains("\"programs\":[")) {
-                // Extract programs from JSON manually (basic parsing)
-                String programsSection = jsonResponse.substring(
-                        jsonResponse.indexOf("\"programs\":[") + 12,
-                        jsonResponse.indexOf("],\"functions\":[")
-                );
-
-                // If there are programs, parse them
-                if (!programsSection.trim().isEmpty() && !programsSection.equals("")) {
-                    // Split by program objects (basic approach)
-                    String[] programs = programsSection.split("\\},\\{");
-
-                    for (String program : programs) {
-                        // Clean up the program string
-                        program = program.replace("{", "").replace("}", "");
-
-                        // Extract values using simple string parsing
-                        String programName = extractJsonValue(program, "programName");
-                        String uploaderName = extractJsonValue(program, "uploaderName");
-                        int numInstructions = Integer.parseInt(extractJsonValue(program, "numOfInstructions"));
-                        int maxDegree = Integer.parseInt(extractJsonValue(program, "maxDegree"));
-                        int numExecutions = Integer.parseInt(extractJsonValue(program, "numOfExecutions"));
-                        double avgCreditCost = Double.parseDouble(extractJsonValue(program, "avgCreditCost"));
-
-                        // Create DTO and add to list
-                        ProgramInfoDTO programInfo = new ProgramInfoDTO(
-                                programName, uploaderName, numInstructions,
-                                maxDegree, numExecutions, avgCreditCost
-                        );
-                        programsData.add(programInfo);
-                    }
-                }
-            }
-
-            // Parse functions
-            if (jsonResponse != null && jsonResponse.contains("\"functions\":[")) {
-                // Extract functions from JSON
-                String functionsSection = jsonResponse.substring(
-                        jsonResponse.indexOf("\"functions\":[") + 13,
-                        jsonResponse.lastIndexOf("]}")
-                );
-
-                // If there are functions, parse them
-                if (!functionsSection.trim().isEmpty() && !functionsSection.equals("")) {
-                    // Split by function objects
-                    String[] functions = functionsSection.split("\\},\\{");
-
-                    for (String function : functions) {
-                        // Clean up the function string
-                        function = function.replace("{", "").replace("}", "");
-
-                        // Extract values using simple string parsing
-                        String functionName = extractJsonValue(function, "functionName");
-                        String associatedProgram = extractJsonValue(function, "associatedProgram");
-                        String associatedUser = extractJsonValue(function, "associatedUser");
-                        int numInstructions = Integer.parseInt(extractJsonValue(function, "numOfInstructions"));
-                        int maxDegree = Integer.parseInt(extractJsonValue(function, "maxDegree"));
-
-                        // Create DTO and add to list
-                        FunctionInfoDTO functionInfo = new FunctionInfoDTO(
-                                functionName, associatedProgram, associatedUser,
-                                numInstructions, maxDegree
-                        );
-                        functionsData.add(functionInfo);
-                    }
-                }
-            }
-
-            System.out.println("Parsed " + programsData.size() + " programs and " + functionsData.size() + " functions");
-
-        } catch (Exception e) {
-            System.err.println("Error parsing JSON: " + e.getMessage());
-            e.printStackTrace();
-
-            // Add test data if parsing fails
-            programsData.add(new ProgramInfoDTO("Test Program", "Test User", 10, 5, 2, 1.5));
-            functionsData.add(new FunctionInfoDTO("Test Function", "Test Program", "Test User", 5, 3));
-        }
-    }
-
-    private String extractJsonValue(String jsonString, String key) {
-        try {
-            String keyPattern = "\"" + key + "\":";
-            int startIndex = jsonString.indexOf(keyPattern) + keyPattern.length();
-
-            if (startIndex == keyPattern.length() - 1) {
-                return "0"; // Key not found
-            }
-
-            // Skip whitespace and quotes
-            while (startIndex < jsonString.length() &&
-                    (jsonString.charAt(startIndex) == ' ' || jsonString.charAt(startIndex) == '"')) {
-                startIndex++;
-            }
-
-            int endIndex = startIndex;
-
-            // Find end of value (next comma, quote, or end of string)
-            while (endIndex < jsonString.length() &&
-                    jsonString.charAt(endIndex) != ',' &&
-                    jsonString.charAt(endIndex) != '"' &&
-                    jsonString.charAt(endIndex) != '}') {
-                endIndex++;
-            }
-
-            return jsonString.substring(startIndex, endIndex).trim();
-        } catch (Exception e) {
-            return "0"; // Default value if extraction fails
-        }
-    }
-
-    public void executeProgramButtonPressed(ActionEvent actionEvent) throws IOException {
-        // Get the selected program
-        ProgramInfoDTO selectedProgram = programsTable.getSelectionModel().getSelectedItem();
-        if (selectedProgram == null) {
-            return; // No program selected
-        }
-
-        // Load the execution dashboard FXML
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
-        Parent executionDashboardRoot = loader.load();
-
-        // Get the controller and set it up for program execution
-        Object controller = loader.getController();
-        if (controller instanceof ExecutionDashboardController) {
-            ExecutionDashboardController dashboardController = (ExecutionDashboardController) controller;
-
-            // Set the program name in the header first
-            dashboardController.setProgramOrFunctionName(selectedProgram.getProgramName());
-
-            // Open the program on the server - this will load the program's instructions and variables
-            dashboardController.openOnServer(selectedProgram.getProgramName());
-        }
-
-        // Get the current stage from the button and transition to execution dashboard
-        Stage stage = (Stage) executeProgramButton.getScene().getWindow();
-
-        if (stage != null && executionDashboardRoot != null) {
+            // Switch to execution dashboard scene
             if (stage.getScene() == null) {
                 stage.setScene(new Scene(executionDashboardRoot));
             } else {
                 stage.getScene().setRoot(executionDashboardRoot);
             }
-            stage.setMaximized(true);
-            stage.centerOnScreen();
-        }
 
-        // Set the title for the execution dashboard
-        stage.setTitle("S-Emulator - Program Execution Dashboard: " + selectedProgram.getProgramName());
+            // Open the target program/function
+            execController.openOnServer(targetName);
+
+        } catch (Exception e) {
+            System.err.println("Error opening execution dashboard: " + e.getMessage());
+            e.printStackTrace();
+
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Failed to Open Execution Dashboard");
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
+        }
     }
 
-    public void executeFunctionButtonPressed(ActionEvent e) throws IOException {
-        // Get the selected function
-        FunctionInfoDTO selectedFunction = functionsTable.getSelectionModel().getSelectedItem();
-        if (selectedFunction == null) {
-            return; // No function selected
-        }
+    // Inner classes for JSON parsing
+    private static class ProgramsAndFunctionsResponse {
+        ProgramData[] programs;
+        FunctionData[] functions;
+    }
 
-        // Load the execution dashboard FXML
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/executionDashboard/executionDashboard.fxml"));
-        Parent executionDashboardRoot = loader.load();
+    private static class ProgramData {
+        String programName;
+        String uploaderName;
+        int numOfInstructions;
+        int maxDegree;
+        int numOfExecutions;
+        double avgCreditCost;
+    }
 
-        // Get the controller and set it up for function execution
-        Object controller = loader.getController();
-        if (controller instanceof ExecutionDashboardController) {
-            ExecutionDashboardController dashboardController = (ExecutionDashboardController) controller;
-
-            // Set the function name in the header first
-            dashboardController.setProgramOrFunctionName(selectedFunction.getFunctionName());
-
-            // Open the function on the server - this will load the function's instructions and variables
-            dashboardController.openOnServer(selectedFunction.getFunctionName());
-        }
-
-        // Get the current stage from the button and transition to execution dashboard
-        Stage stage = (Stage) executeFunctionButton.getScene().getWindow();
-
-        if (stage != null && executionDashboardRoot != null) {
-            if (stage.getScene() == null) {
-                stage.setScene(new Scene(executionDashboardRoot));
-            } else {
-                stage.getScene().setRoot(executionDashboardRoot);
-            }
-            stage.setMaximized(true);
-            stage.centerOnScreen();
-        }
-
-        // Set the title for the execution dashboard
-        stage.setTitle("S-Emulator - Function Execution Dashboard: " + selectedFunction.getFunctionName());
+    private static class FunctionData {
+        String functionName;
+        String associatedProgram;
+        String associatedUser;
+        int numOfInstructions;
+        int maxDegree;
     }
 }
+

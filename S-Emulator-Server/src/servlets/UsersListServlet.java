@@ -4,7 +4,6 @@ import api.dto.UserSummary;
 import com.google.gson.Gson;
 import engine.Program;
 import engine.S_Emulator;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet("/userslist")
 public class UsersListServlet extends HttpServlet {
 
     private static final Gson GSON = new Gson();

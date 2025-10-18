@@ -18,6 +18,39 @@
         <url-pattern>/login</url-pattern>
     </servlet-mapping>
 
+    <!-- Users List servlet mapping -->
+    <servlet>
+        <servlet-name>UsersListServlet</servlet-name>
+        <servlet-class>servlets.UsersListServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>UsersListServlet</servlet-name>
+        <url-pattern>/userslist</url-pattern>
+    </servlet-mapping>
+
+    <!-- Execution History servlet mapping -->
+    <servlet>
+        <servlet-name>ExecutionHistoryServlet</servlet-name>
+        <servlet-class>servlets.ExecutionHistoryServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>ExecutionHistoryServlet</servlet-name>
+        <url-pattern>/executionHistory</url-pattern>
+    </servlet-mapping>
+
+    <!-- Programs servlet mapping -->
+    <servlet>
+        <servlet-name>ProgramsServlet</servlet-name>
+        <servlet-class>servlets.ProgramsServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>ProgramsServlet</servlet-name>
+        <url-pattern>/programs</url-pattern>
+    </servlet-mapping>
+
     <!-- Optional: default welcome file -->
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>

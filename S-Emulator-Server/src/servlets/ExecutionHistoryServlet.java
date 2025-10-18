@@ -2,7 +2,6 @@ package servlets;
 
 import api.dto.ExecutionHistoryDTO;
 import com.google.gson.Gson;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,7 +11,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-@WebServlet("/executionHistory")
 public class ExecutionHistoryServlet extends HttpServlet {
 
     private static final Gson GSON = new Gson();

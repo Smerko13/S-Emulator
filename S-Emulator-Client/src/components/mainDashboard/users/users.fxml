@@ -62,23 +62,25 @@
                 <TableView fx:id="statsTable" prefHeight="410.0" prefWidth="512.6666666666667">
                     <columns>
                         <TableColumn fx:id="executionNumberColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false">
-                            <graphic><Label text="Execution&#10;Number" /></graphic>
+                            <graphic><Label text="Run&#10;ID" /></graphic>
                         </TableColumn>
                         <TableColumn fx:id="runTypeColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="50.0" prefWidth="-1.0" sortable="false">
-                            <graphic><Label text="Run&#10;Type" /></graphic>
+                            <graphic><Label text="Execution&#10;Type" /></graphic>
                         </TableColumn>
-                        <TableColumn fx:id="nameColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false" text="Name" />
+                        <TableColumn fx:id="nameColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false">
+                            <graphic><Label text="Program/Function&#10;Name" /></graphic>
+                        </TableColumn>
                         <TableColumn fx:id="architectureColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false">
                             <graphic><Label text="Architecture&#10;Type" /></graphic>
                         </TableColumn>
                         <TableColumn fx:id="expansionLevelColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" sortable="false">
-                            <graphic><Label text="Expansion&#10;Level" /></graphic>
+                            <graphic><Label text="Execution&#10;Level" /></graphic>
                         </TableColumn>
                         <TableColumn fx:id="cyclesColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="50.0" prefWidth="-1.0" sortable="false">
-                            <graphic><Label text="Cycles&#10;Used" /></graphic>
+                            <graphic><Label text="CPU Cycles&#10;Used" /></graphic>
                         </TableColumn>
                         <TableColumn fx:id="outputColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="60.0" prefWidth="-1.0" sortable="false">
-                            <graphic><Label text="Output&#10;Generated" /></graphic>
+                            <graphic><Label text="Final Y&#10;Value" /></graphic>
                         </TableColumn>
                     </columns>
                     <columnResizePolicy>
