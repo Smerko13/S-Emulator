@@ -61,6 +61,10 @@ public class UsersController {
 
     private Timer timer;
 
+    // Store selected identifiers to restore after refresh
+    private String selectedUserName = null;
+    private Integer selectedExecutionRunId = null;
+
     public void setMainController(clientMainController mainController) {
         this.mainController = mainController;
     }
@@ -135,6 +139,13 @@ public class UsersController {
 
     private void loadUsersList() {
         System.out.println("UsersController: loadUsersList() called");
+
+        // Store current selection before refresh
+        UserRow currentUserSelection = usersTable.getSelectionModel().getSelectedItem();
+        if (currentUserSelection != null) {
+            selectedUserName = currentUserSelection.userNameProperty().get();
+        }
+
         HttpClientUtil.runAsync(Constants.USERS_LIST, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
@@ -171,6 +182,16 @@ public class UsersController {
                         return r;
                     }).toList());
                     System.out.println("UsersController: Table updated, now has " + rows.size() + " rows");
+
+                    // Restore user selection after refresh
+                    if (selectedUserName != null) {
+                        for (int i = 0; i < rows.size(); i++) {
+                            if (rows.get(i).userNameProperty().get().equals(selectedUserName)) {
+                                usersTable.getSelectionModel().select(i);
+                                break;
+                            }
+                        }
+                    }
                 });
             }
         });
@@ -189,6 +210,12 @@ public class UsersController {
     private void loadExecutionHistory(String userName) {
         System.out.println("UsersController: Loading execution history for user: " + userName);
 
+        // Store current execution selection before refresh
+        ExecutionHistoryRow currentExecSelection = statsTable.getSelectionModel().getSelectedItem();
+        if (currentExecSelection != null) {
+            selectedExecutionRunId = currentExecSelection.getRunId();
+        }
+
         String url = Constants.EXECUTION_HISTORY + "?userId=" + userName;
         HttpClientUtil.runAsync(url, new Callback() {
             @Override
@@ -196,6 +223,7 @@ public class UsersController {
                 System.err.println("Failed to load execution history for " + userName + ": " + e.getMessage());
                 Platform.runLater(() -> {
                     historyRows.clear();
+                    selectedExecutionRunId = null;
                 });
             }
 
@@ -206,7 +234,10 @@ public class UsersController {
 
                 if (!response.isSuccessful()) {
                     System.err.println("Server error loading execution history: " + response.code());
-                    Platform.runLater(() -> historyRows.clear());
+                    Platform.runLater(() -> {
+                        historyRows.clear();
+                        selectedExecutionRunId = null;
+                    });
                     return;
                 }
 
@@ -234,6 +265,16 @@ public class UsersController {
                         historyRows.add(row);
                     }
                     System.out.println("UsersController: Loaded " + historyRows.size() + " execution records for " + userName);
+
+                    // Restore execution selection after refresh
+                    if (selectedExecutionRunId != null) {
+                        for (int i = 0; i < historyRows.size(); i++) {
+                            if (historyRows.get(i).getRunId() == selectedExecutionRunId) {
+                                statsTable.getSelectionModel().select(i);
+                                break;
+                            }
+                        }
+                    }
                 });
             }
         });
@@ -245,12 +286,19 @@ public class UsersController {
     private void loadCurrentUserHistory() {
         System.out.println("UsersController: Loading current user's execution history");
 
+        // Store current execution selection before refresh
+        ExecutionHistoryRow currentExecSelection = statsTable.getSelectionModel().getSelectedItem();
+        if (currentExecSelection != null) {
+            selectedExecutionRunId = currentExecSelection.getRunId();
+        }
+
         HttpClientUtil.runAsync(Constants.EXECUTION_HISTORY, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 System.err.println("Failed to load current user execution history: " + e.getMessage());
                 Platform.runLater(() -> {
                     historyRows.clear();
+                    selectedExecutionRunId = null;
                 });
             }
 
@@ -261,7 +309,10 @@ public class UsersController {
 
                 if (!response.isSuccessful()) {
                     System.err.println("Server error loading current user history: " + response.code());
-                    Platform.runLater(() -> historyRows.clear());
+                    Platform.runLater(() -> {
+                        historyRows.clear();
+                        selectedExecutionRunId = null;
+                    });
                     return;
                 }
 
@@ -289,6 +340,16 @@ public class UsersController {
                         historyRows.add(row);
                     }
                     System.out.println("UsersController: Loaded " + historyRows.size() + " execution records for current user");
+
+                    // Restore execution selection after refresh
+                    if (selectedExecutionRunId != null) {
+                        for (int i = 0; i < historyRows.size(); i++) {
+                            if (historyRows.get(i).getRunId() == selectedExecutionRunId) {
+                                statsTable.getSelectionModel().select(i);
+                                break;
+                            }
+                        }
+                    }
                 });
             }
         });
@@ -303,6 +364,8 @@ public class UsersController {
         // Clear user table selection
         usersTable.getSelectionModel().clearSelection();
         selectedUserId = null;
+        selectedUserName = null;
+        selectedExecutionRunId = null;
 
         // Load current user's execution history
         loadCurrentUserHistory();

@@ -54,6 +54,10 @@ public class ProgramsAndFunctionsController {
     private clientMainController mainController;
     private Timer timer;
 
+    // Store selected identifiers to restore after refresh
+    private String selectedProgramName = null;
+    private String selectedFunctionName = null;
+
     public void setMainController(clientMainController mainController) {
         this.mainController = mainController;
     }
@@ -117,6 +121,17 @@ public class ProgramsAndFunctionsController {
     private void loadProgramsAndFunctions() {
         System.out.println("ProgramsAndFunctionsController: Loading programs and functions");
 
+        // Store current selections before refresh
+        ProgramRow currentProgramSelection = programsTable.getSelectionModel().getSelectedItem();
+        if (currentProgramSelection != null) {
+            selectedProgramName = currentProgramSelection.programNameProperty().get();
+        }
+
+        FunctionRow currentFunctionSelection = functionsTable.getSelectionModel().getSelectedItem();
+        if (currentFunctionSelection != null) {
+            selectedFunctionName = currentFunctionSelection.functionNameProperty().get();
+        }
+
         String url = Constants.FULL_SERVER_PATH + "/programs";
         HttpClientUtil.runAsync(url, new Callback() {
             @Override
@@ -154,6 +169,16 @@ public class ProgramsAndFunctionsController {
                         }
                         System.out.println("Loaded " + programRows.size() + " programs");
 
+                        // Restore program selection after refresh
+                        if (selectedProgramName != null) {
+                            for (int i = 0; i < programRows.size(); i++) {
+                                if (programRows.get(i).programNameProperty().get().equals(selectedProgramName)) {
+                                    programsTable.getSelectionModel().select(i);
+                                    break;
+                                }
+                            }
+                        }
+
                         // Update functions table
                         functionRows.clear();
                         if (data.functions != null) {
@@ -169,6 +194,16 @@ public class ProgramsAndFunctionsController {
                             }
                         }
                         System.out.println("Loaded " + functionRows.size() + " functions");
+
+                        // Restore function selection after refresh
+                        if (selectedFunctionName != null) {
+                            for (int i = 0; i < functionRows.size(); i++) {
+                                if (functionRows.get(i).functionNameProperty().get().equals(selectedFunctionName)) {
+                                    functionsTable.getSelectionModel().select(i);
+                                    break;
+                                }
+                            }
+                        }
                     });
 
                 } catch (Exception e) {
