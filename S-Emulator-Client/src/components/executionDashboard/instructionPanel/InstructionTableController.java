@@ -9,12 +9,16 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.scene.layout.Region;
 
 import java.util.List;
 
@@ -228,8 +232,11 @@ public class InstructionTableController {
 
         // Generate and display a summary of the program
         if (rows == null || rows.isEmpty()) {
-            SummaryLineTextBox.getChildren().clear();
-            SummaryLineTextBox.getChildren().add(new Text("No instructions to summarize."));
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Program Summary");
+            alert.setHeaderText("No Instructions Available");
+            alert.setContentText("There are no instructions to summarize.");
+            alert.showAndWait();
             return;
         }
 
@@ -270,23 +277,45 @@ public class InstructionTableController {
             minRequired = Architecture.GENERATION_II;
         }
 
-        // Build summary text
+        // Build summary text with better formatting
         StringBuilder summary = new StringBuilder();
-        summary.append("=== PROGRAM SUMMARY ===\n\n");
+        summary.append("Program Analysis\n\n");
+        summary.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
         summary.append("Total Instructions: ").append(rows.size()).append("\n");
         summary.append("Total Cycles: ").append(totalCycles).append("\n\n");
         summary.append("Instructions by Architecture:\n");
-        summary.append("  Generation I:   ").append(gen1Count).append("\n");
-        summary.append("  Generation II:  ").append(gen2Count).append("\n");
-        summary.append("  Generation III: ").append(gen3Count).append("\n");
-        summary.append("  Generation IV:  ").append(gen4Count).append("\n\n");
-        summary.append("Minimum Required Architecture: ").append(minRequired.getDisplayName()).append("\n");
-        summary.append("Base Cost: ").append(minRequired.getCost()).append(" credits\n");
-        summary.append("Estimated Total Cost: ").append(minRequired.getCost() + totalCycles).append(" credits");
+        summary.append("  • Generation I:   ").append(gen1Count).append(" instruction").append(gen1Count != 1 ? "s" : "").append("\n");
+        summary.append("  • Generation II:  ").append(gen2Count).append(" instruction").append(gen2Count != 1 ? "s" : "").append("\n");
+        summary.append("  • Generation III: ").append(gen3Count).append(" instruction").append(gen3Count != 1 ? "s" : "").append("\n");
+        summary.append("  • Generation IV:  ").append(gen4Count).append(" instruction").append(gen4Count != 1 ? "s" : "").append("\n\n");
+        summary.append("━━━━━━━━━━━━━━━━━━━━━━━\n\n");
+        summary.append("Minimum Required Architecture:\n");
+        summary.append("   ").append(minRequired.getDisplayName()).append("\n\n");
+        summary.append("Cost Estimation:\n");
+        summary.append("   Base Architecture Cost: ").append(minRequired.getCost()).append(" credits\n");
+        summary.append("   Execution Cycles: ").append(totalCycles).append(" credits\n");
+        summary.append("   ─────────────────────────────\n");
+        summary.append("   Total Estimated Cost: ").append(minRequired.getCost() + totalCycles).append(" credits");
 
-        // Display in the summary text box
-        SummaryLineTextBox.getChildren().clear();
-        SummaryLineTextBox.getChildren().add(new Text(summary.toString()));
+        // Create and show the popup dialog
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Program Summary");
+        alert.setHeaderText("Program Execution Summary");
+
+        // Create a TextArea for the summary text to make it scrollable
+        TextArea textArea = new TextArea(summary.toString());
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+
+        // Set the TextArea as the content of the alert
+        alert.getDialogPane().setContent(textArea);
+
+        // Make the dialog resizable and larger
+        alert.setResizable(true);
+        alert.getDialogPane().setPrefWidth(500);
+        alert.getDialogPane().setPrefHeight(450);
+
+        alert.showAndWait();
 
         System.out.println("Program summary displayed: " + rows.size() + " instructions, min arch: " + minRequired.name());
     }
