@@ -30,8 +30,10 @@ public class ExecutionHistoryServlet extends HttpServlet {
                 // Get execution history for specified user
                 User targetUser = context.getUser(targetUserId);
                 if (targetUser == null) {
-                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    resp.getWriter().write(GSON.toJson("User not found: " + targetUserId));
+                    // Return empty array for non-existent user (tolerates server restart)
+                    resp.setStatus(HttpServletResponse.SC_OK);
+                    resp.getWriter().write(GSON.toJson(new ExecutionHistoryDTO[0]));
+                    System.out.println("ExecutionHistoryServlet: User not found (may be after restart): " + targetUserId);
                     return;
                 }
                 history = targetUser.getExecutionHistory();
@@ -49,16 +51,35 @@ public class ExecutionHistoryServlet extends HttpServlet {
 
                 User currentUser = context.getUser(currentUsername);
                 if (currentUser == null) {
-                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    resp.getWriter().write(GSON.toJson("Current user not found"));
+                    // Return empty array after restart instead of error
+                    resp.setStatus(HttpServletResponse.SC_OK);
+                    resp.getWriter().write(GSON.toJson(new ExecutionHistoryDTO[0]));
+                    System.out.println("ExecutionHistoryServlet: Current user not found (may be after restart): " + currentUsername);
                     return;
                 }
                 history = currentUser.getExecutionHistory();
                 System.out.println("ExecutionHistoryServlet: Retrieved " + history.size() + " records for current user: " + currentUsername);
             }
 
+            // Generate JSON and compute ETag
+            String jsonResponse = GSON.toJson(history);
+            String etag = String.valueOf(jsonResponse.hashCode());
+
+            // Check for cached ETag
+            String clientETag = req.getHeader("If-None-Match");
+
+            resp.setHeader("ETag", etag);
+            resp.setHeader("Cache-Control", "no-cache");
+
+            // Return 304 if data hasn't changed
+            if (clientETag != null && clientETag.equals(etag)) {
+                resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+                System.out.println("ExecutionHistoryServlet: Returning 304 Not Modified");
+                return;
+            }
+
             resp.setStatus(HttpServletResponse.SC_OK);
-            resp.getWriter().write(GSON.toJson(history));
+            resp.getWriter().write(jsonResponse);
 
         } catch (Exception e) {
             System.err.println("Error in ExecutionHistoryServlet: " + e.getMessage());

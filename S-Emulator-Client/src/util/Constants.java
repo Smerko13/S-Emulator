@@ -7,7 +7,8 @@ public class Constants {
     // global constants
     public final static String LINE_SEPARATOR = System.getProperty("line.separator");
     public final static String JHON_DOE = "<Anonymous>";
-    public final static int REFRESH_RATE = 2000; // 2 seconds
+    public final static int REFRESH_RATE = 500; // 500ms recommended polling rate
+    public final static int REFRESH_RATE_SLOW = 2000; // 2s for less critical data
     public final static String CHAT_LINE_FORMATTING = "%tH:%tM:%tS | %.10s: %s%n";
 
     // fxml locations

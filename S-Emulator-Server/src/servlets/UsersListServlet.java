@@ -17,6 +17,8 @@ import java.util.Map;
 public class UsersListServlet extends HttpServlet {
 
     private static final Gson GSON = new Gson();
+    private static volatile String cachedResponseJson = null;
+    private static volatile int cachedResponseHash = 0;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -37,10 +39,32 @@ public class UsersListServlet extends HttpServlet {
                         ", Executions: " + summary.executions);
             }
 
+            // Generate JSON response
+            String jsonResponse = GSON.toJson(summaries);
+            int currentHash = jsonResponse.hashCode();
+
+            // Check ETag for cache-friendly mechanism
+            String clientETag = req.getHeader("If-None-Match");
+            String serverETag = String.valueOf(currentHash);
+
             resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
             resp.setContentType("application/json");
+            resp.setHeader("ETag", serverETag);
+            resp.setHeader("Cache-Control", "no-cache");
+
+            // Return 304 Not Modified if data hasn't changed
+            if (clientETag != null && clientETag.equals(serverETag)) {
+                resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+                System.out.println("UsersListServlet: Returning 304 Not Modified (ETag match)");
+                return;
+            }
+
+            // Cache the response
+            cachedResponseJson = jsonResponse;
+            cachedResponseHash = currentHash;
+
             resp.setStatus(HttpServletResponse.SC_OK);
-            resp.getWriter().write(GSON.toJson(summaries));
+            resp.getWriter().write(jsonResponse);
         } catch (Exception e) {
             System.err.println("Error in UsersListServlet: " + e.getMessage());
             e.printStackTrace();

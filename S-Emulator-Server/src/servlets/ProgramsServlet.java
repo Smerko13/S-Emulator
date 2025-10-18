@@ -10,6 +10,9 @@ import java.util.Map;
 
 public class ProgramsServlet extends HttpServlet {
 
+    private static volatile String cachedResponseJson = null;
+    private static volatile int cachedResponseHash = 0;
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
@@ -109,8 +112,28 @@ public class ProgramsServlet extends HttpServlet {
 
             jsonBuilder.append("]}");
 
-            resp.getWriter().write(jsonBuilder.toString());
-            System.out.println("SERVER - Sent programs and functions data: " + jsonBuilder.toString());
+            String jsonResponse = jsonBuilder.toString();
+            int currentHash = jsonResponse.hashCode();
+
+            // Check ETag for cache-friendly mechanism
+            String clientETag = req.getHeader("If-None-Match");
+            String serverETag = String.valueOf(currentHash);
+
+            resp.setHeader("ETag", serverETag);
+            resp.setHeader("Cache-Control", "no-cache");
+
+            // Return 304 Not Modified if data hasn't changed
+            if (clientETag != null && clientETag.equals(serverETag)) {
+                resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+                System.out.println("ProgramsServlet: Returning 304 Not Modified (ETag match)");
+                return;
+            }
+
+            cachedResponseJson = jsonResponse;
+            cachedResponseHash = currentHash;
+
+            resp.getWriter().write(jsonResponse);
+            System.out.println("SERVER - Sent programs and functions data");
 
         } catch (Exception e) {
             System.err.println("SERVER - Error in ProgramsServlet: " + e.getMessage());

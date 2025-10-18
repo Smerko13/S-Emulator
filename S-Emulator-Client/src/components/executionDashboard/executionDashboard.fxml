@@ -5,26 +5,42 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<GridPane hgap="10.0" styleClass="root" vgap="10.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="components.executionDashboard.ExecutionDashboardController">
+<GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+          styleClass="root" vgap="10.0"
+          xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="components.executionDashboard.ExecutionDashboardController">
 
-    <!-- 2 columns: 65% / 35% (only used if a child uses GridPane, SplitPane ignores these widths) -->
+    <!-- 2 columns: 65% instructions / 35% execution panel -->
     <columnConstraints>
-        <ColumnConstraints hgrow="ALWAYS" percentWidth="65.0" />
-        <ColumnConstraints hgrow="ALWAYS" percentWidth="35.0" />
+        <ColumnConstraints hgrow="ALWAYS" minWidth="400.0" percentWidth="65.0" />
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0" percentWidth="35.0" />
     </columnConstraints>
 
-    <!-- rows: header (fixed), middle (split), bottom (split) -->
+    <!-- rows: header (fixed), instructions (grow), history (grow) -->
     <rowConstraints>
-        <RowConstraints vgrow="NEVER" />     <!-- header -->
-        <RowConstraints vgrow="ALWAYS" />    <!-- center -->
-        <RowConstraints vgrow="ALWAYS" />    <!-- bottom -->
+        <RowConstraints minHeight="40.0" prefHeight="60.0" vgrow="NEVER" />     <!-- header -->
+        <RowConstraints minHeight="300.0" vgrow="ALWAYS" />                    <!-- center (instructions + execution panel) -->
+        <RowConstraints minHeight="150.0" vgrow="ALWAYS" />                    <!-- bottom (history panel) -->
     </rowConstraints>
 
     <!-- HEADER -->
-    <fx:include fx:id="headerComponent" source="header/header.fxml" GridPane.columnSpan="2" GridPane.rowIndex="0" GridPane.vgrow="NEVER" />
-    <fx:include fx:id="historyPanelComponent" source="historyPanel/TextFlow.fxml" GridPane.rowIndex="2" />
-    <fx:include fx:id="instructionTableComponent" source="instructionPanel/instructionTable.fxml" GridPane.rowIndex="1" />
-    <fx:include fx:id="executionPanelComponent" source="executionPanel/executionPanel.fxml" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.rowSpan="3" />
+    <fx:include fx:id="headerComponent" source="header/header.fxml"
+                GridPane.columnSpan="2" GridPane.rowIndex="0" GridPane.vgrow="NEVER" />
+
+    <!-- HISTORY PANEL (bottom left) -->
+    <fx:include fx:id="historyPanelComponent" source="historyPanel/TextFlow.fxml"
+                GridPane.columnIndex="0" GridPane.rowIndex="2"
+                GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS" />
+
+    <!-- INSTRUCTION TABLE (middle left) -->
+    <fx:include fx:id="instructionTableComponent" source="instructionPanel/instructionTable.fxml"
+                GridPane.columnIndex="0" GridPane.rowIndex="1"
+                GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS" />
+
+    <!-- EXECUTION PANEL (right side, spans middle and bottom) -->
+    <fx:include fx:id="executionPanelComponent" source="executionPanel/executionPanel.fxml"
+                GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.rowSpan="2"
+                GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS" />
 
     <padding>
         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

@@ -8,6 +8,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class HttpClientUtil {
@@ -19,6 +20,9 @@ public class HttpClientUtil {
                     .followRedirects(false)
                     .build();
 
+    // Store ETags for each URL to support cache-friendly polling
+    private static final ConcurrentHashMap<String, String> etagCache = new ConcurrentHashMap<>();
+
     public static void setCookieManagerLoggingFacility(Consumer<String> logConsumer) {
         simpleCookieManager.setLogData(logConsumer);
     }
@@ -28,12 +32,16 @@ public class HttpClientUtil {
     }
 
     public static void runAsync(String finalUrl, Callback callback) {
-        Request request = new Request.Builder()
-                .url(finalUrl)
-                .build();
+        Request.Builder requestBuilder = new Request.Builder().url(finalUrl);
 
+        // Add ETag header if we have a cached value
+        String cachedETag = etagCache.get(finalUrl);
+        if (cachedETag != null) {
+            requestBuilder.header("If-None-Match", cachedETag);
+        }
+
+        Request request = requestBuilder.build();
         Call call = HttpClientUtil.HTTP_CLIENT.newCall(request);
-
         call.enqueue(callback);
     }
 
@@ -68,9 +76,33 @@ public class HttpClientUtil {
         call.enqueue(callback);
     }
 
+    /**
+     * Store the ETag from a response for future requests
+     */
+    public static void cacheETag(String url, String etag) {
+        if (etag != null && !etag.isEmpty()) {
+            etagCache.put(url, etag);
+        }
+    }
+
+    /**
+     * Clear cached ETag for a URL (useful when data is known to have changed)
+     */
+    public static void clearETag(String url) {
+        etagCache.remove(url);
+    }
+
+    /**
+     * Clear all cached ETags
+     */
+    public static void clearAllETags() {
+        etagCache.clear();
+    }
+
     public static void shutdown() {
         System.out.println("Shutting down HTTP CLIENT");
         HTTP_CLIENT.dispatcher().executorService().shutdown();
         HTTP_CLIENT.connectionPool().evictAll();
+        etagCache.clear();
     }
 }

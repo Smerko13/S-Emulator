@@ -140,7 +140,7 @@ public class UsersController {
     private void loadUsersList() {
         System.out.println("UsersController: loadUsersList() called");
 
-        // Store current selection before refresh
+        // Store current selection and scroll position before refresh
         UserRow currentUserSelection = usersTable.getSelectionModel().getSelectedItem();
         if (currentUserSelection != null) {
             selectedUserName = currentUserSelection.userNameProperty().get();
@@ -154,6 +154,18 @@ public class UsersController {
             }
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                // Handle 304 Not Modified - no need to update UI
+                if (response.code() == 304) {
+                    System.out.println("UsersController: Data unchanged (304), skipping update");
+                    return;
+                }
+
+                // Cache the ETag for next request
+                String etag = response.header("ETag");
+                if (etag != null) {
+                    HttpClientUtil.cacheETag(Constants.USERS_LIST, etag);
+                }
+
                 String body = response.body() != null ? response.body().string() : "[]";
                 System.out.println("UsersController: loadUsersList response: " + body);
                 UserSummary[] summaries;
@@ -172,15 +184,10 @@ public class UsersController {
                 UserSummary[] finalSummaries = summaries;
                 Platform.runLater(() -> {
                     System.out.println("UsersController: Updating table with " + finalSummaries.length + " users");
-                    rows.setAll(Arrays.stream(finalSummaries).map(dto -> {
-                        UserRow r = new UserRow(dto.username);
-                        r.programsUploadedProperty().set(dto.programs);
-                        r.functionsUploadedProperty().set(dto.functions);
-                        r.creditsAvailableProperty().set(dto.creditsAvailable);
-                        r.creditsUsedProperty().set(dto.creditsUsed);
-                        r.totalExecutionsProperty().set(dto.executions);
-                        return r;
-                    }).toList());
+
+                    // Smart update: compare and update only changed rows to avoid flicker
+                    updateUsersTableSmart(finalSummaries);
+
                     System.out.println("UsersController: Table updated, now has " + rows.size() + " rows");
 
                     // Restore user selection after refresh
@@ -195,6 +202,56 @@ public class UsersController {
                 });
             }
         });
+    }
+
+    /**
+     * Smart update that only modifies changed rows to prevent flicker
+     */
+    private void updateUsersTableSmart(UserSummary[] summaries) {
+        // Create a map of existing rows by username
+        java.util.Map<String, UserRow> existingRows = new java.util.HashMap<>();
+        for (UserRow row : rows) {
+            existingRows.put(row.userNameProperty().get(), row);
+        }
+
+        // Track which usernames are in the new data
+        java.util.Set<String> newUsernames = new java.util.HashSet<>();
+
+        for (UserSummary summary : summaries) {
+            newUsernames.add(summary.username);
+            UserRow existingRow = existingRows.get(summary.username);
+
+            if (existingRow != null) {
+                // Update existing row only if values changed
+                if (existingRow.programsUploadedProperty().get() != summary.programs) {
+                    existingRow.programsUploadedProperty().set(summary.programs);
+                }
+                if (existingRow.functionsUploadedProperty().get() != summary.functions) {
+                    existingRow.functionsUploadedProperty().set(summary.functions);
+                }
+                if (existingRow.creditsAvailableProperty().get() != summary.creditsAvailable) {
+                    existingRow.creditsAvailableProperty().set(summary.creditsAvailable);
+                }
+                if (existingRow.creditsUsedProperty().get() != summary.creditsUsed) {
+                    existingRow.creditsUsedProperty().set(summary.creditsUsed);
+                }
+                if (existingRow.totalExecutionsProperty().get() != summary.executions) {
+                    existingRow.totalExecutionsProperty().set(summary.executions);
+                }
+            } else {
+                // Add new row
+                UserRow newRow = new UserRow(summary.username);
+                newRow.programsUploadedProperty().set(summary.programs);
+                newRow.functionsUploadedProperty().set(summary.functions);
+                newRow.creditsAvailableProperty().set(summary.creditsAvailable);
+                newRow.creditsUsedProperty().set(summary.creditsUsed);
+                newRow.totalExecutionsProperty().set(summary.executions);
+                rows.add(newRow);
+            }
+        }
+
+        // Remove rows that are no longer in the data
+        rows.removeIf(row -> !newUsernames.contains(row.userNameProperty().get()));
     }
 
     public void cleanup() {

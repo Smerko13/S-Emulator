@@ -141,6 +141,18 @@ public class ProgramsAndFunctionsController {
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                // Handle 304 Not Modified - no need to update UI
+                if (response.code() == 304) {
+                    System.out.println("ProgramsAndFunctionsController: Data unchanged (304), skipping update");
+                    return;
+                }
+
+                // Cache the ETag for next request
+                String etag = response.header("ETag");
+                if (etag != null) {
+                    HttpClientUtil.cacheETag(url, etag);
+                }
+
                 String body = response.body() != null ? response.body().string() : "{}";
 
                 if (!response.isSuccessful()) {
@@ -152,21 +164,8 @@ public class ProgramsAndFunctionsController {
                     ProgramsAndFunctionsResponse data = GSON_INSTANCE.fromJson(body, ProgramsAndFunctionsResponse.class);
 
                     Platform.runLater(() -> {
-                        // Update programs table
-                        programRows.clear();
-                        if (data.programs != null) {
-                            for (ProgramData prog : data.programs) {
-                                ProgramRow row = new ProgramRow(
-                                    prog.programName,
-                                    prog.uploaderName,
-                                    prog.numOfInstructions,
-                                    prog.maxDegree,
-                                    prog.numOfExecutions,
-                                    prog.avgCreditCost
-                                );
-                                programRows.add(row);
-                            }
-                        }
+                        // Smart update for programs table
+                        updateProgramsTableSmart(data.programs);
                         System.out.println("Loaded " + programRows.size() + " programs");
 
                         // Restore program selection after refresh
@@ -179,20 +178,8 @@ public class ProgramsAndFunctionsController {
                             }
                         }
 
-                        // Update functions table
-                        functionRows.clear();
-                        if (data.functions != null) {
-                            for (FunctionData func : data.functions) {
-                                FunctionRow row = new FunctionRow(
-                                    func.functionName,
-                                    func.associatedProgram,
-                                    func.associatedUser,
-                                    func.numOfInstructions,
-                                    func.maxDegree
-                                );
-                                functionRows.add(row);
-                            }
-                        }
+                        // Smart update for functions table
+                        updateFunctionsTableSmart(data.functions);
                         System.out.println("Loaded " + functionRows.size() + " functions");
 
                         // Restore function selection after refresh
@@ -212,6 +199,116 @@ public class ProgramsAndFunctionsController {
                 }
             }
         });
+    }
+
+    /**
+     * Smart update that only modifies changed rows to prevent flicker
+     */
+    private void updateProgramsTableSmart(ProgramData[] programs) {
+        if (programs == null) {
+            programRows.clear();
+            return;
+        }
+
+        // Create a map of existing rows by program name
+        java.util.Map<String, ProgramRow> existingRows = new java.util.HashMap<>();
+        for (ProgramRow row : programRows) {
+            existingRows.put(row.programNameProperty().get(), row);
+        }
+
+        // Track which programs are in the new data
+        java.util.Set<String> newProgramNames = new java.util.HashSet<>();
+
+        for (ProgramData prog : programs) {
+            newProgramNames.add(prog.programName);
+            ProgramRow existingRow = existingRows.get(prog.programName);
+
+            if (existingRow != null) {
+                // Update existing row only if values changed
+                if (existingRow.instructionCountProperty().get() != prog.numOfInstructions) {
+                    existingRow.instructionCountProperty().set(prog.numOfInstructions);
+                }
+                if (existingRow.maxLevelProperty().get() != prog.maxDegree) {
+                    existingRow.maxLevelProperty().set(prog.maxDegree);
+                }
+                if (existingRow.executionsCountProperty().get() != prog.numOfExecutions) {
+                    existingRow.executionsCountProperty().set(prog.numOfExecutions);
+                }
+                if (Math.abs(existingRow.avgCreditCostProperty().get() - prog.avgCreditCost) > 0.01) {
+                    existingRow.avgCreditCostProperty().set(prog.avgCreditCost);
+                }
+                if (!existingRow.uploaderNameProperty().get().equals(prog.uploaderName)) {
+                    existingRow.uploaderNameProperty().set(prog.uploaderName);
+                }
+            } else {
+                // Add new row
+                ProgramRow newRow = new ProgramRow(
+                    prog.programName,
+                    prog.uploaderName,
+                    prog.numOfInstructions,
+                    prog.maxDegree,
+                    prog.numOfExecutions,
+                    prog.avgCreditCost
+                );
+                programRows.add(newRow);
+            }
+        }
+
+        // Remove rows that are no longer in the data
+        programRows.removeIf(row -> !newProgramNames.contains(row.programNameProperty().get()));
+    }
+
+    /**
+     * Smart update for functions table
+     */
+    private void updateFunctionsTableSmart(FunctionData[] functions) {
+        if (functions == null) {
+            functionRows.clear();
+            return;
+        }
+
+        // Create a map of existing rows by function name
+        java.util.Map<String, FunctionRow> existingRows = new java.util.HashMap<>();
+        for (FunctionRow row : functionRows) {
+            existingRows.put(row.functionNameProperty().get(), row);
+        }
+
+        // Track which functions are in the new data
+        java.util.Set<String> newFunctionNames = new java.util.HashSet<>();
+
+        for (FunctionData func : functions) {
+            newFunctionNames.add(func.functionName);
+            FunctionRow existingRow = existingRows.get(func.functionName);
+
+            if (existingRow != null) {
+                // Update existing row only if values changed
+                if (existingRow.instructionCountProperty().get() != func.numOfInstructions) {
+                    existingRow.instructionCountProperty().set(func.numOfInstructions);
+                }
+                if (existingRow.maxLevelProperty().get() != func.maxDegree) {
+                    existingRow.maxLevelProperty().set(func.maxDegree);
+                }
+                if (!existingRow.parentProgramProperty().get().equals(func.associatedProgram)) {
+                    existingRow.parentProgramProperty().set(func.associatedProgram);
+                }
+                if (!existingRow.uploaderNameProperty().get().equals(func.associatedUser)) {
+                    existingRow.uploaderNameProperty().set(func.associatedUser);
+                }
+            } else {
+                // Add new row
+                FunctionRow newRow = new FunctionRow(
+                    func.functionName,
+                    func.associatedProgram,
+                    func.associatedUser,
+                    func.numOfInstructions,
+                    func.maxDegree
+                );
+                functionRows.add(newRow);
+            }
+        }
+
+        // Remove rows that are no longer in the data
+        functionRows.removeIf(row -> !newFunctionNames.contains(row.functionNameProperty().get()));
     }
 
     @FXML
