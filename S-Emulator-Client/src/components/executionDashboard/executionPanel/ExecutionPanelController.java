@@ -341,6 +341,31 @@ public class ExecutionPanelController implements Initializable {
         Architecture selectedArchitecture = getSelectedArchitecture();
         System.out.println("Selected architecture for execution: " + selectedArchitecture.name() + " (Cost: " + selectedArchitecture.getCost() + " credits)");
 
+        // Validate architecture compatibility with instruction table
+        Architecture requiredArchitecture = validateArchitectureWithInstructionTable(selectedArchitecture);
+        if (requiredArchitecture != null) {
+            // Architecture is insufficient - show error and block execution
+            showArchitectureInsufficientDialog(selectedArchitecture, requiredArchitecture);
+            return;
+        }
+
+        // Check if user has sufficient credits
+        components.shared.UserSession userSession = components.shared.UserSession.getInstance();
+        int availableCredits = userSession.getCredits();
+        int architectureCost = selectedArchitecture.getCost();
+
+        System.out.println("Credit check: Available=" + availableCredits + ", Architecture cost=" + architectureCost);
+
+        // TODO: Get average program cost from server/context if available
+        int estimatedCycleCost = 50; // Conservative estimate for cycles
+        int totalEstimatedCost = architectureCost + estimatedCycleCost;
+
+        if (availableCredits < totalEstimatedCost) {
+            // Insufficient credits - show warning dialog
+            showInsufficientCreditsDialog(availableCredits, totalEstimatedCost, architectureCost);
+            return;
+        }
+
         // Collect and update input variable values before execution
         if (inputVarsTable != null && inputVarsTable.getItems() != null) {
             System.out.println("Input variables table found with " + inputVarsTable.getItems().size() + " variables");
@@ -384,6 +409,55 @@ public class ExecutionPanelController implements Initializable {
 
         System.out.println("Program execution request sent to server with architecture: " + selectedArchitecture.name());
         System.out.println("==================== EXECUTE REQUEST COMPLETE ====================");
+    }
+
+    /**
+     * Validate architecture compatibility with instruction table controller
+     */
+    private Architecture validateArchitectureWithInstructionTable(Architecture selectedArchitecture) {
+        // Get instruction table controller from parent
+        if (parent != null) {
+            return parent.validateArchitectureCompatibility(selectedArchitecture);
+        }
+        return null;
+    }
+
+    /**
+     * Show dialog when selected architecture is insufficient
+     */
+    private void showArchitectureInsufficientDialog(Architecture selected, Architecture required) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Insufficient Architecture");
+        alert.setHeaderText("Selected architecture cannot execute this program");
+
+        StringBuilder content = new StringBuilder();
+        content.append("The program contains instructions that require ").append(required.getDisplayName()).append(".\n\n");
+        content.append("Selected: ").append(selected.getDisplayName()).append(" (").append(selected.getCost()).append(" credits)\n");
+        content.append("Required: ").append(required.getDisplayName()).append(" (").append(required.getCost()).append(" credits)\n\n");
+        content.append("Incompatible instructions have been highlighted in red.\n");
+        content.append("Please select ").append(required.getDisplayName()).append(" or higher to execute.");
+
+        alert.setContentText(content.toString());
+        alert.showAndWait();
+    }
+
+    /**
+     * Show dialog when user has insufficient credits
+     */
+    private void showInsufficientCreditsDialog(int available, int estimated, int architectureCost) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Insufficient Credits");
+        alert.setHeaderText("Not enough credits to execute program");
+
+        StringBuilder content = new StringBuilder();
+        content.append("You do not have enough credits to execute this program.\n\n");
+        content.append("Available credits: ").append(available).append("\n");
+        content.append("Architecture base cost: ").append(architectureCost).append("\n");
+        content.append("Estimated total cost: ").append(estimated).append("\n\n");
+        content.append("Please add more credits before executing.");
+
+        alert.setContentText(content.toString());
+        alert.showAndWait();
     }
 
     public void debugButtonPressed(ActionEvent actionEvent) {

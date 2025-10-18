@@ -8,6 +8,7 @@ public class ExecutionStateDTO {
     private int currentDegree;
     private int maxDegree;
     private int cycles;
+    private int userCredits; // User's current credit balance
     private boolean debugging;
     private List<String> functionNames;
     private List<InstructionDTO> instructions;
@@ -51,6 +52,14 @@ public class ExecutionStateDTO {
 
     public void setCycles(int cycles) {
         this.cycles = cycles;
+    }
+
+    public int getUserCredits() {
+        return userCredits;
+    }
+
+    public void setUserCredits(int userCredits) {
+        this.userCredits = userCredits;
     }
 
     public boolean isDebugging() {

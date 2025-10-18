@@ -280,8 +280,8 @@ public class ExecutionServlet extends HttpServlet {
             System.out.println("ExecutionServlet: Execution record added - Type: " + executionType +
                              ", Y-value: " + finalYValue + ", Cycles: " + cpuCyclesUsed);
 
-            // Return updated execution state
-            ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
+            // Return updated execution state WITH user credits
+            ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget, username);
             response.getWriter().write(GSON.toJson(executionState));
 
         } catch (Exception e) {
@@ -469,9 +469,10 @@ public class ExecutionServlet extends HttpServlet {
 
         S_Emulator engine = (S_Emulator) session.getAttribute("engine");
         String currentTarget = (String) session.getAttribute("currentTarget");
+        String username = (String) session.getAttribute("username");
 
         if (engine != null && currentTarget != null) {
-            ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
+            ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget, username);
             response.getWriter().write(GSON.toJson(executionState));
         } else {
             response.getWriter().write(GSON.toJson("{}"));
@@ -829,7 +830,7 @@ public class ExecutionServlet extends HttpServlet {
             }
 
             // Create updated execution state - this will handle debug state properly
-            ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
+            ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget, username);
 
             response.getWriter().write(GSON.toJson(executionState));
 
@@ -1060,6 +1061,31 @@ public class ExecutionServlet extends HttpServlet {
 
         // Set empty trace lines for now
         state.setTraceLines(new ArrayList<>());
+
+        return state;
+    }
+
+    /**
+     * Overload that accepts username to include user credits in the state
+     */
+    private ExecutionStateDTO createExecutionStateDTO(S_Emulator engine, String target, String username) {
+        ExecutionStateDTO state = createExecutionStateDTO(engine, target);
+
+        // Add user's current credit balance
+        if (username != null) {
+            ServerContext context = ServerContext.getInstance();
+            User user = context.getUser(username);
+            if (user != null) {
+                state.setUserCredits(user.getCredits());
+                System.out.println("ExecutionServlet: Added user credits to state: " + user.getCredits());
+            } else {
+                state.setUserCredits(0);
+                System.out.println("ExecutionServlet: User not found, setting credits to 0");
+            }
+        } else {
+            state.setUserCredits(0);
+            System.out.println("ExecutionServlet: No username provided, setting credits to 0");
+        }
 
         return state;
     }

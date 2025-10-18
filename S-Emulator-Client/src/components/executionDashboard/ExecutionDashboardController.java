@@ -536,4 +536,15 @@ public class ExecutionDashboardController {
             executionPanelComponentController.updateInputDisplayValues(preFilledInputs);
         }
     }
+
+    /**
+     * Validate architecture compatibility by delegating to instruction table controller
+     * Returns the required architecture if incompatible, null if compatible
+     */
+    public Architecture validateArchitectureCompatibility(Architecture selectedArchitecture) {
+        if (instructionTableComponentController != null) {
+            return instructionTableComponentController.validateArchitectureCompatibility(selectedArchitecture);
+        }
+        return null;
+    }
 }
