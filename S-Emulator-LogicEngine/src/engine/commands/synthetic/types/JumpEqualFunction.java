@@ -93,10 +93,10 @@ public class JumpEqualFunction extends SyntheticCommand {
                 new JumpEqualVariable(this.variable, newWorkVariable, this.JEFunctionLabel, this, this.associatedProgram)
         );
 
-        // Clean scratch (prevents later passes from seeing stale value)
-        this.ExpandedCommands.add(
-                new ConstantAssignment(newWorkVariable, 0, "   ", this, this.associatedProgram)
-        );
+        // REMOVED: Cleanup of scratch variable
+        // Per Quote spec, variables should persist their values after Q executes
+        // The newWorkVariable holds Q's result and may be referenced later
+        // The substitution mechanism already ensures proper isolation
 
         expandFurther();
     }
@@ -105,35 +105,31 @@ public class JumpEqualFunction extends SyntheticCommand {
     public String execute() {
         int returnValue = -1;
 
-        // Snapshot existing variables' values so we can restore them after speculative eval
-        Set<Variable> snapshot = this.associatedProgram.getVariables().stream()
-                .map(Variable::clone)
-                .collect(Collectors.toSet());
-
         // Track temporary variables created while resolving constants/nested calls
         List<Variable> execTemps = new ArrayList<>();
 
-        try {
-            // Build call var list from already-parsed tokens
-            List<String> args = this.functionArguments;
-            List<Variable> callVars = new ArrayList<>(args.size());
-            for (String a : args) {
-                callVars.add(resolveArgToVariable(a, execTemps));
-            }
+        // Build call var list from already-parsed tokens
+        List<String> args = this.functionArguments;
+        List<Variable> callVars = new ArrayList<>(args.size());
+        for (String a : args) {
+            callVars.add(resolveArgToVariable(a, execTemps));
+        }
 
-            for (Program e : this.associatedProgram.subFunctions) {
-                if (e.getUserString().equals(functionName)) {
-                    returnValue = e.executeFunction(callVars, functionName, this.associatedProgram);
-                    break;
-                }
+        for (Program e : this.associatedProgram.subFunctions) {
+            if (e.getUserString().equals(functionName)) {
+                returnValue = e.executeFunction(callVars, functionName, this.associatedProgram);
+                break;
             }
-        } finally {
-            // Always restore values
-            setBackOriginalVariables(snapshot);
-            // Remove ephemeral temps created during evaluation
-            if (!execTemps.isEmpty()) {
-                this.associatedProgram.getVariables().removeAll(execTemps);
-            }
+        }
+
+        // REMOVED: Variable restoration logic
+        // Per Quote spec, the quoted function Q's side effects should persist
+        // Variables modified during Q's execution retain their values
+        // Only clean up ephemeral temp variables created during argument resolution
+
+        // Remove ephemeral temps created during evaluation
+        if (!execTemps.isEmpty()) {
+            this.associatedProgram.getVariables().removeAll(execTemps);
         }
 
         return (this.variable.getValue() == returnValue) ? JEFunctionLabel : null;

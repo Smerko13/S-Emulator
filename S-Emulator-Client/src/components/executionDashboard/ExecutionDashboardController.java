@@ -61,6 +61,13 @@ public class ExecutionDashboardController {
         if (historyPanelComponentController != null) historyPanelComponentController.setMainController(this);
     }
 
+    /**
+     * Get the execution panel controller so other components can configure it before opening
+     */
+    public ExecutionPanelController getExecutionPanelController() {
+        return executionPanelComponentController;
+    }
+
     /* ---------------------------
        Public API called by UI
        --------------------------- */
@@ -338,14 +345,47 @@ public class ExecutionDashboardController {
                 }
 
                 try {
+                    // Check if response is valid JSON object before parsing
+                    if (json.trim().isEmpty()) {
+                        System.err.println("Empty response received from server");
+                        Platform.runLater(() -> pushError("Empty response from server"));
+                        return;
+                    }
+
+                    // Check if it's a plain string (starts with quotes but not a JSON object)
+                    String trimmedJson = json.trim();
+                    if (trimmedJson.startsWith("\"") && !trimmedJson.startsWith("{")) {
+                        // It's a plain string - could be success or error message
+                        String message = GSON_INSTANCE.fromJson(json, String.class);
+
+                        // Check if it's a success message or error message
+                        if (message.toLowerCase().contains("success") ||
+                            message.toLowerCase().contains("updated")) {
+                            // It's a success message - log it but don't show as error
+                            System.out.println("Server success message: " + message);
+                            // Don't update UI for success messages from intermediate operations
+                            return;
+                        } else {
+                            // It's an error message
+                            System.err.println("Server returned error message: " + message);
+                            Platform.runLater(() -> pushError(message));
+                            return;
+                        }
+                    }
+
                     ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
                     System.out.println("Parsed ExecutionStateDTO - Instructions: " +
                             (state.getInstructions() != null ? state.getInstructions().size() : "null") +
                             ", Variables: " + (state.getAllVariables() != null ? state.getAllVariables().size() : "null"));
                     Platform.runLater(() -> applyStateToPanels(state));
+                } catch (com.google.gson.JsonSyntaxException e) {
+                    System.err.println("Invalid JSON format - server may have returned an error message");
+                    System.err.println("Response was: " + json);
+                    Platform.runLater(() -> pushError("Invalid response from server: " + shorten(json)));
                 } catch (Exception e) {
                     System.err.println("Error parsing JSON response: " + e.getMessage());
                     e.printStackTrace();
+                    Platform.runLater(() -> pushError("Error processing response: " + e.getMessage()));
                 }
             }
         });

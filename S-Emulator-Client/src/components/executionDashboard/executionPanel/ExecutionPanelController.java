@@ -30,6 +30,7 @@ public class ExecutionPanelController implements Initializable {
     @FXML private Label cyclesLabel;
 
     private ExecutionDashboardController parent;
+    private Parent mainDashboardRoot;  // Store reference to main dashboard to preserve state
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -275,6 +276,14 @@ public class ExecutionPanelController implements Initializable {
         this.parent = parent;
     }
 
+    /**
+     * Set the main dashboard root to return to when back button is pressed.
+     * This preserves the state of the main dashboard (programs list, user info, etc.)
+     */
+    public void setMainDashboardRoot(Parent mainDashboardRoot) {
+        this.mainDashboardRoot = mainDashboardRoot;
+    }
+
 
 
     // Must be public (dashboard calls it)
@@ -512,15 +521,18 @@ public class ExecutionPanelController implements Initializable {
 
     public void backToMainDashBoard(ActionEvent actionEvent) {
         try {
-            // Load the main dashboard FXML
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/mainDashboard/mainDashboard.fxml"));
-            Parent mainDashboardRoot = loader.load();
-
-            // Get the current stage from the button (using your proven pattern)
+            // Get the current stage from the button
             Stage stage = (Stage) backToMainDashBoardButton.getScene().getWindow();
 
-            // Apply the same transition pattern that works well
-            if (stage != null && mainDashboardRoot != null) {
+            if (stage == null) {
+                System.err.println("Cannot navigate back - stage is null");
+                return;
+            }
+
+            // If we have a reference to the main dashboard root, use it (preserves state)
+            if (mainDashboardRoot != null) {
+                System.out.println("Returning to existing main dashboard instance (preserving state)");
+
                 if (stage.getScene() == null) {
                     stage.setScene(new Scene(mainDashboardRoot));
                 } else {
@@ -528,14 +540,28 @@ public class ExecutionPanelController implements Initializable {
                 }
                 stage.setMaximized(true);
                 stage.centerOnScreen();
-            }
+                stage.setTitle("S-Emulator - Main Dashboard");
+            } else {
+                // Fallback: Load fresh instance if no reference was provided
+                // This shouldn't happen in normal flow, but provides backward compatibility
+                System.out.println("WARNING: No main dashboard reference found - loading fresh instance (state will be lost)");
 
-            // Set the title for the main dashboard
-            stage.setTitle("S-Emulator - Main Dashboard");
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/mainDashboard/mainDashboard.fxml"));
+                Parent mainDashboardRoot = loader.load();
+
+                if (stage.getScene() == null) {
+                    stage.setScene(new Scene(mainDashboardRoot));
+                } else {
+                    stage.getScene().setRoot(mainDashboardRoot);
+                }
+                stage.setMaximized(true);
+                stage.centerOnScreen();
+                stage.setTitle("S-Emulator - Main Dashboard");
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
-            // Handle the error gracefully - could show an alert dialog here if needed
+            System.err.println("Error navigating back to main dashboard: " + e.getMessage());
         }
     }
 }

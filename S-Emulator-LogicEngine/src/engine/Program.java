@@ -455,7 +455,13 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         resetWorkAndOutputVariables();
         int index = 0;
         this.cycleSum = 0;
+
+        // CRITICAL FIX: If we're executing at expansion level 0 and there are synthetic commands,
+        // we need to execute at a higher level where they're expanded.
+        // However, for subfunctions being called by Quote.executeFunction(), level 0 is correct
+        // because subfunctions don't need expansion - they're already basic commands.
         List<Command> commands = getCommandsAtDesiredLevel(expansionLevel);
+
         Command currentCommand = commands.get(index);
         while (currentCommand != null) {
             String executionLabel = currentCommand.execute();

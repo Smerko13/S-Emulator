@@ -343,6 +343,17 @@ public class ProgramsAndFunctionsController {
             // Get the current stage
             Stage stage = (Stage) programsTable.getScene().getWindow();
 
+            // IMPORTANT: Store reference to main dashboard root before switching
+            Parent mainDashboardRoot = (Parent) stage.getScene().getRoot();
+
+            // Pass the main dashboard root to the execution panel so it can navigate back without losing state
+            if (execController.getExecutionPanelController() != null) {
+                execController.getExecutionPanelController().setMainDashboardRoot(mainDashboardRoot);
+                System.out.println("ProgramsAndFunctionsController: Main dashboard root reference passed to execution panel");
+            } else {
+                System.err.println("ProgramsAndFunctionsController: WARNING - Could not get execution panel controller to set main dashboard root");
+            }
+
             // Switch to execution dashboard scene
             if (stage.getScene() == null) {
                 stage.setScene(new Scene(executionDashboardRoot));

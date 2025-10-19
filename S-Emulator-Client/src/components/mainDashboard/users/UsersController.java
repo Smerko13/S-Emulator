@@ -514,6 +514,17 @@ public class UsersController {
             // Get the current stage
             javafx.stage.Stage stage = (javafx.stage.Stage) statsTable.getScene().getWindow();
 
+            // IMPORTANT: Store reference to main dashboard root before switching
+            javafx.scene.Parent mainDashboardRoot = (javafx.scene.Parent) stage.getScene().getRoot();
+
+            // Pass the main dashboard root to the execution panel so it can navigate back without losing state
+            if (execController.getExecutionPanelController() != null) {
+                execController.getExecutionPanelController().setMainDashboardRoot(mainDashboardRoot);
+                System.out.println("UsersController: Main dashboard root reference passed to execution panel");
+            } else {
+                System.err.println("UsersController: WARNING - Could not get execution panel controller to set main dashboard root");
+            }
+
             // Switch to execution dashboard scene
             if (stage.getScene() == null) {
                 stage.setScene(new javafx.scene.Scene(executionDashboardRoot));
