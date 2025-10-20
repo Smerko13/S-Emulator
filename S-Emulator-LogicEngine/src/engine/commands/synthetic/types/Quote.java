@@ -20,9 +20,6 @@ public class Quote extends SyntheticCommand implements Cloneable {
     String functionArguments;
     List<String> argumentList;
 
-    // Base case flag: track if we're already inside a Quote execution to prevent re-entry
-    private static ThreadLocal<Boolean> isExecuting = ThreadLocal.withInitial(() -> false);
-
     public Quote(SInstruction instruction, Program program) {
         super(instruction, program);
         this.commandName = "QUOTE";
@@ -40,80 +37,9 @@ public class Quote extends SyntheticCommand implements Cloneable {
         }
         this.functionArguments = instruction.getSInstructionArguments().getSInstructionArgument().get(1).getValue();
         this.argumentList = initializeArgumentList(this.functionArguments);
-
-        // CRITICAL FIX: Clean up input variables from subfunctions before registering our own
-        // Subfunctions' input variables should NOT be part of the main program's input variables
-        cleanupSubfunctionInputVariables();
-
         initializeAssociatedVariables();
         this.cycles = 5 + calculateSubFunctionCycles(this.functionName);
         // Remove the premature levelOfExpansion calculation - let getExpansionDepth() handle it
-    }
-
-    /**
-     * Remove InputVariables that belong to subfunctions, not the main program.
-     * Subfunctions like Minus have their own x1, x2 parameters that should not appear
-     * as input variables in the main program's execution dashboard.
-     */
-    private void cleanupSubfunctionInputVariables() {
-        // Collect all input variable names used by subfunctions
-        Set<String> subfunctionInputVarNames = new HashSet<>();
-        for (Program subFunc : this.associatedProgram.subFunctions) {
-            for (Variable v : subFunc.getVariables()) {
-                if (v instanceof InputVariable) {
-                    subfunctionInputVarNames.add(v.getName());
-                }
-            }
-        }
-
-        // Remove these from the main program's variable list if they're not actually used
-        // in the main program's instructions (they're only used in subfunctions)
-        List<Variable> varsToRemove = new ArrayList<>();
-        for (Variable v : this.associatedProgram.getVariables()) {
-            if (v instanceof InputVariable && subfunctionInputVarNames.contains(v.getName())) {
-                // Check if this variable is actually referenced in the main program's instructions
-                // If not referenced in arguments, it's spurious and should be removed
-                if (!isVariableReferencedInArguments(v.getName())) {
-                    varsToRemove.add(v);
-                }
-            }
-        }
-
-        // Remove spurious input variables
-        for (Variable v : varsToRemove) {
-            this.associatedProgram.getVariables().remove(v);
-        }
-    }
-
-    /**
-     * Check if a variable name is actually referenced in the function arguments.
-     * This helps distinguish between variables used in the main program vs. subfunction parameters.
-     */
-    private boolean isVariableReferencedInArguments(String varName) {
-        if (this.functionArguments == null || this.functionArguments.isEmpty()) {
-            return false;
-        }
-
-        // Parse arguments and check if this variable is directly referenced
-        for (String arg : this.argumentList) {
-            if (arg.trim().equals(varName)) {
-                return true;
-            }
-            // Also check inside nested function calls like (Successor,x1)
-            if (arg.contains(varName)) {
-                // More precise check: ensure it's the variable name, not just a substring
-                // Must be preceded by ',' or '(' and followed by ',' or ')' or end of string
-                int idx = arg.indexOf(varName);
-                if (idx != -1) {
-                    char before = (idx > 0) ? arg.charAt(idx - 1) : ',';
-                    char after = (idx + varName.length() < arg.length()) ? arg.charAt(idx + varName.length()) : ')';
-                    if ((before == ',' || before == '(') && (after == ',' || after == ')')) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     public Quote(Variable assignedVariable, String functionName, List<String> functionArguments, String label, Command parentCommand, Program program) {
@@ -131,10 +57,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
         }
         this.argumentList = functionArguments;
         this.functionArguments = String.join(",", functionArguments);
-        // REMOVED: initializeAssociatedVariables() call
-        // This constructor is used for nested/programmatically created Quotes during expansion
-        // Only the XML constructor should register input variables in the main program
-        // Nested Quotes are internal to the expansion process and shouldn't affect the main program's input variable list
+        initializeAssociatedVariables();
         this.cycles = 5 + calculateSubFunctionCycles(this.functionName);
         // Remove the premature levelOfExpansion calculation - let getExpansionDepth() handle it
     }
@@ -152,23 +75,9 @@ public class Quote extends SyntheticCommand implements Cloneable {
         if (functionArguments == null || functionArguments.isEmpty()) {
             return;
         }
-        // Use the proper parser that respects nested parentheses
-        List<String> parsedArgs = initializeArgumentList(this.functionArguments);
-
-        for (String arg : parsedArgs) {
-            // Skip empty arguments
-            if (arg == null || arg.trim().isEmpty()) {
-                continue;
-            }
-
-            arg = arg.trim();
-
-            // Skip function calls (arguments starting with '(')
-            if (arg.startsWith("(")) {
-                continue;
-            }
-
-            // Only process variable references (x1, y, z1, etc.)
+        List<String> tempList = new ArrayList<>(List.of(this.functionArguments.split(",")));
+        tempList.removeIf(s -> s.charAt(0) == '('); //remove function calls
+        for (String arg : tempList) {
             if (arg.startsWith("x") || arg.startsWith("z") || arg.startsWith("y")) {
                 int index = 0;
                 for (char c : arg.toCharArray()) {
@@ -178,52 +87,19 @@ public class Quote extends SyntheticCommand implements Cloneable {
                         break;
                     }
                 }
-
-                if (index == 0) {
-                    continue; // No valid variable name found
-                }
-
                 String cleanedArg = arg.substring(0, index);
-
-                // Additional safety check: ensure it's actually a variable name (not just "x" or "y" alone without number)
-                if (cleanedArg.length() < 2 && !cleanedArg.equals("y")) {
-                    continue; // Skip single-letter vars except 'y'
-                }
-
                 boolean found = false;
                 for (Variable v : this.associatedProgram.getVariables()) {
                     if (v.getName().equals(cleanedArg)) {
-                        // Only add if not already in associatedVariables AND if it's actually an InputVariable
-                        if (!this.associatedVariables.contains(v) && v instanceof InputVariable) {
-                            this.associatedVariables.add(v);
-                        }
+                        this.associatedVariables.add(v);
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    // Only create InputVariable if:
-                    // 1. This Quote is at the top level (no parent command)
-                    // 2. We're being called from the first constructor (XML-based)
-                    // This prevents nested Quotes from creating spurious input variables
-                    if (this.parentCommand == null) {
-                        // CRITICAL: Before creating a new InputVariable, check if a variable with this name
-                        // already exists in ANY form (it might have been added by a subfunction)
-                        // If it exists as a non-InputVariable, DO NOT create a new InputVariable
-                        boolean existsAsNonInput = false;
-                        for (Variable v : this.associatedProgram.getVariables()) {
-                            if (v.getName().equals(cleanedArg) && !(v instanceof InputVariable)) {
-                                existsAsNonInput = true;
-                                break;
-                            }
-                        }
-
-                        if (!existsAsNonInput) {
-                            Variable var = new InputVariable(cleanedArg);
-                            this.associatedProgram.getVariables().add(var);
-                            this.associatedVariables.add(var);
-                        }
-                    }
+                    Variable var = new InputVariable(cleanedArg);
+                    this.associatedProgram.getVariables().add(var);
+                    this.associatedVariables.add(var);
                 }
             }
         }
@@ -433,7 +309,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     }
                 }
 
-                for (Command cmd : subFunctionCommands) {
+                for(Command cmd : subFunctionCommands) {
                     if(checkParentCommand(cmd) && cmd instanceof Quote) {
                         Quote quoteCmd = (Quote) cmd;
                         if(quoteCmd.functionArguments.equals("(Minus,x1,x2)")) {
@@ -448,7 +324,6 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
                 this.ExpandedCommands.addAll(subFunctionCommands);
 
-                // Step 6: Add final assignment V ← zy with label Lend if EXIT was used
                 if (outputTempVar != null) {
                     String anchor = exitLabelRequired ? exitLabel : "   ";
                     this.ExpandedCommands.add(
@@ -456,9 +331,12 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     );
                 }
 
-                // REMOVED: Cleanup assignments that zero out variables
-                // Per spec, variables should retain their values after Q executes
-                // The substitution mechanism already ensures isolation
+                for (Variable v : functionHelpers) {
+                    // assign 0 directly instead of looping ZeroVariable
+                    this.ExpandedCommands.add(
+                            new ConstantAssignment(v, 0, "   ", this, this.associatedProgram)
+                    );
+                }
 
                 // Found and processed the target function, break out of the loop
                 break;
@@ -467,7 +345,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
         // If not found in local subfunctions, try global functions as fallback
         if (this.ExpandedCommands.isEmpty() ||
-            (this.ExpandedCommands.size() == 1 && this.ExpandedCommands.get(0) instanceof Neutral)) {
+                (this.ExpandedCommands.size() == 1 && this.ExpandedCommands.get(0) instanceof Neutral)) {
             Program targetFunction = getGlobalFunction(functionName);
             if (targetFunction != null) {
                 // Process global function using the same logic as above
@@ -625,7 +503,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
             }
         }
 
-        for (Command cmd : subFunctionCommands) {
+        for(Command cmd : subFunctionCommands) {
             if(checkParentCommand(cmd) && cmd instanceof Quote) {
                 Quote quoteCmd = (Quote) cmd;
                 if(quoteCmd.functionArguments.equals("(Minus,x1,x2)")) {
@@ -640,7 +518,6 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
         this.ExpandedCommands.addAll(subFunctionCommands);
 
-        // Step 6: Add final assignment V ← zy with label Lend if EXIT was used
         if (outputTempVar != null) {
             String anchor = exitLabelRequired ? exitLabel : "   ";
             this.ExpandedCommands.add(
@@ -648,9 +525,12 @@ public class Quote extends SyntheticCommand implements Cloneable {
             );
         }
 
-        // REMOVED: Cleanup assignments that zero out variables
-        // Per spec, variables should retain their values after Q executes
-        // The substitution mechanism already ensures isolation
+        for (Variable v : functionHelpers) {
+            // assign 0 directly instead of looping ZeroVariable
+            this.ExpandedCommands.add(
+                    new ConstantAssignment(v, 0, "   ", this, this.associatedProgram)
+            );
+        }
     }
 
     private Program getGlobalFunction(String functionName) {
@@ -663,14 +543,14 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     Program prog = (Program) program;
                     // Check both program name and user string
                     if (prog.getCurrentProgramName().equals(functionName) ||
-                        (prog.getUserString() != null && prog.getUserString().equals(functionName))) {
+                            (prog.getUserString() != null && prog.getUserString().equals(functionName))) {
                         return prog;
                     }
 
                     // Also check subfunctions within each program
                     for (Program subFunc : prog.subFunctions) {
                         if (subFunc.getCurrentProgramName().equals(functionName) ||
-                            (subFunc.getUserString() != null && subFunc.getUserString().equals(functionName))) {
+                                (subFunc.getUserString() != null && subFunc.getUserString().equals(functionName))) {
                             return subFunc;
                         }
                     }
@@ -741,199 +621,88 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
     @Override
     public String execute() {
-        // CRITICAL FIX: If this Quote has already been expanded, we should execute
-        // its expanded commands instead of trying to call the function again.
-        // This handles the case where Program.executeProgram() calls execute() on
-        // synthetic commands at level 0.
-        if (this.didInitialize && !this.ExpandedCommands.isEmpty()) {
-            // Execute all the expanded commands in sequence
-            for (Command cmd : this.ExpandedCommands) {
-                String jumpLabel = cmd.execute();
-                // If a command returns a jump label, we need to handle it
-                // For now, just let it execute - proper jump handling would require
-                // more complex logic that Program.executeProgram() handles
-                if (jumpLabel != null && jumpLabel.equals("EXIT")) {
-                    break; // Stop executing expanded commands if we hit EXIT
+        int result = 0;
+        Set<Variable> snapshot = takeValueSnapshot(this.associatedProgram.getVariables());
+
+        // V3 CHANGE: First try local subFunctions, then try global functions
+        Program targetFunction = null;
+
+        // Check local subfunctions first
+        for (Program e : this.associatedProgram.subFunctions) {
+            if (e.getCurrentProgramName().equals(functionName) || e.getUserString().equals(functionName)) {
+                targetFunction = e;
+                break;
+            }
+        }
+
+        // If not found locally, try global functions from server
+        if (targetFunction == null) {
+            targetFunction = getGlobalFunction(functionName);
+        }
+
+        if (targetFunction != null) {
+            List<Variable> varsToPass = new ArrayList<>();
+            for (String arg : argumentList) {
+                if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
+                    for (Variable v : this.associatedProgram.getVariables()) {
+                        if (v.getName().equals(arg)) {
+                            varsToPass.add(v);
+                            break;
+                        }
+                    }
+                } else if (arg.charAt(0) == '(') {
+                    varsToPass.add(handleFunctionCall(arg));
+                    for (Variable var : this.associatedProgram.variables) {
+                        for (Variable snapshotVar : snapshot) {
+                            if (var.getName().equals(snapshotVar.getName())) {
+                                var.setValue(snapshotVar.getValue());
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                 }
             }
-            // The expanded commands should have set this.variable to the correct value
-            return null;
+            result = targetFunction.executeFunction(varsToPass, functionName, this.associatedProgram);
         }
 
-        // If we reach here, this Quote is being executed in a special context (e.g., during expansion
-        // of another Quote as a nested argument). Proceed with normal execution.
-
-        if (isExecuting.get()) {
-            throw new StackOverflowError("Nested Quote execution detected. Possible infinite recursion in Quote calls.");
-        }
-        isExecuting.set(true);
-
-        try {
-            int result = 0;
-
-            // V3 CHANGE: First try local subFunctions, then try global functions
-            Program targetFunction = null;
-
-            // Check local subfunctions first
-            for (Program e : this.associatedProgram.subFunctions) {
-                if (e.getCurrentProgramName().equals(functionName) || e.getUserString().equals(functionName)) {
-                    targetFunction = e;
+        for (Variable var : this.associatedProgram.variables) {
+            for (Variable snapshotVar : snapshot) {
+                if (var.getName().equals(snapshotVar.getName())) {
+                    var.setValue(snapshotVar.getValue());
                     break;
                 }
             }
-
-            // If not found locally, try global functions from server
-            if (targetFunction == null) {
-                targetFunction = getGlobalFunction(functionName);
-            }
-
-            if (targetFunction != null) {
-                List<Variable> varsToPass = new ArrayList<>();
-                for (String arg : argumentList) {
-                    if (arg.isEmpty()) {
-                        continue; // Skip empty arguments
-                    }
-
-                    Variable argVar = resolveArgument(arg);
-                    if (argVar != null) {
-                        varsToPass.add(argVar);
-                    }
-                }
-                result = targetFunction.executeFunction(varsToPass, functionName, this.associatedProgram);
-            }
-
-            // FIX: Do NOT restore variables - the quoted function's side effects should persist
-            // The expansion logic already handles variable isolation through proper substitution
-            // Restoring variables here breaks the execution semantics
-
-            this.variable.setValue(result);
-            return null;
-        } finally {
-            // Decrement recursion depth when done
-            isExecuting.set(false);
         }
+        this.variable.setValue(result);
+        return null;
     }
 
-    /**
-     * Resolve an argument to a Variable.
-     * BASE CASE: Only resolve simple variable references, numeric literals, and constants.
-     * DO NOT resolve nested function calls - those should already be expanded by expansionLogic().
-     */
-    private Variable resolveArgument(String arg) {
-        if (arg.isEmpty()) {
-            return null;
-        }
-
-        String trimmed = arg.trim();
-
-        // BASE CASE: If this is a nested function call, it should have already been expanded
-        // during the expansion phase. If we're being asked to resolve it during execution,
-        // something is wrong - we should not recursively execute nested Quotes.
-        if (trimmed.startsWith("(")) {
-            // This indicates the expansion phase didn't properly handle this Quote
-            throw new IllegalStateException(
-                "Attempted to resolve nested function call during execution: " + trimmed +
-                ". Nested Quotes should be expanded during initialization, not executed during runtime."
-            );
-        }
-
-        // Check if it's a numeric literal
-        if (trimmed.matches("-?\\d+")) {
-            Variable numVar = new WorkVariable("temp_num");
-            numVar.setValue(Integer.parseInt(trimmed));
-            return numVar;
-        }
-
-        // Check if it's a named constant (CONST0, CONST1, etc.)
-        if (trimmed.toUpperCase().startsWith("CONST")) {
-            int constValue = extractConstantValue(trimmed);
-            Variable constVar = new WorkVariable("temp_const");
-            constVar.setValue(constValue);
-            return constVar;
-        }
-
-        // Otherwise, treat it as a variable reference
-        // Search for the variable in the program's variable set
-        for (Variable v : this.associatedProgram.getVariables()) {
-            if (v.getName().equals(trimmed)) {
-                return v;
+    private Set<Variable> takeValueSnapshot(Set<Variable> variables) {
+        Set<Variable> snapshot = new HashSet<>();
+        for (Variable var : variables) {
+            Variable varCopy;
+            if (var instanceof InputVariable) {
+                varCopy = var.clone();
+            } else if (var instanceof OutputVariable) {
+                varCopy = var.clone();
+            } else if (var instanceof WorkVariable) {
+                varCopy = var.clone();
+            } else {
+                throw new IllegalArgumentException("Unknown variable type: " + var.getClass().getName());
             }
+            varCopy.setValue(var.getValue());
+            snapshot.add(varCopy);
         }
-
-        // If variable not found, create a new one (should rarely happen)
-        System.err.println("Warning: Variable '" + trimmed + "' not found in Quote execution, creating new variable");
-        Variable newVar = new WorkVariable(trimmed);
-        newVar.setValue(0);
-        this.associatedProgram.getVariables().add(newVar);
-        return newVar;
-    }
-
-    /**
-     * Extract the numeric value from a constant name like CONST0, CONST1, etc.
-     */
-    private int extractConstantValue(String constName) {
-        String upperName = constName.toUpperCase().trim();
-        if (upperName.equals("CONST0")) {
-            return 0;
-        } else if (upperName.equals("CONST1")) {
-            return 1;
-        } else if (upperName.startsWith("CONST")) {
-            // Try to extract the number after CONST
-            try {
-                return Integer.parseInt(upperName.substring(5));
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid constant name: " + constName);
-            }
-        }
-        throw new IllegalArgumentException("Invalid constant name: " + constName);
-    }
-
-    @Override
-    public String toString() {
-        // Display format: V ← (FunctionName, arg1, arg2, ...)
-        if (functionArguments == null || functionArguments.isEmpty()) {
-            return variable.getName() + " <- (" + userString + ")";
-        } else {
-            return variable.getName() + " <- (" + userString + "," + functionArguments + ")";
-        }
-    }
-
-    @Override
-    public int getExpansionDepth() {
-        // CRITICAL FIX: Always calculate dynamically, never rely on levelOfExpansion field
-        // This ensures we get the actual depth regardless of initialization timing
-        if (!this.didInitialize) {
-            // If not initialized yet, force initialization
-            initializeExpandedCommands();
-        }
-
-        // Calculate actual depth from expanded commands
-        int maxDepth = 1;
-        for (Command cmd : this.getExpandedCommands()) {
-            int cmdDepth = cmd.getExpansionDepth();
-            if (cmdDepth >= maxDepth) {
-                maxDepth = cmdDepth + 1;
-            }
-        }
-
-        // Also update the field for consistency
-        this.levelOfExpansion = maxDepth;
-        return maxDepth;
-    }
-
-    @Override
-    public Quote clone() {
-        Quote cloned = (Quote) super.clone();
-        cloned.argumentList = new ArrayList<>(this.argumentList);
-        cloned.functionName = this.functionName;
-        cloned.functionArguments = this.functionArguments;
-        cloned.userString = this.userString;
-        return cloned;
+        return snapshot;
     }
 
     private Variable handleFunctionCall(String arg) {
         //handle function calls inside arguments
         Variable var = null;
+        Set<Variable> snapshot = takeValueSnapshot(this.associatedProgram.getVariables());
+        List<Variable> subVarsToPass;
 
         String name = arg.substring(1, arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(','));
 
@@ -954,27 +723,32 @@ public class Quote extends SyntheticCommand implements Cloneable {
         }
 
         if (targetFunction != null) {
-            List<Variable> subVarsToPass = new ArrayList<>();
+            subVarsToPass = new ArrayList<>();
             String subFunctionArguments = arg.indexOf(',') == -1 ? "" : arg.substring(arg.indexOf(',') + 1, arg.length() - 1);
             List<String> subArgumentList = initializeArgumentList(subFunctionArguments);
-
-            // Use resolveArgument for each nested argument - handles ANY identifier or expression
             for (String subArg : subArgumentList) {
-                if (subArg.isEmpty()) {
-                    continue; // Skip empty arguments
-                }
-
-                Variable resolvedVar = resolveArgument(subArg);
-                if (resolvedVar != null) {
-                    subVarsToPass.add(resolvedVar);
+                if (subArg.charAt(0) == 'x' || subArg.charAt(0) == 'y' || subArg.charAt(0) == 'z') {
+                    for (Variable v : this.associatedProgram.getVariables()) {
+                        if (v.getName().equals(subArg)) {
+                            subVarsToPass.add(v);
+                            break;
+                        }
+                    }
+                } else if (subArg.charAt(0) == '(') {
+                    subVarsToPass.add(handleFunctionCall(subArg));
+                    for (Variable varz : this.associatedProgram.variables) {
+                        for (Variable snapshotVar : snapshot) {
+                            if (varz.getName().equals(snapshotVar.getName())) {
+                                varz.setValue(snapshotVar.getValue());
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid argument passed in Quote: " + subArg);
                 }
             }
-
             int resultOfSubFunction = targetFunction.executeFunction(subVarsToPass, name, this.associatedProgram);
-
-            // FIX: Do NOT restore variables - nested function calls should persist their side effects
-            // The expansion logic already handles variable isolation
-
             var = new WorkVariable("temp");
             var.setValue(resultOfSubFunction);
         }
@@ -1025,6 +799,49 @@ public class Quote extends SyntheticCommand implements Cloneable {
             this.associatedLabels.remove(lbl);
             this.associatedLabels.add(newLabel);
         }
+    }
+
+    @Override
+    public String toString() {
+        // Display format: V ← (FunctionName, arg1, arg2, ...)
+        if (functionArguments == null || functionArguments.isEmpty()) {
+            return variable.getName() + " <- (" + userString + ")";
+        } else {
+            return variable.getName() + " <- (" + userString + "," + functionArguments + ")";
+        }
+    }
+
+    @Override
+    public int getExpansionDepth() {
+        // CRITICAL FIX: Always calculate dynamically, never rely on levelOfExpansion field
+        // This ensures we get the actual depth regardless of initialization timing
+        if (!this.didInitialize) {
+            // If not initialized yet, force initialization
+            initializeExpandedCommands();
+        }
+
+        // Calculate actual depth from expanded commands
+        int maxDepth = 1;
+        for (Command cmd : this.getExpandedCommands()) {
+            int cmdDepth = cmd.getExpansionDepth();
+            if (cmdDepth >= maxDepth) {
+                maxDepth = cmdDepth + 1;
+            }
+        }
+
+        // Also update the field for consistency
+        this.levelOfExpansion = maxDepth;
+        return maxDepth;
+    }
+
+    @Override
+    public Quote clone() {
+        Quote cloned = (Quote) super.clone();
+        cloned.argumentList = new ArrayList<>(this.argumentList);
+        cloned.functionName = this.functionName;
+        cloned.functionArguments = this.functionArguments;
+        cloned.userString = this.userString;
+        return cloned;
     }
 }
 
