@@ -8,7 +8,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="jaxb" level="project" />
-    <orderEntry type="module" module-name="S-Emulator-Server" />
-    <orderEntry type="module" module-name="S-Emulator-API" />
+    <orderEntry type="module" module-name="S-Emulator-Server" exported="" />
+    <orderEntry type="module" module-name="S-Emulator-API" exported="" />
   </component>
 </module>

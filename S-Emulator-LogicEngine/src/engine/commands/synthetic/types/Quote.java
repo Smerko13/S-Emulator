@@ -75,32 +75,77 @@ public class Quote extends SyntheticCommand implements Cloneable {
         if (functionArguments == null || functionArguments.isEmpty()) {
             return;
         }
-        List<String> tempList = new ArrayList<>(List.of(this.functionArguments.split(",")));
-        tempList.removeIf(s -> s.charAt(0) == '('); //remove function calls
-        for (String arg : tempList) {
-            if (arg.startsWith("x") || arg.startsWith("z") || arg.startsWith("y")) {
-                int index = 0;
-                for (char c : arg.toCharArray()) {
-                    if (c == 'x' || c == 'y' || c == 'z' || Character.isDigit(c)) {
-                        index++;
-                    } else {
-                        break;
-                    }
+
+        // Parse arguments more carefully to handle nested function calls
+        List<String> actualVariables = extractActualVariablesFromArguments(this.functionArguments);
+
+        for (String varName : actualVariables) {
+            boolean found = false;
+            for (Variable v : this.associatedProgram.getVariables()) {
+                if (v.getName().equals(varName)) {
+                    this.associatedVariables.add(v);
+                    found = true;
+                    break;
                 }
+            }
+            if (!found) {
+                Variable var = new InputVariable(varName);
+                this.associatedProgram.getVariables().add(var);
+                this.associatedVariables.add(var);
+            }
+        }
+    }
+
+    /**
+     * Extracts only the actual variable references from function arguments,
+     * properly handling nested function calls.
+     * For example: "(Const7),(Successor,x1)" should only extract "x1"
+     */
+    private List<String> extractActualVariablesFromArguments(String args) {
+        Set<String> variables = new LinkedHashSet<>();
+
+        // Use the existing argumentList which is already properly parsed
+        for (String arg : this.argumentList) {
+            extractVariablesFromArgument(arg, variables);
+        }
+
+        return new ArrayList<>(variables);
+    }
+
+    /**
+     * Recursively extract variable names from an argument, handling nested function calls
+     */
+    private void extractVariablesFromArgument(String arg, Set<String> variables) {
+        arg = arg.trim();
+
+        if (arg.isEmpty()) {
+            return;
+        }
+
+        // If it's a function call like (FuncName,arg1,arg2)
+        if (arg.charAt(0) == '(') {
+            // Extract the arguments inside the function call
+            String innerArgs = arg.substring(arg.indexOf(',') == -1 ? arg.length() - 1 : arg.indexOf(',') + 1, arg.length() - 1);
+            if (!innerArgs.isEmpty()) {
+                List<String> subArgs = initializeArgumentList(innerArgs);
+                for (String subArg : subArgs) {
+                    extractVariablesFromArgument(subArg, variables);
+                }
+            }
+        }
+        // If it's a direct variable reference like x1, y, z2
+        else if (arg.startsWith("x") || arg.startsWith("y") || arg.startsWith("z")) {
+            int index = 0;
+            for (char c : arg.toCharArray()) {
+                if (c == 'x' || c == 'y' || c == 'z' || Character.isDigit(c)) {
+                    index++;
+                } else {
+                    break;
+                }
+            }
+            if (index > 0) {
                 String cleanedArg = arg.substring(0, index);
-                boolean found = false;
-                for (Variable v : this.associatedProgram.getVariables()) {
-                    if (v.getName().equals(cleanedArg)) {
-                        this.associatedVariables.add(v);
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    Variable var = new InputVariable(cleanedArg);
-                    this.associatedProgram.getVariables().add(var);
-                    this.associatedVariables.add(var);
-                }
+                variables.add(cleanedArg);
             }
         }
     }

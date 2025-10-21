@@ -1231,13 +1231,32 @@ public class ExecutionServlet extends HttpServlet {
         // Use the correct method from S_Emulator interface to get variables
         Set<Variable> variableSet = engine.getVariables();
 
+        // Collect variables that are actually used at degree 0 (top-level only)
+        Set<String> topLevelInputVariables = new HashSet<>();
+        List<Command> topLevelCommands = engine.getCommandsAtDesiredLevel(0);
+
+        for (Command command : topLevelCommands) {
+            Variable[] assocVars = command.getAssociatedVariables();
+            if (assocVars != null) {
+                for (Variable var : assocVars) {
+                    if (var != null && var instanceof InputVariable) {
+                        topLevelInputVariables.add(var.getName());
+                    }
+                }
+            }
+        }
+
+        System.out.println("ExecutionServlet: Top-level input variables found: " + topLevelInputVariables);
+
+        // Only include InputVariables that are actually used at the top level
         for (Variable variable : variableSet) {
-            if (variable instanceof InputVariable) {
+            if (variable instanceof InputVariable && topLevelInputVariables.contains(variable.getName())) {
                 VariableDTO varDTO = new VariableDTO();
                 varDTO.setName(variable.getName());
                 varDTO.setValue(variable.getValue());
                 varDTO.setType("InputVariable");
                 inputVariables.add(varDTO);
+                System.out.println("ExecutionServlet: Including input variable: " + variable.getName());
             }
         }
 
