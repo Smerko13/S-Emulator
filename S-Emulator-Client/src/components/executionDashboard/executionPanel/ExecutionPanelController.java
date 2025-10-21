@@ -475,8 +475,61 @@ public class ExecutionPanelController implements Initializable {
             return;
         }
 
+        System.out.println("==================== DEBUG BUTTON PRESSED ====================");
         System.out.println("Debug button pressed - starting debugging mode");
-        parent.startDebugging();
+
+        // Get the selected architecture and validate credits
+        Architecture selectedArchitecture = getSelectedArchitecture();
+        System.out.println("Selected architecture for debugging: " + selectedArchitecture.name() + " (Cost: " + selectedArchitecture.getCost() + " credits)");
+
+        // Validate architecture compatibility with instruction table
+        Architecture requiredArchitecture = validateArchitectureWithInstructionTable(selectedArchitecture);
+        if (requiredArchitecture != null) {
+            // Architecture is insufficient - show error and block execution
+            showArchitectureInsufficientDialog(selectedArchitecture, requiredArchitecture);
+            return;
+        }
+
+        // Check if user has sufficient credits
+        components.shared.UserSession userSession = components.shared.UserSession.getInstance();
+        int availableCredits = userSession.getCredits();
+        int architectureCost = selectedArchitecture.getCost();
+
+        System.out.println("Credit check for debug: Available=" + availableCredits + ", Architecture cost=" + architectureCost);
+
+        // For debug mode, we only check if user has enough for architecture cost
+        // (stepping costs are charged per step)
+        if (availableCredits < architectureCost) {
+            // Insufficient credits - show warning dialog
+            showInsufficientCreditsDialog(availableCredits, architectureCost, architectureCost);
+            return;
+        }
+
+        // Collect and update input variable values before debugging
+        if (inputVarsTable != null && inputVarsTable.getItems() != null) {
+            System.out.println("Input variables table found with " + inputVarsTable.getItems().size() + " variables");
+
+            for (VariableDTO var : inputVarsTable.getItems()) {
+                System.out.println("Processing input variable: " + var.getName() + " = " + var.getValue());
+
+                // Send each input variable value to the server
+                if (parent != null) {
+                    System.out.println("Sending to server: updateInputValue('" + var.getName() + "', " + var.getValue() + ")");
+                    parent.updateInputValue(var.getName(), var.getValue());
+                } else {
+                    System.err.println("Parent controller is null - cannot send variable update for: " + var.getName());
+                }
+            }
+
+            System.out.println("Completed sending " + inputVarsTable.getItems().size() + " input variable updates to server");
+        }
+
+        // Start debugging with the selected architecture
+        System.out.println("Calling parent.startDebugging() with architecture " + selectedArchitecture.name() + "...");
+        parent.startDebugging(selectedArchitecture);
+
+        System.out.println("Debug mode started with architecture: " + selectedArchitecture.name());
+        System.out.println("==================== DEBUG REQUEST COMPLETE ====================");
     }
 
     public void newRunButtonPressed(ActionEvent actionEvent) {

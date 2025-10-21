@@ -280,7 +280,12 @@ public class ExecutionDashboardController {
 
     /* Debugging – entirely on server */
     public void startDebugging() {
-        debugOp("start");
+        startDebugging(Architecture.GENERATION_I); // Default to cheapest architecture
+    }
+
+    public void startDebugging(Architecture architecture) {
+        System.out.println("ExecutionDashboardController: startDebugging called with architecture: " + architecture.name());
+        debugOpWithArchitecture("start", architecture);
     }
 
     public void stepOver() {
@@ -323,6 +328,73 @@ public class ExecutionDashboardController {
                 .addQueryParameter("op", op)
                 .build();
         callAndApply(url);
+    }
+
+    private void debugOpWithArchitecture(String op, Architecture architecture) {
+        System.out.println("Making debug request with op=" + op + ", architecture=" + architecture.name());
+
+        HttpUrl url = HttpUrl.parse(Constants.EXEC_DEBUG)
+                .newBuilder()
+                .addQueryParameter("op", op)
+                .build();
+
+        // Create ExecuteProgramRequest with architecture
+        ExecuteProgramRequest request = new ExecuteProgramRequest(selectedFunction, architecture);
+        String requestJson = GSON_INSTANCE.toJson(request);
+
+        System.out.println("Sending debug request: " + requestJson);
+
+        HttpClientUtil.runAsyncPost(url.toString(), requestJson, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                System.err.println("Debug operation failed: " + e.getMessage());
+                Platform.runLater(() -> pushError("Network error: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String json = response.body() != null ? response.body().string() : "";
+                System.out.println("Received response: " + response.code() + " - " + json);
+
+                if (!response.isSuccessful()) {
+                    // Try to parse as ExecuteProgramResponse to get validation error details
+                    try {
+                        ExecuteProgramResponse errorResponse = GSON_INSTANCE.fromJson(json, ExecuteProgramResponse.class);
+                        if (errorResponse != null && errorResponse.validationError != null && !errorResponse.validationError.isValid()) {
+                            // Architecture validation failed - show detailed error
+                            ArchitectureValidationDTO validation = errorResponse.validationError;
+                            System.err.println("Architecture validation failed: " + validation.getErrorMessage());
+                            System.err.println("Incompatible instruction IDs: " + validation.getIncompatibleInstructionIds());
+
+                            Platform.runLater(() -> {
+                                showArchitectureValidationError(validation);
+                                if (instructionTableComponentController != null && validation.getIncompatibleInstructionIds() != null) {
+                                    instructionTableComponentController.highlightIncompatibleInstructions(
+                                        validation.getIncompatibleInstructionIds()
+                                    );
+                                }
+                            });
+                            return;
+                        }
+                    } catch (Exception parseError) {
+                        System.err.println("Could not parse validation error: " + parseError.getMessage());
+                    }
+
+                    Platform.runLater(() -> pushError("Debug operation failed: " + shorten(json)));
+                    return;
+                }
+
+                try {
+                    ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
+                    System.out.println("Debug operation successful with architecture: " + architecture.name());
+                    Platform.runLater(() -> applyStateToPanels(state));
+                } catch (Exception e) {
+                    System.err.println("Error parsing debug response: " + e.getMessage());
+                    e.printStackTrace();
+                    Platform.runLater(() -> pushError("Error processing debug results"));
+                }
+            }
+        });
     }
 
     private void callAndApply(HttpUrl url) {
