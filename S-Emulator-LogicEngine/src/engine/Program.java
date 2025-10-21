@@ -598,6 +598,8 @@ public class Program implements S_Emulator , Serializable, Cloneable {
     }
 
     public int executeFunction(List<Variable> variables,String functionName, Program associatedProgram) {
+        System.out.println("executeFunction: Searching for function '" + functionName + "'");
+
         LinkedList<Variable> varsCopy = new LinkedList<>();
         for(Variable v : variables) {
             Variable copy = new WorkVariable(v.getName());
@@ -605,14 +607,18 @@ public class Program implements S_Emulator , Serializable, Cloneable {
             varsCopy.add(copy);
         }
 
-         for(Program e : associatedProgram.subFunctions) {
+        // First, try to find the function in local subfunctions
+        System.out.println("executeFunction: Checking " + associatedProgram.subFunctions.size() + " local subfunctions");
+        for(Program e : associatedProgram.subFunctions) {
             if(e.getCurrentProgramName().equals(functionName)  || e.getUserString().equals(functionName)) {
+                System.out.println("executeFunction: FOUND '" + functionName + "' in local subfunctions");
                 Set<Variable> snapshot = associatedProgram.getVariables().stream()
                         .map(v -> v.clone())
                         .collect(Collectors.toSet());
                 e.assignVarsToCommands(varsCopy);
                 e.executeProgram(0,false);
                 int returnValue = e.getReturnValue();
+                System.out.println("executeFunction: '" + functionName + "' returned " + returnValue);
                 for(Variable var : snapshot) {
                     for(Variable originalVar : associatedProgram.getVariables()) {
                         if(var.getName().equals(originalVar.getName())) {
@@ -624,8 +630,78 @@ public class Program implements S_Emulator , Serializable, Cloneable {
             }
         }
 
-         int returnValue = -1;
-         return -1;
+        // If not found locally, try global context
+        System.out.println("executeFunction: Function '" + functionName + "' NOT found locally, searching globally...");
+        try {
+            servlets.ServerContext context = servlets.ServerContext.getInstance();
+            java.util.Map<String, servlets.User> allUsers = context.getAllUsers();
+            System.out.println("executeFunction: Found " + allUsers.size() + " users in global context");
+
+            for (servlets.User user : allUsers.values()) {
+                java.util.Map<String, S_Emulator> userPrograms = user.getAllPrograms();
+                System.out.println("executeFunction: User " + user.getUserName() + " has " + userPrograms.size() + " programs");
+
+                for (S_Emulator program : userPrograms.values()) {
+                    if (program instanceof Program) {
+                        Program prog = (Program) program;
+
+                        // Check if this is the target function (main program)
+                        if (prog.getCurrentProgramName().equals(functionName) ||
+                                (prog.getUserString() != null && prog.getUserString().equals(functionName))) {
+                            System.out.println("executeFunction: FOUND '" + functionName + "' as main program globally");
+                            Set<Variable> snapshot = associatedProgram.getVariables().stream()
+                                    .map(v -> v.clone())
+                                    .collect(Collectors.toSet());
+                            prog.assignVarsToCommands(varsCopy);
+                            prog.executeProgram(0, false);
+                            int returnValue = prog.getReturnValue();
+                            System.out.println("executeFunction: '" + functionName + "' returned " + returnValue);
+                            for(Variable var : snapshot) {
+                                for(Variable originalVar : associatedProgram.getVariables()) {
+                                    if(var.getName().equals(originalVar.getName())) {
+                                        originalVar.setValue(var.getValue());
+                                    }
+                                }
+                            }
+                            return returnValue;
+                        }
+
+                        // Check subfunctions within this program
+                        if (prog.subFunctions != null) {
+                            for (Program subFunc : prog.subFunctions) {
+                                if (subFunc.getCurrentProgramName().equals(functionName) ||
+                                        (subFunc.getUserString() != null && subFunc.getUserString().equals(functionName))) {
+                                    System.out.println("executeFunction: FOUND '" + functionName + "' as subfunction globally");
+                                    Set<Variable> snapshot = associatedProgram.getVariables().stream()
+                                            .map(v -> v.clone())
+                                            .collect(Collectors.toSet());
+                                    subFunc.assignVarsToCommands(varsCopy);
+                                    subFunc.executeProgram(0, false);
+                                    int returnValue = subFunc.getReturnValue();
+                                    System.out.println("executeFunction: '" + functionName + "' returned " + returnValue);
+                                    for(Variable var : snapshot) {
+                                        for(Variable originalVar : associatedProgram.getVariables()) {
+                                            if(var.getName().equals(originalVar.getName())) {
+                                                originalVar.setValue(var.getValue());
+                                            }
+                                        }
+                                    }
+                                    return returnValue;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("executeFunction: ERROR accessing global context: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // Function not found anywhere - return -1 to indicate error
+        System.err.println("executeFunction: ERROR - Function '" + functionName + "' NOT FOUND in local subfunctions or global context!");
+        System.err.println("executeFunction: Returning -1 to indicate function not found");
+        return -1;
     }
 
     private void assignVarsToCommands(List<Variable> variables) {

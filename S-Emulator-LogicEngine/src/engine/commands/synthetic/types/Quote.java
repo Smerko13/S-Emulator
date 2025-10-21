@@ -581,22 +581,31 @@ public class Quote extends SyntheticCommand implements Cloneable {
     private Program getGlobalFunction(String functionName) {
         try {
             servlets.ServerContext context = servlets.ServerContext.getInstance();
-            java.util.Map<String, engine.S_Emulator> allPrograms = context.getAllStoredPrograms();
 
-            for (engine.S_Emulator program : allPrograms.values()) {
-                if (program instanceof Program) {
-                    Program prog = (Program) program;
-                    // Check both program name and user string
-                    if (prog.getCurrentProgramName().equals(functionName) ||
-                            (prog.getUserString() != null && prog.getUserString().equals(functionName))) {
-                        return prog;
-                    }
+            // Search through all users and their programs
+            java.util.Map<String, servlets.User> allUsers = context.getAllUsers();
 
-                    // Also check subfunctions within each program
-                    for (Program subFunc : prog.subFunctions) {
-                        if (subFunc.getCurrentProgramName().equals(functionName) ||
-                                (subFunc.getUserString() != null && subFunc.getUserString().equals(functionName))) {
-                            return subFunc;
+            for (servlets.User user : allUsers.values()) {
+                java.util.Map<String, engine.S_Emulator> userPrograms = user.getAllPrograms();
+
+                for (engine.S_Emulator program : userPrograms.values()) {
+                    if (program instanceof Program) {
+                        Program prog = (Program) program;
+
+                        // Check both program name and user string
+                        if (prog.getCurrentProgramName().equals(functionName) ||
+                                (prog.getUserString() != null && prog.getUserString().equals(functionName))) {
+                            return prog;
+                        }
+
+                        // Also check subfunctions within each program
+                        if (prog.subFunctions != null) {
+                            for (Program subFunc : prog.subFunctions) {
+                                if (subFunc.getCurrentProgramName().equals(functionName) ||
+                                        (subFunc.getUserString() != null && subFunc.getUserString().equals(functionName))) {
+                                    return subFunc;
+                                }
+                            }
                         }
                     }
                 }
