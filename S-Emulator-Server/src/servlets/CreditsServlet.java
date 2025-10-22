@@ -69,8 +69,6 @@ public class CreditsServlet extends HttpServlet {
             resp.setCharacterEncoding("UTF-8");
             resp.getWriter().write("{\"success\":true,\"newCredits\":" + newCredits + "}");
 
-            System.out.println("SERVER - Added " + creditsToAdd + " credits to user: " + userId +
-                             ". New total: " + newCredits);
 
         } catch (NumberFormatException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -115,7 +113,6 @@ public class CreditsServlet extends HttpServlet {
             resp.setCharacterEncoding("UTF-8");
             resp.getWriter().write("{\"success\":true,\"newCredits\":" + creditsToSet + "}");
 
-            System.out.println("SERVER - Set credits for user: " + userId + " to: " + creditsToSet);
 
         } catch (NumberFormatException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);

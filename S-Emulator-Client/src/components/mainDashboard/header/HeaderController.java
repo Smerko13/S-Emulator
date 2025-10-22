@@ -168,7 +168,6 @@ public class HeaderController {
             chatStage.show();
 
         } catch (Exception e) {
-            System.err.println("Error opening chat window: " + e.getMessage());
             e.printStackTrace();
             showAlert("Chat Error", "Failed to open chat window: " + e.getMessage());
         }

@@ -79,11 +79,8 @@ public class ExecutionDetailsServlet extends HttpServlet {
 
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(GSON.toJson(details));
-            System.out.println("ExecutionDetailsServlet: Retrieved details for runId " + runId +
-                             " with " + (details.finalVariables != null ? details.finalVariables.size() : 0) + " variables");
 
         } catch (Exception e) {
-            System.err.println("Error in ExecutionDetailsServlet: " + e.getMessage());
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write(GSON.toJson("Error retrieving execution details"));

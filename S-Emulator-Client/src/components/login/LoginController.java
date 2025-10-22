@@ -125,7 +125,6 @@ public class LoginController {
 
     private void updateHttpStatusLine(String data) {
         if (clientMainController != null) clientMainController.updateHttpLine(data);
-        else System.out.println("[HTTP] " + data);
     }
 
     public void setClientMainController(clientMainController c) {

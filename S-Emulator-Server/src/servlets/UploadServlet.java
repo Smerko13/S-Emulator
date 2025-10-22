@@ -92,7 +92,6 @@ public class UploadServlet extends HttpServlet {
             response.getWriter().write(GSON.toJson(successResponse));
 
         } catch (Exception e) {
-            System.err.println("Upload error: " + e.getMessage());
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Upload failed: " + e.getMessage()));
@@ -260,7 +259,6 @@ public class UploadServlet extends HttpServlet {
             }
 
         } catch (Exception e) {
-            System.err.println("Error extracting function references: " + e.getMessage());
             e.printStackTrace();
         }
 

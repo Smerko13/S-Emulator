@@ -19,12 +19,7 @@ public class ValidationServlet extends HttpServlet {
         byte[] requestBytes = req.getInputStream().readAllBytes();
         String xmlContent = new String(requestBytes, StandardCharsets.UTF_8);
 
-        System.out.println("SERVER - Received bytes: " + requestBytes.length);
-        System.out.println("SERVER - XML length: " + xmlContent.length());
-        System.out.println("SERVER - First 200 chars: " + xmlContent.substring(0, Math.min(200, xmlContent.length())));
-
         String userId = req.getParameter("userId");
-        System.out.println("SERVER - User ID: " + userId);
 
         if (userId == null || userId.trim().isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -38,14 +33,12 @@ public class ValidationServlet extends HttpServlet {
         if (!result.isValid()) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write("Validation failed: " + result.getErrorMessage());
-            System.out.println("SERVER - Validation failed: " + result.getErrorMessage());
             return;
         }
 
         // Success
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.getWriter().write("XML is valid and program stored with name: " + result.getProgramName());
-        System.out.println("SERVER - Success: XML validated and stored for program: " + result.getProgramName());
     }
 
     private ValidationResult validateAndProcessXml(String xmlContent, String username) {
@@ -98,8 +91,6 @@ public class ValidationServlet extends HttpServlet {
 
             // All validations passed - store the program
             context.storeUserProgram(username, programName, program);
-            System.out.println("SERVER - Program '" + programName + "' stored for user: " + username);
-
             return ValidationResult.success(programName, newFunctions);
 
         } catch (Exception e) {
@@ -189,7 +180,6 @@ public class ValidationServlet extends HttpServlet {
             }
 
         } catch (Exception e) {
-            System.err.println("Error extracting function references: " + e.getMessage());
             e.printStackTrace();
         }
 

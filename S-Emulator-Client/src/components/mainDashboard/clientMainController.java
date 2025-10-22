@@ -127,7 +127,6 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
         util.http.HttpClientUtil.runAsyncMultipartPost(UPLOAD, selectedFile, new okhttp3.Callback() {
             @Override
             public void onFailure(okhttp3.Call call, java.io.IOException e) {
-                System.err.println("Upload failed: " + e.getMessage());
                 Platform.runLater(() -> {
                     showUploadError("Upload Failed", "Network error: " + e.getMessage());
                     if (headerPanelController != null) {
@@ -235,7 +234,6 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
     private void refreshProgramsList() {
         // This would trigger a refresh of the programs panel to show newly uploaded programs
         // Implementation depends on how the programs panel is structured
-        System.out.println("Refreshing programs list after successful upload");
     }
 
 
@@ -265,7 +263,6 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error fetching credits: " + e.getMessage());
         }
         return userSession.getCredits(); // Return cached value if server call fails
     }
@@ -280,7 +277,6 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println("Add credits response: " + response.statusCode() + " - " + response.body());
             if (response.statusCode() == 200) {
                 // Refresh credits from server to get updated value
                 getUserCredits();
@@ -289,7 +285,6 @@ public class clientMainController implements Closeable, HttpStatusUpdate {
             return false;
 
         } catch (Exception e) {
-            System.err.println("Error adding credits: " + e.getMessage());
             return false;
         }
     }

@@ -87,7 +87,6 @@ public class ExecutionServlet extends HttpServlet {
             throws IOException {
 
         String target = request.getParameter("target");
-        System.out.println("ExecutionServlet: handleOpen called with target: " + target);
 
         if (target == null || target.trim().isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -97,7 +96,6 @@ public class ExecutionServlet extends HttpServlet {
 
         HttpSession session = request.getSession();
         String username = (String) session.getAttribute("username");
-        System.out.println("ExecutionServlet: Username from session: " + username);
 
         if (username == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -108,15 +106,9 @@ public class ExecutionServlet extends HttpServlet {
         try {
             // Create or get the engine for this user/program combination
             S_Emulator engine = getOrCreateEngine(session, target);
-            System.out.println("ExecutionServlet: Engine loaded: " + (engine != null));
 
             // Create execution state DTO
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, target);
-            System.out.println("ExecutionServlet: ExecutionStateDTO created with " +
-                (executionState.getInstructions() != null ? executionState.getInstructions().size() : "null") +
-                " instructions and " +
-                (executionState.getAllVariables() != null ? executionState.getAllVariables().size() : "null") +
-                " variables");
 
             // Store current program/function in session
             session.setAttribute("currentTarget", target);
@@ -124,8 +116,6 @@ public class ExecutionServlet extends HttpServlet {
             response.getWriter().write(GSON.toJson(executionState));
 
         } catch (Exception e) {
-            System.err.println("ExecutionServlet: Error in handleOpen: " + e.getMessage());
-            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Failed to open program: " + e.getMessage()));
         }
@@ -162,7 +152,6 @@ public class ExecutionServlet extends HttpServlet {
                 }
 
                 if (requestBody.length() > 0) {
-                    System.out.println("ExecutionServlet: Received execution request body: " + requestBody.toString());
                     execRequest = GSON.fromJson(requestBody.toString(), ExecuteProgramRequest.class);
                 }
             }
@@ -172,7 +161,6 @@ public class ExecutionServlet extends HttpServlet {
                 ? execRequest.architecture
                 : Architecture.GENERATION_I;
 
-            System.out.println("ExecutionServlet: Executing with architecture: " + architecture.name() + " (Base Cost: " + architecture.getCost() + " credits)");
 
             // Get user
             ServerContext context = ServerContext.getInstance();
@@ -191,8 +179,6 @@ public class ExecutionServlet extends HttpServlet {
                 ExecuteProgramResponse errorResponse = new ExecuteProgramResponse(validation);
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().write(GSON.toJson(errorResponse));
-                System.out.println("Execution blocked: " + validation.getErrorMessage());
-                System.out.println("Incompatible instructions: " + validation.getIncompatibleInstructionIds());
                 return;
             }
 
@@ -204,7 +190,6 @@ public class ExecutionServlet extends HttpServlet {
                     VariableDTO inputDTO = new VariableDTO(var.getName(), var.getValue(), "Input");
                     inputDTO.setInput(true);
                     originalInputs.add(inputDTO);
-                    System.out.println("ExecutionServlet: Captured original input - " + var.getName() + " = " + var.getValue());
                 }
             }
 
@@ -230,7 +215,6 @@ public class ExecutionServlet extends HttpServlet {
                 return;
             }
 
-            System.out.println("ExecutionServlet: Credits deducted successfully. Total cost: " + totalCost + " (Architecture: " + architecture.getCost() + " + Cycles: " + cpuCyclesUsed + "). User " + username + " now has " + user.getCredits() + " credits");
 
             // Record execution in global statistics for this program
             context.recordProgramExecution(currentTarget, totalCost);
@@ -275,18 +259,12 @@ public class ExecutionServlet extends HttpServlet {
             );
             user.addExecutionDetails(detailsDTO);
 
-            System.out.println("ExecutionServlet: Program executed successfully with architecture: " + architecture.name());
-            System.out.println("ExecutionServlet: User " + username + " total executions: " + user.getTotalExecutions());
-            System.out.println("ExecutionServlet: Execution record added - Type: " + executionType +
-                             ", Y-value: " + finalYValue + ", Cycles: " + cpuCyclesUsed);
 
             // Return updated execution state WITH user credits
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget, username);
             response.getWriter().write(GSON.toJson(executionState));
 
         } catch (Exception e) {
-            System.err.println("ExecutionServlet: Error during execution: " + e.getMessage());
-            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Execution failed: " + e.getMessage()));
         }
@@ -314,7 +292,6 @@ public class ExecutionServlet extends HttpServlet {
 
             return null; // All commands supported
         } catch (Exception e) {
-            System.err.println("Error validating program for architecture: " + e.getMessage());
             return "Error validating program compatibility: " + e.getMessage();
         }
     }
@@ -330,18 +307,10 @@ public class ExecutionServlet extends HttpServlet {
             // Use the ArchitectureValidator to validate
             ArchitectureValidationDTO validation = ArchitectureValidator.validate(instructions, architecture);
 
-            if (!validation.isValid()) {
-                System.out.println("Architecture validation failed: " + validation.getErrorMessage());
-                System.out.println("Incompatible instruction IDs: " + validation.getIncompatibleInstructionIds());
-                System.out.println("Required architecture: " + validation.getRequiredArchitecture().name());
-                System.out.println("Provided architecture: " + validation.getProvidedArchitecture().name());
-            }
 
             return validation;
 
         } catch (Exception e) {
-            System.err.println("Error validating program for architecture: " + e.getMessage());
-            e.printStackTrace();
             // Return error validation result
             return new ArchitectureValidationDTO(
                 false,
@@ -425,12 +394,10 @@ public class ExecutionServlet extends HttpServlet {
             if (valueStr != null && !valueStr.trim().isEmpty()) {
                 // Direct degree setting
                 newDegree = Integer.parseInt(valueStr);
-                System.out.println("ExecutionServlet: Setting degree directly to: " + newDegree);
             } else if (deltaStr != null && !deltaStr.trim().isEmpty()) {
                 // Delta change (expand/collapse)
                 int delta = Integer.parseInt(deltaStr);
                 newDegree = engine.getCurrentDegree() + delta;
-                System.out.println("ExecutionServlet: Changing degree by delta " + delta + " from " + engine.getCurrentDegree() + " to " + newDegree);
             }
 
             // Ensure degree is within valid bounds
@@ -443,7 +410,6 @@ public class ExecutionServlet extends HttpServlet {
 
             // Set the new degree in the engine
             engine.setCurrentDegree(newDegree);
-            System.out.println("ExecutionServlet: Degree set to: " + newDegree);
 
             // Return updated execution state with instructions and variables at the new degree
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
@@ -493,12 +459,10 @@ public class ExecutionServlet extends HttpServlet {
         }
 
         try {
-            System.out.println("ExecutionServlet: handleNewRun - resetting ALL variables to 0 and resetting execution state");
 
             // Exit debug mode if active
             Boolean debugMode = (Boolean) session.getAttribute("debugMode");
             if (debugMode != null && debugMode) {
-                System.out.println("Exiting debug mode before new run");
                 session.setAttribute("debugMode", false);
                 if (engine instanceof Program) {
                     ((Program) engine).stopDebugging();
@@ -509,7 +473,6 @@ public class ExecutionServlet extends HttpServlet {
             Set<Variable> variables = engine.getVariables();
             for (Variable variable : variables) {
                 variable.setValue(0);
-                System.out.println("Reset variable: " + variable.getName() + " to 0 (type: " + variable.getClass().getSimpleName() + ")");
             }
 
             // Reset execution state
@@ -517,21 +480,12 @@ public class ExecutionServlet extends HttpServlet {
                 Program program = (Program) engine;
                 program.setCycleSum(0);
                 program.setCurrentCommand(null);
-                System.out.println("Reset execution state (cycles and current command)");
-            }
-
-            // Log final state to confirm all variables are reset
-            System.out.println("Final variable values after new run:");
-            for (Variable var : engine.getVariables()) {
-                System.out.println("  " + var.getName() + " = " + var.getValue() + " (type: " + var.getClass().getSimpleName() + ")");
             }
 
             ExecutionStateDTO executionState = createExecutionStateDTO(engine, currentTarget);
             response.getWriter().write(GSON.toJson(executionState));
 
         } catch (Exception e) {
-            System.err.println("ExecutionServlet: Error in handleNewRun: " + e.getMessage());
-            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Failed to create new run: " + e.getMessage()));
         }
@@ -559,7 +513,6 @@ public class ExecutionServlet extends HttpServlet {
         }
 
         try {
-            System.out.println("Debug operation: " + operation);
             ServerContext context = ServerContext.getInstance();
             User user = context.getUser(username);
 
@@ -594,7 +547,6 @@ public class ExecutionServlet extends HttpServlet {
                         ExecuteProgramResponse errorResponse = new ExecuteProgramResponse(validation);
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         response.getWriter().write(GSON.toJson(errorResponse));
-                        System.out.println("Debug blocked: " + validation.getErrorMessage());
                         return;
                     }
 
@@ -606,7 +558,6 @@ public class ExecutionServlet extends HttpServlet {
                     // Start debugging mode - prepare the engine for step-by-step execution
                     engine.prepareForDebugging();
                     session.setAttribute("debugMode", true);
-                    System.out.println("Debug mode started with architecture: " + architecture.name() + " (cost will be charged on first step or continue)");
                     break;
 
                 case "step":
@@ -660,19 +611,13 @@ public class ExecutionServlet extends HttpServlet {
                     // Mark architecture as charged after first step
                     if (!architectureCharged) {
                         session.setAttribute("debugArchitectureCharged", true);
-                        System.out.println("Debug step 1: Architecture cost charged (" + debugArch.getCost() + ") + cycles (" + newCycles + ") = " + incrementalCost + " credits");
-                    } else {
-                        System.out.println("Debug step: Cycles charged (" + newCycles + ") = " + incrementalCost + " credits");
                     }
 
                     // Update previous cycles for next step
                     session.setAttribute("debugPreviousCycles", currentCycles);
 
-                    System.out.println("User " + username + " now has " + user.getCredits() + " credits remaining");
-
                     // Increment execution count for debug step operations
                     user.incrementExecutionCount();
-                    System.out.println("ExecutionServlet: Debug step - User " + username + " total executions: " + user.getTotalExecutions());
 
                     // Check if program has completed after step - if so, exit debug mode
                     if (engine instanceof Program) {
@@ -701,7 +646,6 @@ public class ExecutionServlet extends HttpServlet {
 
                             session.setAttribute("debugMode", false);
                             program.stopDebugging();
-                            System.out.println("Debug mode completed after step - exiting debug mode. Total cost: " + totalDebugCost);
                         }
                     }
                     break;
@@ -751,13 +695,8 @@ public class ExecutionServlet extends HttpServlet {
                     user.deductCredits(remainingCost);
 
                     if (!architectureCharged) {
-                        System.out.println("Debug continue: Architecture cost charged (" + debugArch.getCost() + ") + remaining cycles (" + remainingCycles + ") = " + remainingCost + " credits");
                         session.setAttribute("debugArchitectureCharged", true);
-                    } else {
-                        System.out.println("Debug continue: Remaining cycles charged (" + remainingCycles + ") = " + remainingCost + " credits");
                     }
-
-                    System.out.println("Debug completed. Total cost: " + totalCostNeeded + ". User " + username + " now has " + user.getCredits() + " credits");
 
                     // Record execution in global statistics
                     context.recordProgramExecution(currentTarget, totalCostNeeded);
@@ -806,7 +745,6 @@ public class ExecutionServlet extends HttpServlet {
                         Program program = (Program) engine;
                         program.stopDebugging();
                     }
-                    System.out.println("Continued execution to completion - debug mode terminated");
                     break;
 
                 case "stop":
@@ -820,7 +758,6 @@ public class ExecutionServlet extends HttpServlet {
                         program.stopDebugging();
                     }
                     engine.reset(); // Reset to initial state
-                    System.out.println("Debug mode stopped and program reset (no credits deducted)");
                     break;
 
                 default:
@@ -835,8 +772,6 @@ public class ExecutionServlet extends HttpServlet {
             response.getWriter().write(GSON.toJson(executionState));
 
         } catch (Exception e) {
-            System.err.println("Debug operation failed: " + e.getMessage());
-            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Debug operation failed: " + e.getMessage()));
         }
@@ -886,7 +821,6 @@ public class ExecutionServlet extends HttpServlet {
         String inputName = request.getParameter("name");
         String inputValue = request.getParameter("value");
 
-        System.out.println("ExecutionServlet: handleUpdateInput called with name: '" + inputName + "', value: '" + inputValue + "'");
 
         HttpSession session = request.getSession();
         S_Emulator engine = (S_Emulator) session.getAttribute("engine");
@@ -907,14 +841,12 @@ public class ExecutionServlet extends HttpServlet {
         try {
             // Update the input variable in the engine (do NOT execute)
             engine.updateInputVariable(inputName, inputValue);
-            System.out.println("ExecutionServlet: Successfully updated input variable " + inputName + " = " + inputValue);
 
             // Return simple success response WITHOUT calling createExecutionStateDTO
             // This prevents automatic execution during input updates
             response.getWriter().write(GSON.toJson("Input variable updated successfully"));
 
         } catch (Exception e) {
-            System.err.println("ExecutionServlet: Failed to update input variable " + inputName + ": " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(GSON.toJson("Input update failed: " + e.getMessage()));
         }
@@ -1037,7 +969,6 @@ public class ExecutionServlet extends HttpServlet {
                 for (InstructionDTO instruction : instructions) {
                     if (instruction.getId() == currentDebugCommand.getId()) {
                         state.setHighlightedInstructionId(currentDebugCommand.getId());
-                        System.out.println("Highlighted debug instruction ID: " + currentDebugCommand.getId());
                         break;
                     }
                 }
@@ -1055,7 +986,6 @@ public class ExecutionServlet extends HttpServlet {
         if (debugMode && engine instanceof Program) {
             Program program = (Program) engine;
             changedVariables = program.getChangedVariableNames();
-            System.out.println("Changed variables in debug mode: " + changedVariables);
         }
         state.setChangedVariableNames(changedVariables);
 
@@ -1077,14 +1007,11 @@ public class ExecutionServlet extends HttpServlet {
             User user = context.getUser(username);
             if (user != null) {
                 state.setUserCredits(user.getCredits());
-                System.out.println("ExecutionServlet: Added user credits to state: " + user.getCredits());
             } else {
                 state.setUserCredits(0);
-                System.out.println("ExecutionServlet: User not found, setting credits to 0");
             }
         } else {
             state.setUserCredits(0);
-            System.out.println("ExecutionServlet: No username provided, setting credits to 0");
         }
 
         return state;
@@ -1095,7 +1022,6 @@ public class ExecutionServlet extends HttpServlet {
 
         // Use the correct method from S_Emulator interface to get commands at current degree
         List<Command> commands = engine.getCommandsAtDesiredLevel(engine.getCurrentDegree());
-        System.out.println("ExecutionServlet: Retrieved " + commands.size() + " commands from engine");
 
         for (int i = 0; i < commands.size(); i++) {
             Command command = commands.get(i);
@@ -1124,11 +1050,7 @@ public class ExecutionServlet extends HttpServlet {
             // *** NEW: Set the required architecture for this command ***
             Architecture requiredArch = getRequiredArchitectureForCommand(command);
             instruction.setRequiredArchitecture(requiredArch);
-            System.out.println("ExecutionServlet: Command " + command.getId() + " (" +
-                command.getClass().getSimpleName() + ") requires " + requiredArch.name());
-
             instructions.add(instruction);
-            System.out.println("ExecutionServlet: Added instruction " + command.getId() + ": " + command.toString());
         }
 
         return instructions;
@@ -1146,7 +1068,6 @@ public class ExecutionServlet extends HttpServlet {
         if (commandType.equals("QUOTE") ||
             commandType.equals("JUMPEQUALFUNCTION") ||
             commandType.equals("JUMP_EQUAL_FUNCTION")) {
-            System.out.println("ARCHITECTURE CHECK: " + commandType + " requires GENERATION_IV");
             return Architecture.GENERATION_IV;
         }
 
@@ -1181,7 +1102,6 @@ public class ExecutionServlet extends HttpServlet {
         }
 
         // Default to Generation I if unknown
-        System.out.println("WARNING: Unknown command type '" + commandType + "', defaulting to GENERATION_I");
         return Architecture.GENERATION_I;
     }
 
@@ -1206,8 +1126,6 @@ public class ExecutionServlet extends HttpServlet {
 
         // Get all variables from engine
         Set<Variable> allVariableSet = engine.getVariables();
-        System.out.println("ExecutionServlet: Retrieved " + allVariableSet.size() + " total variables from engine");
-        System.out.println("ExecutionServlet: Filtering to show only variables used in current degree commands: " + relevantVariableNames);
 
         // Only include variables that are used in the current degree's commands
         for (Variable variable : allVariableSet) {
@@ -1217,11 +1135,9 @@ public class ExecutionServlet extends HttpServlet {
                 varDTO.setValue(variable.getValue());
                 varDTO.setType(variable.getClass().getSimpleName());
                 variables.add(varDTO);
-                System.out.println("ExecutionServlet: Added relevant variable: " + variable.getName() + " = " + variable.getValue());
             }
         }
 
-        System.out.println("ExecutionServlet: Filtered variables list contains " + variables.size() + " variables for current degree");
         return variables;
     }
 
@@ -1246,7 +1162,6 @@ public class ExecutionServlet extends HttpServlet {
             }
         }
 
-        System.out.println("ExecutionServlet: Top-level input variables found: " + topLevelInputVariables);
 
         // Only include InputVariables that are actually used at the top level
         for (Variable variable : variableSet) {
@@ -1256,7 +1171,6 @@ public class ExecutionServlet extends HttpServlet {
                 varDTO.setValue(variable.getValue());
                 varDTO.setType("InputVariable");
                 inputVariables.add(varDTO);
-                System.out.println("ExecutionServlet: Including input variable: " + variable.getName());
             }
         }
 
@@ -1281,7 +1195,6 @@ public class ExecutionServlet extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error getting final Y value: " + e.getMessage());
         }
         return 0; // Default if no Y variable found
     }
@@ -1318,7 +1231,6 @@ public class ExecutionServlet extends HttpServlet {
             return "Helper Function";
 
         } catch (Exception e) {
-            System.err.println("Error determining execution type: " + e.getMessage());
             return "Unknown";
         }
     }

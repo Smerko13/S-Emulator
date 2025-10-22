@@ -199,6 +199,8 @@ public class Quote extends SyntheticCommand implements Cloneable {
     }
 
     private void expansionLogic() {
+        int depth = getParentDepth();
+
         String newOutputVarName = null;
         WorkVariable outputTempVar = null;
 
@@ -344,6 +346,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
                 for (Command cmd : subFunctionCommands) {
                     if (cmd instanceof Quote q) {
+                        String originalArgs = q.functionArguments;
                         // rewrite list entries
                         List<String> newArgs = new ArrayList<>(q.argumentList.size());
                         for (String a : q.argumentList) newArgs.add(rewriteArgsWithBindings(a, inputBind));
@@ -470,6 +473,9 @@ public class Quote extends SyntheticCommand implements Cloneable {
             }
         }
 
+        // CRITICAL FIX: Store argument evaluation commands separately to ensure correct execution order
+        List<Command> argumentEvaluationCommands = new ArrayList<>();
+
         int index = 0;
         for(Variable v : clonedSubFunction.getVariables()) {
             if (v instanceof WorkVariable) {
@@ -516,7 +522,7 @@ public class Quote extends SyntheticCommand implements Cloneable {
                 if (arg.charAt(0) == 'x' || arg.charAt(0) == 'y' || arg.charAt(0) == 'z') {
                     for (Variable var : this.associatedProgram.getVariables()) {
                         if (var.getName().equals(arg)) {
-                            this.ExpandedCommands.add(new Assignment(newWorkVar, "   ", var, this, this.associatedProgram));
+                            argumentEvaluationCommands.add(new Assignment(newWorkVar, "   ", var, this, this.associatedProgram));
                             break;
                         }
                     }
@@ -529,18 +535,25 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     } else if (checkParentCommand(this) && functionName.equals("NOT") && subArgumentList.equals(List.of("(Minus,x1,x2)"))) {
                         subArgumentList = List.of("(Minus,x2,x1)");
                     }
-                    this.ExpandedCommands.add(new Quote(newWorkVar, functionName, subArgumentList, "   ", this, this.associatedProgram));
+                    argumentEvaluationCommands.add(new Quote(newWorkVar, functionName, subArgumentList, "   ", this, this.associatedProgram));
                 } else {
                     throw new IllegalArgumentException("Invalid argument passed in Quote: " + arg);
                 }
             }
         }
 
+        // Add all argument evaluation commands BEFORE the function's main commands
+        this.ExpandedCommands.addAll(argumentEvaluationCommands);
+
         for (Command cmd : subFunctionCommands) {
             if (cmd instanceof Quote q) {
+                String originalArgs = q.functionArguments;
                 // rewrite list entries
                 List<String> newArgs = new ArrayList<>(q.argumentList.size());
-                for (String a : q.argumentList) newArgs.add(rewriteArgsWithBindings(a, inputBind));
+                for (String a : q.argumentList) {
+                    String rewritten = rewriteArgsWithBindings(a, inputBind);
+                    newArgs.add(rewritten);
+                }
                 q.argumentList = newArgs;
 
                 // keep functionArguments string in sync if you use it elsewhere
@@ -611,7 +624,6 @@ public class Quote extends SyntheticCommand implements Cloneable {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Could not access global context: " + e.getMessage());
         }
         return null;
     }
@@ -642,33 +654,40 @@ public class Quote extends SyntheticCommand implements Cloneable {
             return bind.getOrDefault(trimmed, trimmed);
         }
 
+        // FIXED: Use proper argument parsing that respects nested parentheses
+        List<String> parts = initializeArgumentList(s);
         StringBuilder out = new StringBuilder(s.length());
-        String[] parts = s.split(",");  // OK: we are only replacing identifiers, not parsing
-        for (int i = 0; i < parts.length; i++) {
-            String p = parts[i] == null ? "" : parts[i];
-            String t = p.trim();
 
-            // Count ALL leading '('
-            int openCount = 0;
-            while (openCount < t.length() && t.charAt(openCount) == '(') openCount++;
-            // Count ALL trailing ')'
-            int closeCount = 0;
-            while (closeCount < t.length() - openCount && t.charAt(t.length() - 1 - closeCount) == ')') closeCount++;
+        for (int i = 0; i < parts.size(); i++) {
+            String part = parts.get(i).trim();
 
-            String core = t.substring(openCount, t.length() - closeCount).trim();
-            if (core.isEmpty()) {
-                // nothing meaningful—just rebuild parentheses
-                for (int k = 0; k < openCount; k++) out.append('(');
-                for (int k = 0; k < closeCount; k++) out.append(')');
-            } else {
-                // replace only exact identifier matches
-                String repl = bind.getOrDefault(core, core);
-                for (int k = 0; k < openCount; k++) out.append('(');
-                out.append(repl);
-                for (int k = 0; k < closeCount; k++) out.append(')');
+            if (part.isEmpty()) {
+                // Skip empty parts
+                if (i < parts.size() - 1) out.append(',');
+                continue;
             }
 
-            if (i < parts.length - 1) out.append(',');
+            // If it's a nested function call like (FuncName,arg1,arg2)
+            if (part.charAt(0) == '(') {
+                // Extract function name and arguments
+                int firstComma = part.indexOf(',');
+                if (firstComma == -1) {
+                    // No arguments, like (ConstZero)
+                    out.append(part);
+                } else {
+                    // Has arguments, recursively rewrite them
+                    String funcName = part.substring(1, firstComma);
+                    String innerArgs = part.substring(firstComma + 1, part.length() - 1);
+                    String rewrittenArgs = rewriteArgsWithBindings(innerArgs, bind);
+                    out.append('(').append(funcName).append(',').append(rewrittenArgs).append(')');
+                }
+            } else {
+                // Plain variable reference - apply binding
+                String repl = bind.getOrDefault(part, part);
+                out.append(repl);
+            }
+
+            if (i < parts.size() - 1) out.append(',');
         }
         return out.toString();
     }
@@ -808,6 +827,21 @@ public class Quote extends SyntheticCommand implements Cloneable {
         }
 
         return var;
+    }
+
+    /**
+     * Helper method to calculate the depth of this Quote in the parent chain for logging
+     */
+    private int getParentDepth() {
+        int depth = 0;
+        Command current = this.getParentCommand();
+        while (current != null) {
+            if (current instanceof Quote) {
+                depth++;
+            }
+            current = current.getParentCommand();
+        }
+        return depth;
     }
 
     // Public getter methods for external access

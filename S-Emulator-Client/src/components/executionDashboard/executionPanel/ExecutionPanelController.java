@@ -34,11 +34,9 @@ public class ExecutionPanelController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        System.out.println("==================== EXECUTION PANEL INITIALIZATION ====================");
 
         // Initialize architecture ComboBox
         if (architectureComboBox != null) {
-            System.out.println("Initializing architecture ComboBox with available architectures");
 
             // Populate ComboBox with all available architectures
             architectureComboBox.setItems(FXCollections.observableArrayList(Architecture.values()));
@@ -49,17 +47,11 @@ public class ExecutionPanelController implements Initializable {
             // Add listener to log architecture changes
             architectureComboBox.setOnAction(e -> {
                 Architecture selected = architectureComboBox.getValue();
-                if (selected != null) {
-                    System.out.println("Architecture changed to: " + selected.name() + " (Cost: " + selected.getCost() + " credits)");
-                }
+
             });
 
-            System.out.println("Architecture ComboBox initialized successfully with default: " + Architecture.GENERATION_I.name());
-        } else {
-            System.err.println("Architecture ComboBox is null - check FXML binding");
         }
 
-        System.out.println("==================== EXECUTION PANEL INITIALIZATION COMPLETE ====================");
     }
 
     /**
@@ -69,11 +61,9 @@ public class ExecutionPanelController implements Initializable {
     public Architecture getSelectedArchitecture() {
         if (architectureComboBox != null && architectureComboBox.getValue() != null) {
             Architecture selected = architectureComboBox.getValue();
-            System.out.println("Retrieved selected architecture: " + selected.name() + " (Cost: " + selected.getCost() + " credits)");
             return selected;
         }
 
-        System.out.println("No architecture selected, defaulting to GENERATION_I");
         return Architecture.GENERATION_I;
     }
 
@@ -83,7 +73,6 @@ public class ExecutionPanelController implements Initializable {
      */
     public void setSelectedArchitecture(Architecture architecture) {
         if (architectureComboBox != null && architecture != null) {
-            System.out.println("Setting architecture ComboBox to: " + architecture.name());
             architectureComboBox.setValue(architecture);
         }
     }
@@ -91,35 +80,16 @@ public class ExecutionPanelController implements Initializable {
     public void setVariables(java.util.List<VariableDTO> allVars,
                              java.util.List<VariableDTO> inputVars,
                              java.util.Set<String> changedNames) {
-        System.out.println("==================== VARIABLES UPDATE RECEIVED ====================");
-        System.out.println("setVariables called - updating UI with execution results");
 
-        // Log received data
-        System.out.println("All variables received: " + (allVars != null ? allVars.size() : "null"));
-        if (allVars != null) {
-            for (VariableDTO var : allVars) {
-                System.out.println("  All var: " + var.getName() + " = " + var.getValue() + " (type: " + var.getType() + ", isInput: " + var.isInput() + ")");
-            }
-        }
 
-        System.out.println("Input variables received: " + (inputVars != null ? inputVars.size() : "null"));
-        if (inputVars != null) {
-            for (VariableDTO var : inputVars) {
-                System.out.println("  Input var: " + var.getName() + " = " + var.getValue() + " (type: " + var.getType() + ")");
-            }
-        }
-
-        System.out.println("Changed variables: " + (changedNames != null ? changedNames.toString() : "null"));
 
         // Left table: all/work/output variables
         var all = javafx.collections.FXCollections.observableArrayList(allVars);
         allVarsTable.setItems(all);
-        System.out.println("Updated all variables table with " + all.size() + " items");
 
         // Right table: inputs
         var inputs = javafx.collections.FXCollections.observableArrayList(inputVars);
         inputVarsTable.setItems(inputs);
-        System.out.println("Updated input variables table with " + inputs.size() + " items");
 
         // simple highlight for changed names
         allVarsTable.setRowFactory(tv -> new TableRow<VariableDTO>() {
@@ -217,14 +187,11 @@ public class ExecutionPanelController implements Initializable {
                     VariableDTO variable = getTableView().getItems().get(getIndex());
                     variable.setValue(newValue.intValue());
                     
-                    System.out.println("Committed edit: " + variable.getName() + " = " + newValue.intValue());
-                    
+
                     // IMPORTANT: Send the updated value to the server immediately
                     if (parent != null) {
-                        System.out.println("Automatically sending input variable update to server: " + variable.getName() + " = " + newValue.intValue());
                         parent.updateInputValue(variable.getName(), newValue.intValue());
                     } else {
-                        System.err.println("Cannot send input variable update - parent controller is null");
                     }
 
                     // Update the display immediately without full table refresh
@@ -241,7 +208,6 @@ public class ExecutionPanelController implements Initializable {
                             int value = Integer.parseInt(textField.getText());
                             commitEdit(value);
                         } catch (NumberFormatException ex) {
-                            System.err.println("Invalid number format: " + textField.getText());
                             cancelEdit();
                         }
                     });
@@ -252,7 +218,6 @@ public class ExecutionPanelController implements Initializable {
                                 int value = Integer.parseInt(textField.getText());
                                 commitEdit(value);
                             } catch (NumberFormatException ex) {
-                                System.err.println("Invalid number format on focus lost: " + textField.getText());
                                 cancelEdit();
                             }
                         }
@@ -267,8 +232,6 @@ public class ExecutionPanelController implements Initializable {
 
         allVarsTable.refresh();
         inputVarsTable.refresh();
-        System.out.println("Tables refreshed successfully");
-        System.out.println("==================== VARIABLES UPDATE COMPLETE ====================");
     }
 
 
@@ -288,18 +251,12 @@ public class ExecutionPanelController implements Initializable {
 
     // Must be public (dashboard calls it)
     public void setCyclesLabel(int cycles) {
-        System.out.println("==================== CYCLES UPDATE ====================");
-        System.out.println("setCyclesLabel called with cycles: " + cycles);
 
         if (cyclesLabel != null) {
             String oldText = cyclesLabel.getText();
             cyclesLabel.setText("Cycles: " + cycles);
-            System.out.println("Cycles label updated from '" + oldText + "' to 'Cycles: " + cycles + "'");
-        } else {
-            System.err.println("Cycles label is null - cannot update cycles display");
         }
 
-        System.out.println("==================== CYCLES UPDATE COMPLETE ====================");
     }
 
     // New signature used by dashboard
@@ -314,10 +271,8 @@ public class ExecutionPanelController implements Initializable {
      * Update input display values (used during Re-Run to pre-fill inputs)
      */
     public void updateInputDisplayValues(java.util.List<VariableDTO> preFilledInputs) {
-        System.out.println("ExecutionPanelController: Updating input display values with " + preFilledInputs.size() + " pre-filled inputs");
 
         if (inputVarsTable == null || inputVarsTable.getItems() == null) {
-            System.err.println("Input variables table is null or has no items");
             return;
         }
 
@@ -326,7 +281,6 @@ public class ExecutionPanelController implements Initializable {
             for (VariableDTO tableInput : inputVarsTable.getItems()) {
                 if (tableInput.getName().equals(preFilledInput.getName())) {
                     tableInput.setValue(preFilledInput.getValue());
-                    System.out.println("  Updated input display: " + tableInput.getName() + " = " + preFilledInput.getValue());
                     break;
                 }
             }
@@ -334,21 +288,16 @@ public class ExecutionPanelController implements Initializable {
 
         // Refresh the table to show updated values
         inputVarsTable.refresh();
-        System.out.println("Input variables table refreshed with pre-filled values");
     }
 
     public void executeButtonPressed(ActionEvent actionEvent) {
         if (parent == null) {
-            System.err.println("Parent controller not set - cannot execute program");
             return;
         }
 
-        System.out.println("==================== EXECUTE BUTTON PRESSED ====================");
-        System.out.println("Execute button pressed - collecting input variables and executing program");
 
         // Get the selected architecture and validate credits
         Architecture selectedArchitecture = getSelectedArchitecture();
-        System.out.println("Selected architecture for execution: " + selectedArchitecture.name() + " (Cost: " + selectedArchitecture.getCost() + " credits)");
 
         // Validate architecture compatibility with instruction table
         Architecture requiredArchitecture = validateArchitectureWithInstructionTable(selectedArchitecture);
@@ -363,7 +312,6 @@ public class ExecutionPanelController implements Initializable {
         int availableCredits = userSession.getCredits();
         int architectureCost = selectedArchitecture.getCost();
 
-        System.out.println("Credit check: Available=" + availableCredits + ", Architecture cost=" + architectureCost);
 
         // TODO: Get average program cost from server/context if available
         int estimatedCycleCost = 50; // Conservative estimate for cycles
@@ -377,48 +325,25 @@ public class ExecutionPanelController implements Initializable {
 
         // Collect and update input variable values before execution
         if (inputVarsTable != null && inputVarsTable.getItems() != null) {
-            System.out.println("Input variables table found with " + inputVarsTable.getItems().size() + " variables");
 
             for (VariableDTO var : inputVarsTable.getItems()) {
-                System.out.println("Processing input variable: " + var.getName() + " = " + var.getValue());
 
                 // Send each input variable value to the server
                 // The server needs to know the current values before execution
                 if (parent != null) {
-                    System.out.println("Sending to server: updateInputValue('" + var.getName() + "', " + var.getValue() + ")");
                     parent.updateInputValue(var.getName(), var.getValue());
-                } else {
-                    System.err.println("Parent controller is null - cannot send variable update for: " + var.getName());
                 }
             }
 
-            System.out.println("Completed sending " + inputVarsTable.getItems().size() + " input variable updates to server");
-        } else {
-            if (inputVarsTable == null) {
-                System.out.println("Input variables table is null - no input variables to send");
-            } else {
-                System.out.println("Input variables table items is null - no input variables to send");
-            }
         }
 
-        // Log current state before execution
-        System.out.println("Current cycles before execution: " + (cyclesLabel != null ? cyclesLabel.getText() : "unknown"));
-        if (allVarsTable != null && allVarsTable.getItems() != null) {
-            System.out.println("Current all variables count: " + allVarsTable.getItems().size());
-            for (VariableDTO var : allVarsTable.getItems()) {
-                System.out.println("  - " + var.getName() + " = " + var.getValue() + " (type: " + var.getType() + ")");
-            }
-        }
+
 
         // Execute the program using the parent controller's method with selected architecture
         // This will make an HTTP call to the server and update all UI components
         // The server will execute with the current degree, updated input variables, and selected architecture
-        System.out.println("Calling parent.executeProgram() with architecture " + selectedArchitecture.name() + " to trigger server execution...");
         parent.executeProgram(selectedArchitecture);
-
-        System.out.println("Program execution request sent to server with architecture: " + selectedArchitecture.name());
-        System.out.println("==================== EXECUTE REQUEST COMPLETE ====================");
-    }
+}
 
     /**
      * Validate architecture compatibility with instruction table controller
@@ -471,16 +396,12 @@ public class ExecutionPanelController implements Initializable {
 
     public void debugButtonPressed(ActionEvent actionEvent) {
         if (parent == null) {
-            System.err.println("Parent controller not set - cannot start debugging");
             return;
         }
 
-        System.out.println("==================== DEBUG BUTTON PRESSED ====================");
-        System.out.println("Debug button pressed - starting debugging mode");
 
         // Get the selected architecture and validate credits
         Architecture selectedArchitecture = getSelectedArchitecture();
-        System.out.println("Selected architecture for debugging: " + selectedArchitecture.name() + " (Cost: " + selectedArchitecture.getCost() + " credits)");
 
         // Validate architecture compatibility with instruction table
         Architecture requiredArchitecture = validateArchitectureWithInstructionTable(selectedArchitecture);
@@ -495,7 +416,6 @@ public class ExecutionPanelController implements Initializable {
         int availableCredits = userSession.getCredits();
         int architectureCost = selectedArchitecture.getCost();
 
-        System.out.println("Credit check for debug: Available=" + availableCredits + ", Architecture cost=" + architectureCost);
 
         // For debug mode, we only check if user has enough for architecture cost
         // (stepping costs are charged per step)
@@ -507,68 +427,51 @@ public class ExecutionPanelController implements Initializable {
 
         // Collect and update input variable values before debugging
         if (inputVarsTable != null && inputVarsTable.getItems() != null) {
-            System.out.println("Input variables table found with " + inputVarsTable.getItems().size() + " variables");
 
             for (VariableDTO var : inputVarsTable.getItems()) {
-                System.out.println("Processing input variable: " + var.getName() + " = " + var.getValue());
 
                 // Send each input variable value to the server
                 if (parent != null) {
-                    System.out.println("Sending to server: updateInputValue('" + var.getName() + "', " + var.getValue() + ")");
                     parent.updateInputValue(var.getName(), var.getValue());
-                } else {
-                    System.err.println("Parent controller is null - cannot send variable update for: " + var.getName());
                 }
             }
 
-            System.out.println("Completed sending " + inputVarsTable.getItems().size() + " input variable updates to server");
         }
 
         // Start debugging with the selected architecture
-        System.out.println("Calling parent.startDebugging() with architecture " + selectedArchitecture.name() + "...");
         parent.startDebugging(selectedArchitecture);
 
-        System.out.println("Debug mode started with architecture: " + selectedArchitecture.name());
-        System.out.println("==================== DEBUG REQUEST COMPLETE ====================");
-    }
+   }
 
     public void newRunButtonPressed(ActionEvent actionEvent) {
         if (parent == null) {
-            System.err.println("Parent controller not set - cannot create new run");
             return;
         }
 
-        System.out.println("New run button pressed - creating fresh execution");
         parent.newRunButtonPressed();
     }
 
     public void stepOverPressed(ActionEvent actionEvent) {
         if (parent == null) {
-            System.err.println("Parent controller not set - cannot step over");
             return;
         }
 
-        System.out.println("Step over button pressed - stepping to next instruction");
         parent.stepOver();
     }
 
     public void stopDebugPressed(ActionEvent actionEvent) {
         if (parent == null) {
-            System.err.println("Parent controller not set - cannot stop debugging");
             return;
         }
 
-        System.out.println("Stop debug button pressed - stopping debugging mode");
         parent.stopDebugging();
     }
 
     public void continueButtonPressed(ActionEvent actionEvent) {
         if (parent == null) {
-            System.err.println("Parent controller not set - cannot continue debugging");
             return;
         }
 
-        System.out.println("Continue button pressed - continuing execution");
         parent.continueDebugging();
     }
 
@@ -578,13 +481,11 @@ public class ExecutionPanelController implements Initializable {
             Stage stage = (Stage) backToMainDashBoardButton.getScene().getWindow();
 
             if (stage == null) {
-                System.err.println("Cannot navigate back - stage is null");
                 return;
             }
 
             // If we have a reference to the main dashboard root, use it (preserves state)
             if (mainDashboardRoot != null) {
-                System.out.println("Returning to existing main dashboard instance (preserving state)");
 
                 if (stage.getScene() == null) {
                     stage.setScene(new Scene(mainDashboardRoot));
@@ -597,7 +498,6 @@ public class ExecutionPanelController implements Initializable {
             } else {
                 // Fallback: Load fresh instance if no reference was provided
                 // This shouldn't happen in normal flow, but provides backward compatibility
-                System.out.println("WARNING: No main dashboard reference found - loading fresh instance (state will be lost)");
 
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/components/mainDashboard/mainDashboard.fxml"));
                 Parent mainDashboardRoot = loader.load();
@@ -614,7 +514,6 @@ public class ExecutionPanelController implements Initializable {
 
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Error navigating back to main dashboard: " + e.getMessage());
         }
     }
 }

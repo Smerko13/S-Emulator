@@ -56,9 +56,6 @@ public class ServerContext {
     public void recordProgramExecution(String programName, int creditCost) {
         ProgramStats stats = globalProgramStats.computeIfAbsent(programName, k -> new ProgramStats());
         stats.addExecution(creditCost);
-        System.out.println("Recorded execution for program '" + programName + "': cost=" + creditCost +
-                         ", total executions=" + stats.getTotalExecutions() +
-                         ", avg cost=" + stats.getAverageCreditCost());
     }
 
     public int getProgramExecutionCount(String programName) {

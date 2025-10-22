@@ -136,8 +136,6 @@ public class ChatServlet extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_CREATED);
                 response.getWriter().write(jsonResponse);
 
-                System.out.println("User '" + username + "' posted message: " + text);
-
             } catch (IllegalStateException e) {
                 // Rate limit exceeded
                 response.setStatus(HTTP_TOO_MANY_REQUESTS);

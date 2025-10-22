@@ -125,7 +125,6 @@ public class ProgramsServlet extends HttpServlet {
             // Return 304 Not Modified if data hasn't changed
             if (clientETag != null && clientETag.equals(serverETag)) {
                 resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-                System.out.println("ProgramsServlet: Returning 304 Not Modified (ETag match)");
                 return;
             }
 
@@ -133,10 +132,8 @@ public class ProgramsServlet extends HttpServlet {
             cachedResponseHash = currentHash;
 
             resp.getWriter().write(jsonResponse);
-            System.out.println("SERVER - Sent programs and functions data");
 
         } catch (Exception e) {
-            System.err.println("SERVER - Error in ProgramsServlet: " + e.getMessage());
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write("{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");

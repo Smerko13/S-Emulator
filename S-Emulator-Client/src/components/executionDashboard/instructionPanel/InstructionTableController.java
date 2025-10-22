@@ -159,15 +159,12 @@ public class InstructionTableController {
 
         architectureSummaryLabel.setText(summary.toString());
 
-        System.out.println("Architecture summary updated: " + summary);
     }
 
     /**
      * Highlight instructions that are incompatible with the selected architecture
      */
     public void highlightIncompatibleInstructions(List<Integer> instructionIds) {
-        System.out.println("InstructionTableController: Highlighting " +
-            (instructionIds != null ? instructionIds.size() : 0) + " incompatible instructions");
         this.incompatibleInstructionIds = instructionIds;
         instructionTableView.refresh();
     }
@@ -228,7 +225,6 @@ public class InstructionTableController {
      */
     @FXML
     private void ShowProgramSummary(ActionEvent event) {
-        System.out.println("Show Program Summary button clicked");
 
         // Generate and display a summary of the program
         if (rows == null || rows.isEmpty()) {
@@ -317,6 +313,5 @@ public class InstructionTableController {
 
         alert.showAndWait();
 
-        System.out.println("Program summary displayed: " + rows.size() + " instructions, min arch: " + minRequired.name());
     }
 }

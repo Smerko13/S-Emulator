@@ -64,7 +64,6 @@ public class ProgramsAndFunctionsController {
 
     @FXML
     public void initialize() {
-        System.out.println("ProgramsAndFunctionsController: Initializing");
 
         // Programs table wiring
         programNameColumn.setCellValueFactory(c -> c.getValue().programNameProperty());
@@ -119,7 +118,6 @@ public class ProgramsAndFunctionsController {
     }
 
     private void loadProgramsAndFunctions() {
-        System.out.println("ProgramsAndFunctionsController: Loading programs and functions");
 
         // Store current selections before refresh
         ProgramRow currentProgramSelection = programsTable.getSelectionModel().getSelectedItem();
@@ -136,14 +134,12 @@ public class ProgramsAndFunctionsController {
         HttpClientUtil.runAsync(url, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                System.err.println("Failed to load programs and functions: " + e.getMessage());
             }
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 // Handle 304 Not Modified - no need to update UI
                 if (response.code() == 304) {
-                    System.out.println("ProgramsAndFunctionsController: Data unchanged (304), skipping update");
                     return;
                 }
 
@@ -156,7 +152,6 @@ public class ProgramsAndFunctionsController {
                 String body = response.body() != null ? response.body().string() : "{}";
 
                 if (!response.isSuccessful()) {
-                    System.err.println("Server error loading programs: " + response.code());
                     return;
                 }
 
@@ -166,7 +161,6 @@ public class ProgramsAndFunctionsController {
                     Platform.runLater(() -> {
                         // Smart update for programs table
                         updateProgramsTableSmart(data.programs);
-                        System.out.println("Loaded " + programRows.size() + " programs");
 
                         // Restore program selection after refresh
                         if (selectedProgramName != null) {
@@ -180,7 +174,6 @@ public class ProgramsAndFunctionsController {
 
                         // Smart update for functions table
                         updateFunctionsTableSmart(data.functions);
-                        System.out.println("Loaded " + functionRows.size() + " functions");
 
                         // Restore function selection after refresh
                         if (selectedFunctionName != null) {
@@ -194,7 +187,6 @@ public class ProgramsAndFunctionsController {
                     });
 
                 } catch (Exception e) {
-                    System.err.println("Error parsing programs/functions JSON: " + e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -317,7 +309,6 @@ public class ProgramsAndFunctionsController {
         if (selected == null) return;
 
         String programName = selected.programNameProperty().get();
-        System.out.println("Executing program: " + programName);
         openExecutionDashboard(programName);
     }
 
@@ -327,7 +318,6 @@ public class ProgramsAndFunctionsController {
         if (selected == null) return;
 
         String functionName = selected.functionNameProperty().get();
-        System.out.println("Executing function: " + functionName);
         openExecutionDashboard(functionName);
     }
 
@@ -349,9 +339,7 @@ public class ProgramsAndFunctionsController {
             // Pass the main dashboard root to the execution panel so it can navigate back without losing state
             if (execController.getExecutionPanelController() != null) {
                 execController.getExecutionPanelController().setMainDashboardRoot(mainDashboardRoot);
-                System.out.println("ProgramsAndFunctionsController: Main dashboard root reference passed to execution panel");
             } else {
-                System.err.println("ProgramsAndFunctionsController: WARNING - Could not get execution panel controller to set main dashboard root");
             }
 
             // Switch to execution dashboard scene
@@ -365,7 +353,6 @@ public class ProgramsAndFunctionsController {
             execController.openOnServer(targetName);
 
         } catch (Exception e) {
-            System.err.println("Error opening execution dashboard: " + e.getMessage());
             e.printStackTrace();
 
             Alert alert = new Alert(Alert.AlertType.ERROR);

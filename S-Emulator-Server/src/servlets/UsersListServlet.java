@@ -30,13 +30,6 @@ public class UsersListServlet extends HttpServlet {
             for (User user : allUsers.values()) {
                 UserSummary summary = createUserSummary(user);
                 summaries.add(summary);
-
-                System.out.println("UsersListServlet: User " + user.getUserName() +
-                        " - Programs: " + summary.programs +
-                        ", Functions: " + summary.functions +
-                        ", Credits: " + summary.creditsAvailable +
-                        ", Used: " + summary.creditsUsed +
-                        ", Executions: " + summary.executions);
             }
 
             // Generate JSON response
@@ -55,7 +48,6 @@ public class UsersListServlet extends HttpServlet {
             // Return 304 Not Modified if data hasn't changed
             if (clientETag != null && clientETag.equals(serverETag)) {
                 resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-                System.out.println("UsersListServlet: Returning 304 Not Modified (ETag match)");
                 return;
             }
 
@@ -66,7 +58,6 @@ public class UsersListServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(jsonResponse);
         } catch (Exception e) {
-            System.err.println("Error in UsersListServlet: " + e.getMessage());
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write(GSON.toJson("Error retrieving user list"));

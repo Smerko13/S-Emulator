@@ -33,11 +33,9 @@ public class ExecutionHistoryServlet extends HttpServlet {
                     // Return empty array for non-existent user (tolerates server restart)
                     resp.setStatus(HttpServletResponse.SC_OK);
                     resp.getWriter().write(GSON.toJson(new ExecutionHistoryDTO[0]));
-                    System.out.println("ExecutionHistoryServlet: User not found (may be after restart): " + targetUserId);
                     return;
                 }
                 history = targetUser.getExecutionHistory();
-                System.out.println("ExecutionHistoryServlet: Retrieved " + history.size() + " records for user: " + targetUserId);
             } else {
                 // Get execution history for current logged-in user
                 HttpSession session = req.getSession();
@@ -54,11 +52,9 @@ public class ExecutionHistoryServlet extends HttpServlet {
                     // Return empty array after restart instead of error
                     resp.setStatus(HttpServletResponse.SC_OK);
                     resp.getWriter().write(GSON.toJson(new ExecutionHistoryDTO[0]));
-                    System.out.println("ExecutionHistoryServlet: Current user not found (may be after restart): " + currentUsername);
                     return;
                 }
                 history = currentUser.getExecutionHistory();
-                System.out.println("ExecutionHistoryServlet: Retrieved " + history.size() + " records for current user: " + currentUsername);
             }
 
             // Generate JSON and compute ETag
@@ -74,7 +70,6 @@ public class ExecutionHistoryServlet extends HttpServlet {
             // Return 304 if data hasn't changed
             if (clientETag != null && clientETag.equals(etag)) {
                 resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-                System.out.println("ExecutionHistoryServlet: Returning 304 Not Modified");
                 return;
             }
 
@@ -82,7 +77,6 @@ public class ExecutionHistoryServlet extends HttpServlet {
             resp.getWriter().write(jsonResponse);
 
         } catch (Exception e) {
-            System.err.println("Error in ExecutionHistoryServlet: " + e.getMessage());
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write(GSON.toJson("Error retrieving execution history"));

@@ -71,7 +71,6 @@ public class UsersController {
 
     @FXML
     public void initialize() {
-        System.out.println("UsersController: Initializing users table and execution history table");
 
         // Users table wiring
         userNameColumn.setCellValueFactory(c -> c.getValue().userNameProperty());
@@ -103,19 +102,12 @@ public class UsersController {
             boolean hasSelection = newSelection != null;
             showStatusButton.setDisable(!hasSelection);
             reRunButton.setDisable(!hasSelection);
-
-            if (newSelection != null) {
-                System.out.println("UsersController: Execution selected - runId: " + newSelection.runIdProperty().get());
-            } else {
-                System.out.println("UsersController: Execution deselected");
-            }
         });
 
         // Add selection listener to users table
         usersTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
                 String userName = newSelection.userNameProperty().get();
-                System.out.println("UsersController: User selected: " + userName);
                 selectedUserId = userName;
                 loadExecutionHistory(userName);
             }
@@ -138,7 +130,6 @@ public class UsersController {
     }
 
     private void loadUsersList() {
-        System.out.println("UsersController: loadUsersList() called");
 
         // Store current selection and scroll position before refresh
         UserRow currentUserSelection = usersTable.getSelectionModel().getSelectedItem();
@@ -149,14 +140,12 @@ public class UsersController {
         HttpClientUtil.runAsync(Constants.USERS_LIST, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                System.out.println("UsersController: loadUsersList failed: " + e.getMessage());
                 if (mainController != null) mainController.updateHttpLine("userslist failed: " + e.getMessage());
             }
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 // Handle 304 Not Modified - no need to update UI
                 if (response.code() == 304) {
-                    System.out.println("UsersController: Data unchanged (304), skipping update");
                     return;
                 }
 
@@ -167,28 +156,18 @@ public class UsersController {
                 }
 
                 String body = response.body() != null ? response.body().string() : "[]";
-                System.out.println("UsersController: loadUsersList response: " + body);
                 UserSummary[] summaries;
                 try {
                     summaries = GSON_INSTANCE.fromJson(body, UserSummary[].class);
-                    System.out.println("UsersController: Parsed " + summaries.length + " users");
-                    for (UserSummary summary : summaries) {
-                        System.out.println("  - " + summary.username + ": programs=" + summary.programs +
-                                         ", functions=" + summary.functions + ", credits=" + summary.creditsAvailable +
-                                         ", used=" + summary.creditsUsed + ", executions=" + summary.executions);
-                    }
                 } catch (Exception e) {
-                    System.out.println("UsersController: Error parsing JSON: " + e.getMessage());
                     summaries = new UserSummary[0];
                 }
                 UserSummary[] finalSummaries = summaries;
                 Platform.runLater(() -> {
-                    System.out.println("UsersController: Updating table with " + finalSummaries.length + " users");
 
                     // Smart update: compare and update only changed rows to avoid flicker
                     updateUsersTableSmart(finalSummaries);
 
-                    System.out.println("UsersController: Table updated, now has " + rows.size() + " rows");
 
                     // Restore user selection after refresh
                     if (selectedUserName != null) {
@@ -265,7 +244,6 @@ public class UsersController {
      * Load execution history for a specific user
      */
     private void loadExecutionHistory(String userName) {
-        System.out.println("UsersController: Loading execution history for user: " + userName);
 
         // Store current execution selection before refresh
         ExecutionHistoryRow currentExecSelection = statsTable.getSelectionModel().getSelectedItem();
@@ -277,7 +255,6 @@ public class UsersController {
         HttpClientUtil.runAsync(url, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                System.err.println("Failed to load execution history for " + userName + ": " + e.getMessage());
                 Platform.runLater(() -> {
                     historyRows.clear();
                     selectedExecutionRunId = null;
@@ -287,10 +264,8 @@ public class UsersController {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String body = response.body() != null ? response.body().string() : "[]";
-                System.out.println("UsersController: Received execution history response: " + body);
 
                 if (!response.isSuccessful()) {
-                    System.err.println("Server error loading execution history: " + response.code());
                     Platform.runLater(() -> {
                         historyRows.clear();
                         selectedExecutionRunId = null;
@@ -302,7 +277,6 @@ public class UsersController {
                 try {
                     historyArray = GSON_INSTANCE.fromJson(body, ExecutionHistoryDTO[].class);
                 } catch (Exception e) {
-                    System.err.println("Error parsing execution history JSON: " + e.getMessage());
                     historyArray = new ExecutionHistoryDTO[0];
                 }
 
@@ -321,7 +295,6 @@ public class UsersController {
                         );
                         historyRows.add(row);
                     }
-                    System.out.println("UsersController: Loaded " + historyRows.size() + " execution records for " + userName);
 
                     // Restore execution selection after refresh
                     if (selectedExecutionRunId != null) {
@@ -341,7 +314,6 @@ public class UsersController {
      * Load execution history for the current logged-in user
      */
     private void loadCurrentUserHistory() {
-        System.out.println("UsersController: Loading current user's execution history");
 
         // Store current execution selection before refresh
         ExecutionHistoryRow currentExecSelection = statsTable.getSelectionModel().getSelectedItem();
@@ -352,7 +324,6 @@ public class UsersController {
         HttpClientUtil.runAsync(Constants.EXECUTION_HISTORY, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                System.err.println("Failed to load current user execution history: " + e.getMessage());
                 Platform.runLater(() -> {
                     historyRows.clear();
                     selectedExecutionRunId = null;
@@ -362,10 +333,8 @@ public class UsersController {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String body = response.body() != null ? response.body().string() : "[]";
-                System.out.println("UsersController: Received current user history response: " + body);
 
                 if (!response.isSuccessful()) {
-                    System.err.println("Server error loading current user history: " + response.code());
                     Platform.runLater(() -> {
                         historyRows.clear();
                         selectedExecutionRunId = null;
@@ -377,7 +346,6 @@ public class UsersController {
                 try {
                     historyArray = GSON_INSTANCE.fromJson(body, ExecutionHistoryDTO[].class);
                 } catch (Exception e) {
-                    System.err.println("Error parsing current user history JSON: " + e.getMessage());
                     historyArray = new ExecutionHistoryDTO[0];
                 }
 
@@ -396,7 +364,6 @@ public class UsersController {
                         );
                         historyRows.add(row);
                     }
-                    System.out.println("UsersController: Loaded " + historyRows.size() + " execution records for current user");
 
                     // Restore execution selection after refresh
                     if (selectedExecutionRunId != null) {
@@ -416,7 +383,6 @@ public class UsersController {
      * Handle unselect user button - revert to showing current user's history
      */
     public void unselectedUserPressed(javafx.event.ActionEvent e) {
-        System.out.println("UsersController: Unselect user pressed - reverting to current user's history");
 
         // Clear user table selection
         usersTable.getSelectionModel().clearSelection();
@@ -432,12 +398,10 @@ public class UsersController {
     public void reRunButtonPressed(javafx.event.ActionEvent e) {
         ExecutionHistoryRow selected = statsTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            System.out.println("UsersController: No execution selected for re-run");
             return;
         }
 
         int runId = selected.getRunId();
-        System.out.println("UsersController: Re-running execution with runId: " + runId);
 
         // Build URL with runId and optionally userId
         String url = Constants.EXECUTION_DETAILS + "?runId=" + runId;
@@ -448,7 +412,6 @@ public class UsersController {
         HttpClientUtil.runAsync(url, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException ex) {
-                System.err.println("Failed to load execution details for re-run " + runId + ": " + ex.getMessage());
                 Platform.runLater(() -> {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Error");
@@ -463,7 +426,6 @@ public class UsersController {
                 String body = response.body() != null ? response.body().string() : null;
 
                 if (!response.isSuccessful()) {
-                    System.err.println("Server error loading execution details for re-run: " + response.code());
                     Platform.runLater(() -> {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
                         alert.setTitle("Error");
@@ -480,7 +442,6 @@ public class UsersController {
                         openExecutionDashboardForReRun(details);
                     });
                 } catch (Exception ex) {
-                    System.err.println("Error parsing execution details JSON for re-run: " + ex.getMessage());
                     ex.printStackTrace();
                     Platform.runLater(() -> {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -499,10 +460,6 @@ public class UsersController {
      */
     private void openExecutionDashboardForReRun(api.dto.ExecutionDetailsDTO details) {
         try {
-            System.out.println("UsersController: Opening execution dashboard for re-run");
-            System.out.println("  Program: " + details.programFunctionName);
-            System.out.println("  Execution Level: " + details.executionLevel);
-            System.out.println("  Original Inputs: " + (details.originalInputs != null ? details.originalInputs.size() : 0));
 
             // Load the execution dashboard FXML
             FXMLLoader loader = new FXMLLoader(getClass().getResource(Constants.MAIN_PAGE_FXML_RESOURCE_LOCATION.replace("mainDashboard", "executionDashboard")));
@@ -520,9 +477,7 @@ public class UsersController {
             // Pass the main dashboard root to the execution panel so it can navigate back without losing state
             if (execController.getExecutionPanelController() != null) {
                 execController.getExecutionPanelController().setMainDashboardRoot(mainDashboardRoot);
-                System.out.println("UsersController: Main dashboard root reference passed to execution panel");
             } else {
-                System.err.println("UsersController: WARNING - Could not get execution panel controller to set main dashboard root");
             }
 
             // Switch to execution dashboard scene
@@ -540,18 +495,14 @@ public class UsersController {
             if (details.originalInputs != null && !details.originalInputs.isEmpty()) {
                 // Use the stored original inputs
                 inputVariables.addAll(details.originalInputs);
-                System.out.println("UsersController: Using " + details.originalInputs.size() + " original inputs from before execution:");
                 for (api.dto.VariableDTO var : details.originalInputs) {
-                    System.out.println("  Input variable for re-run: " + var.getName() + " = " + var.getValue());
                 }
             } else {
                 // Fallback: extract inputs from finalVariables if originalInputs not available
-                System.out.println("UsersController: Warning - originalInputs not available, falling back to finalVariables");
                 if (details.finalVariables != null) {
                     for (api.dto.VariableDTO var : details.finalVariables) {
                         if ("Input".equalsIgnoreCase(var.getType()) || var.isInput()) {
                             inputVariables.add(var);
-                            System.out.println("  Input variable for re-run (from final): " + var.getName() + " = " + var.getValue());
                         }
                     }
                 }
@@ -562,17 +513,14 @@ public class UsersController {
             try {
                 targetDegree = Integer.parseInt(details.executionLevel);
             } catch (NumberFormatException ex) {
-                System.out.println("Could not parse execution level as degree: " + details.executionLevel);
                 // Default to 0 if parsing fails
             }
 
             // Open the program with pre-filled ORIGINAL inputs and target degree
             execController.openOnServer(details.programFunctionName, inputVariables, targetDegree);
 
-            System.out.println("UsersController: Execution dashboard opened successfully for re-run");
 
         } catch (Exception ex) {
-            System.err.println("Error opening execution dashboard for re-run: " + ex.getMessage());
             ex.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
@@ -585,12 +533,10 @@ public class UsersController {
     public void showStatusButtonPressed(javafx.event.ActionEvent e) {
         ExecutionHistoryRow selected = statsTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            System.out.println("UsersController: No execution selected");
             return;
         }
 
         int runId = selected.getRunId();
-        System.out.println("UsersController: Fetching execution details for runId: " + runId);
 
         // Build URL with runId and optionally userId
         String url = Constants.EXECUTION_DETAILS + "?runId=" + runId;
@@ -601,7 +547,6 @@ public class UsersController {
         HttpClientUtil.runAsync(url, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException ex) {
-                System.err.println("Failed to load execution details for runId " + runId + ": " + ex.getMessage());
                 Platform.runLater(() -> {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Error");
@@ -616,7 +561,6 @@ public class UsersController {
                 String body = response.body() != null ? response.body().string() : null;
 
                 if (!response.isSuccessful()) {
-                    System.err.println("Server error loading execution details: " + response.code());
                     Platform.runLater(() -> {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
                         alert.setTitle("Error");
@@ -635,7 +579,6 @@ public class UsersController {
                         ExecutionStatusDialog.show(details, ownerStage);
                     });
                 } catch (Exception ex) {
-                    System.err.println("Error parsing execution details JSON: " + ex.getMessage());
                     ex.printStackTrace();
                     Platform.runLater(() -> {
                         Alert alert = new Alert(Alert.AlertType.ERROR);

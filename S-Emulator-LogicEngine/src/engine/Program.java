@@ -105,11 +105,9 @@ public class Program implements S_Emulator , Serializable, Cloneable {
             this.stats.reset();
             return true;
         } catch (JAXBException e) {
-            System.out.println("JAXB Exception: " + e.getMessage());
             e.printStackTrace();
             return false;
         } catch (Exception e) {
-            System.out.println("General Exception: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -282,13 +280,11 @@ public class Program implements S_Emulator , Serializable, Cloneable {
 
     @Override
     public void prepareForDebugging() {
-        System.out.println("Program.prepareForDebugging called");
         debugMode = true;
         debugCommandIndex = 0;
 
         // Get commands at current degree for debugging
         debugCommands = getCommandsAtDesiredLevel(currentDegree);
-        System.out.println("Prepared " + debugCommands.size() + " commands for debugging at degree " + currentDegree);
 
         // Reset program state but PRESERVE input variables that user set
         // Only reset work and output variables, NOT input variables
@@ -312,14 +308,9 @@ public class Program implements S_Emulator , Serializable, Cloneable {
             previousVariableState.add(var.clone());
         }
 
-        System.out.println("Debug mode prepared. Input variables preserved. First command will be: " +
-            (debugCommands.isEmpty() ? "none" : debugCommands.get(0).toString()));
-
         // Log current input variable values to confirm they're preserved
-        System.out.println("Input variable values at debug start:");
         for (Variable var : variables) {
             if (var instanceof InputVariable) {
-                System.out.println("  " + var.getName() + " = " + var.getValue());
             }
         }
     }
@@ -327,16 +318,12 @@ public class Program implements S_Emulator , Serializable, Cloneable {
     @Override
     public void stepOver() {
         if (!debugMode || debugCommands == null || debugCommandIndex >= debugCommands.size()) {
-            System.out.println("Cannot step over: not in debug mode or no more commands. Index: " +
-                debugCommandIndex + ", Commands size: " + (debugCommands != null ? debugCommands.size() : "null"));
             return;
         }
 
-        System.out.println("Program.stepOver called - executing command at index " + debugCommandIndex);
 
         // Get the current command to execute
         Command currentCommand = debugCommands.get(debugCommandIndex);
-        System.out.println("Executing debug command [" + debugCommandIndex + "]: " + currentCommand.toString());
 
         // Execute the single command and handle jump logic
         String jumpLabel = currentCommand.execute();
@@ -349,45 +336,30 @@ public class Program implements S_Emulator , Serializable, Cloneable {
             }
 
             if (jumpLabel.equals("EXIT")) {
-                System.out.println("Debug: Program reached EXIT");
                 debugCommandIndex = debugCommands.size(); // Mark as finished
             } else {
                 // Find the target command for the jump
                 boolean foundTarget = false;
-                System.out.println("Debug: Looking for target label '" + jumpLabel + "'");
 
                 for (int i = 0; i < debugCommands.size(); i++) {
                     Command cmd = debugCommands.get(i);
                     String cmdLabel = cmd.getLabel();
 
-                    // Debug logging to see what labels we're comparing
-                    System.out.println("  Checking command [" + i + "] with label: '" + cmdLabel + "'");
-
                     // Compare labels properly - handle null and whitespace
                     if (cmdLabel != null && jumpLabel.trim().equals(cmdLabel.trim())) {
                         debugCommandIndex = i;
                         foundTarget = true;
-                        System.out.println("Debug: Found target! Jumped to label '" + jumpLabel + "' at index " + debugCommandIndex);
                         break;
                     }
                 }
 
                 if (!foundTarget) {
-                    System.out.println("Debug: Label '" + jumpLabel + "' not found in any command, continuing to next command");
                     debugCommandIndex++;
                 }
             }
         } else {
             // Normal sequential execution
             debugCommandIndex++;
-        }
-
-        System.out.println("Debug step completed. Next command index: " + debugCommandIndex + "/" + debugCommands.size());
-
-        // Log current variable states after execution
-        System.out.println("Variables after step:");
-        for (Variable var : variables) {
-            System.out.println("  " + var.getName() + " = " + var.getValue());
         }
     }
 
@@ -404,11 +376,9 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         Set<String> changedNames = new HashSet<>();
 
         if (previousVariableState == null) {
-            System.out.println("No previous variable state to compare against");
             return changedNames;
         }
 
-        System.out.println("Comparing variable states for changes:");
 
         // Compare current variable state with previous state
         for (Variable currentVar : variables) {
@@ -419,12 +389,8 @@ public class Program implements S_Emulator , Serializable, Cloneable {
 
             if (previousVar == null) {
                 changedNames.add(currentVar.getName());
-                System.out.println("  " + currentVar.getName() + ": NEW variable = " + currentVar.getValue());
             } else if (previousVar.getValue() != currentVar.getValue()) {
                 changedNames.add(currentVar.getName());
-                System.out.println("  " + currentVar.getName() + ": " + previousVar.getValue() + " -> " + currentVar.getValue() + " (CHANGED)");
-            } else {
-                System.out.println("  " + currentVar.getName() + ": " + currentVar.getValue() + " (unchanged)");
             }
         }
 
@@ -434,7 +400,6 @@ public class Program implements S_Emulator , Serializable, Cloneable {
             previousVariableState.add(var.clone());
         }
 
-        System.out.println("Changed variables: " + changedNames);
         return changedNames;
     }
 
@@ -447,7 +412,6 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         debugCommandIndex = 0;
         debugCommands = null;
         previousVariableState = null;
-        System.out.println("Debug mode stopped");
     }
 
     @Override
@@ -598,7 +562,6 @@ public class Program implements S_Emulator , Serializable, Cloneable {
     }
 
     public int executeFunction(List<Variable> variables,String functionName, Program associatedProgram) {
-        System.out.println("executeFunction: Searching for function '" + functionName + "'");
 
         LinkedList<Variable> varsCopy = new LinkedList<>();
         for(Variable v : variables) {
@@ -608,17 +571,14 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         }
 
         // First, try to find the function in local subfunctions
-        System.out.println("executeFunction: Checking " + associatedProgram.subFunctions.size() + " local subfunctions");
         for(Program e : associatedProgram.subFunctions) {
             if(e.getCurrentProgramName().equals(functionName)  || e.getUserString().equals(functionName)) {
-                System.out.println("executeFunction: FOUND '" + functionName + "' in local subfunctions");
                 Set<Variable> snapshot = associatedProgram.getVariables().stream()
                         .map(v -> v.clone())
                         .collect(Collectors.toSet());
                 e.assignVarsToCommands(varsCopy);
                 e.executeProgram(0,false);
                 int returnValue = e.getReturnValue();
-                System.out.println("executeFunction: '" + functionName + "' returned " + returnValue);
                 for(Variable var : snapshot) {
                     for(Variable originalVar : associatedProgram.getVariables()) {
                         if(var.getName().equals(originalVar.getName())) {
@@ -631,15 +591,12 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         }
 
         // If not found locally, try global context
-        System.out.println("executeFunction: Function '" + functionName + "' NOT found locally, searching globally...");
         try {
             servlets.ServerContext context = servlets.ServerContext.getInstance();
             java.util.Map<String, servlets.User> allUsers = context.getAllUsers();
-            System.out.println("executeFunction: Found " + allUsers.size() + " users in global context");
 
             for (servlets.User user : allUsers.values()) {
                 java.util.Map<String, S_Emulator> userPrograms = user.getAllPrograms();
-                System.out.println("executeFunction: User " + user.getUserName() + " has " + userPrograms.size() + " programs");
 
                 for (S_Emulator program : userPrograms.values()) {
                     if (program instanceof Program) {
@@ -648,14 +605,12 @@ public class Program implements S_Emulator , Serializable, Cloneable {
                         // Check if this is the target function (main program)
                         if (prog.getCurrentProgramName().equals(functionName) ||
                                 (prog.getUserString() != null && prog.getUserString().equals(functionName))) {
-                            System.out.println("executeFunction: FOUND '" + functionName + "' as main program globally");
                             Set<Variable> snapshot = associatedProgram.getVariables().stream()
                                     .map(v -> v.clone())
                                     .collect(Collectors.toSet());
                             prog.assignVarsToCommands(varsCopy);
                             prog.executeProgram(0, false);
                             int returnValue = prog.getReturnValue();
-                            System.out.println("executeFunction: '" + functionName + "' returned " + returnValue);
                             for(Variable var : snapshot) {
                                 for(Variable originalVar : associatedProgram.getVariables()) {
                                     if(var.getName().equals(originalVar.getName())) {
@@ -671,14 +626,12 @@ public class Program implements S_Emulator , Serializable, Cloneable {
                             for (Program subFunc : prog.subFunctions) {
                                 if (subFunc.getCurrentProgramName().equals(functionName) ||
                                         (subFunc.getUserString() != null && subFunc.getUserString().equals(functionName))) {
-                                    System.out.println("executeFunction: FOUND '" + functionName + "' as subfunction globally");
                                     Set<Variable> snapshot = associatedProgram.getVariables().stream()
                                             .map(v -> v.clone())
                                             .collect(Collectors.toSet());
                                     subFunc.assignVarsToCommands(varsCopy);
                                     subFunc.executeProgram(0, false);
                                     int returnValue = subFunc.getReturnValue();
-                                    System.out.println("executeFunction: '" + functionName + "' returned " + returnValue);
                                     for(Variable var : snapshot) {
                                         for(Variable originalVar : associatedProgram.getVariables()) {
                                             if(var.getName().equals(originalVar.getName())) {
@@ -694,13 +647,10 @@ public class Program implements S_Emulator , Serializable, Cloneable {
                 }
             }
         } catch (Exception e) {
-            System.err.println("executeFunction: ERROR accessing global context: " + e.getMessage());
             e.printStackTrace();
         }
 
         // Function not found anywhere - return -1 to indicate error
-        System.err.println("executeFunction: ERROR - Function '" + functionName + "' NOT FOUND in local subfunctions or global context!");
-        System.err.println("executeFunction: Returning -1 to indicate function not found");
         return -1;
     }
 
@@ -895,7 +845,6 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         }
 
         if (targetCommand == null) {
-            System.out.println("Command with ID " + commandId + " not found at expansion level " + expansionLevel);
             return historyChain;
         }
 
@@ -962,7 +911,6 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         targetDto.setLabel(targetCommand.getLabel()); // Set the command's label
         historyChain.add(targetDto);
 
-        System.out.println("Built history chain with " + historyChain.size() + " entries for command " + commandId);
 
         return historyChain;
     }
@@ -1048,7 +996,6 @@ public class Program implements S_Emulator , Serializable, Cloneable {
 
     @Override
     public void updateInputVariable(String name, String value) {
-        System.out.println("Program.updateInputVariable called with name: '" + name + "', value: '" + value + "'");
 
         try {
             int intValue = Integer.parseInt(value);
@@ -1059,7 +1006,6 @@ public class Program implements S_Emulator , Serializable, Cloneable {
                 if (variable instanceof InputVariable && variable.getName().equals(name)) {
                     variable.setValue(intValue);
                     variableFound = true;
-                    System.out.println("Updated input variable " + name + " to " + intValue + " in main variables set");
                     break;
                 }
             }
@@ -1069,12 +1015,10 @@ public class Program implements S_Emulator , Serializable, Cloneable {
                 if (variable instanceof InputVariable && variable.getName().equals(name)) {
                     variable.setValue(intValue);
                     variableFound = true;
-                    System.out.println("Updated input variable " + name + " to " + intValue + " in extra input variables set");
                     break;
                 }
             }
         } catch (NumberFormatException e) {
-            System.err.println("Invalid value format for input variable " + name + ": " + value);
             throw new IllegalArgumentException("Invalid value format: " + value);
         }
     }
@@ -1136,8 +1080,6 @@ public class Program implements S_Emulator , Serializable, Cloneable {
         if (stats != null) {
             stats.reset();
         }
-
-        System.out.println("Program hard reset completed");
     }
 
     @Override

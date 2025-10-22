@@ -91,14 +91,12 @@ public class ExecutionDashboardController {
         HttpClientUtil.runAsync(url.toString(), new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                System.err.println("HTTP Request failed: " + e.getMessage());
                 Platform.runLater(() -> pushError("Network error: " + e.getMessage()));
             }
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String json = response.body() != null ? response.body().string() : "";
-                System.out.println("Received response: " + response.code() + " - " + json);
 
                 if (!response.isSuccessful()) {
                     Platform.runLater(() -> pushError(shorten(json)));
@@ -107,9 +105,6 @@ public class ExecutionDashboardController {
 
                 try {
                     ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
-                    System.out.println("Parsed ExecutionStateDTO - Instructions: " +
-                            (state.getInstructions() != null ? state.getInstructions().size() : "null") +
-                            ", Variables: " + (state.getAllVariables() != null ? state.getAllVariables().size() : "null"));
 
                     Platform.runLater(() -> {
                         applyStateToPanels(state);
@@ -125,7 +120,6 @@ public class ExecutionDashboardController {
                         }
                     });
                 } catch (Exception e) {
-                    System.err.println("Error parsing JSON response: " + e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -143,13 +137,11 @@ public class ExecutionDashboardController {
      * Run whole program/function with specific architecture.
      */
     public void executeProgram(Architecture architecture) {
-        System.out.println("ExecutionDashboardController: executeProgram called with architecture: " + architecture.name());
 
         // Create ExecuteProgramRequest with architecture
         ExecuteProgramRequest request = new ExecuteProgramRequest(selectedFunction, architecture);
         String requestJson = GSON_INSTANCE.toJson(request);
 
-        System.out.println("Sending execute request: " + requestJson);
 
         // Make POST request to execution endpoint with architecture information
         HttpUrl url = HttpUrl.parse(Constants.EXEC_EXECUTE).newBuilder().build();
@@ -157,14 +149,12 @@ public class ExecutionDashboardController {
         HttpClientUtil.runAsyncPost(url.toString(), requestJson, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                System.err.println("Execute program request failed: " + e.getMessage());
                 Platform.runLater(() -> pushError("Network error: " + e.getMessage()));
             }
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String json = response.body() != null ? response.body().string() : "";
-                System.out.println("Execute program response: " + response.code() + " - " + json);
 
                 if (!response.isSuccessful()) {
                     // Try to parse as ExecuteProgramResponse to get validation error details
@@ -173,10 +163,6 @@ public class ExecutionDashboardController {
                         if (errorResponse != null && errorResponse.validationError != null && !errorResponse.validationError.isValid()) {
                             // Architecture validation failed - show detailed error
                             ArchitectureValidationDTO validation = errorResponse.validationError;
-                            System.err.println("Architecture validation failed: " + validation.getErrorMessage());
-                            System.err.println("Incompatible instruction IDs: " + validation.getIncompatibleInstructionIds());
-                            System.err.println("Required architecture: " + validation.getRequiredArchitecture());
-                            System.err.println("Provided architecture: " + validation.getProvidedArchitecture());
 
                             Platform.runLater(() -> {
                                 // Show error message to user
@@ -193,7 +179,6 @@ public class ExecutionDashboardController {
                         }
                     } catch (Exception parseError) {
                         // If parsing fails, just show generic error
-                        System.err.println("Could not parse validation error: " + parseError.getMessage());
                     }
 
                     Platform.runLater(() -> pushError("Execution failed: " + shorten(json)));
@@ -219,10 +204,8 @@ public class ExecutionDashboardController {
 
                     // Try to parse as ExecutionStateDTO for successful execution
                     ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
-                    System.out.println("Program executed successfully with architecture: " + architecture.name());
                     Platform.runLater(() -> applyStateToPanels(state));
                 } catch (Exception e) {
-                    System.err.println("Error parsing execution response: " + e.getMessage());
                     e.printStackTrace();
                     Platform.runLater(() -> pushError("Error processing execution results"));
                 }
@@ -284,7 +267,6 @@ public class ExecutionDashboardController {
     }
 
     public void startDebugging(Architecture architecture) {
-        System.out.println("ExecutionDashboardController: startDebugging called with architecture: " + architecture.name());
         debugOpWithArchitecture("start", architecture);
     }
 
@@ -331,7 +313,6 @@ public class ExecutionDashboardController {
     }
 
     private void debugOpWithArchitecture(String op, Architecture architecture) {
-        System.out.println("Making debug request with op=" + op + ", architecture=" + architecture.name());
 
         HttpUrl url = HttpUrl.parse(Constants.EXEC_DEBUG)
                 .newBuilder()
@@ -342,19 +323,16 @@ public class ExecutionDashboardController {
         ExecuteProgramRequest request = new ExecuteProgramRequest(selectedFunction, architecture);
         String requestJson = GSON_INSTANCE.toJson(request);
 
-        System.out.println("Sending debug request: " + requestJson);
 
         HttpClientUtil.runAsyncPost(url.toString(), requestJson, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                System.err.println("Debug operation failed: " + e.getMessage());
                 Platform.runLater(() -> pushError("Network error: " + e.getMessage()));
             }
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String json = response.body() != null ? response.body().string() : "";
-                System.out.println("Received response: " + response.code() + " - " + json);
 
                 if (!response.isSuccessful()) {
                     // Try to parse as ExecuteProgramResponse to get validation error details
@@ -363,8 +341,6 @@ public class ExecutionDashboardController {
                         if (errorResponse != null && errorResponse.validationError != null && !errorResponse.validationError.isValid()) {
                             // Architecture validation failed - show detailed error
                             ArchitectureValidationDTO validation = errorResponse.validationError;
-                            System.err.println("Architecture validation failed: " + validation.getErrorMessage());
-                            System.err.println("Incompatible instruction IDs: " + validation.getIncompatibleInstructionIds());
 
                             Platform.runLater(() -> {
                                 showArchitectureValidationError(validation);
@@ -377,7 +353,6 @@ public class ExecutionDashboardController {
                             return;
                         }
                     } catch (Exception parseError) {
-                        System.err.println("Could not parse validation error: " + parseError.getMessage());
                     }
 
                     Platform.runLater(() -> pushError("Debug operation failed: " + shorten(json)));
@@ -386,10 +361,8 @@ public class ExecutionDashboardController {
 
                 try {
                     ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
-                    System.out.println("Debug operation successful with architecture: " + architecture.name());
                     Platform.runLater(() -> applyStateToPanels(state));
                 } catch (Exception e) {
-                    System.err.println("Error parsing debug response: " + e.getMessage());
                     e.printStackTrace();
                     Platform.runLater(() -> pushError("Error processing debug results"));
                 }
@@ -398,18 +371,15 @@ public class ExecutionDashboardController {
     }
 
     private void callAndApply(HttpUrl url) {
-        System.out.println("Making request to: " + url.toString());
         HttpClientUtil.runAsync(url.toString(), new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                System.err.println("HTTP Request failed: " + e.getMessage());
                 Platform.runLater(() -> pushError("Network error: " + e.getMessage()));
             }
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String json = response.body() != null ? response.body().string() : "";
-                System.out.println("Received response: " + response.code() + " - " + json);
 
                 if (!response.isSuccessful()) {
                     Platform.runLater(() -> pushError(shorten(json)));
@@ -419,7 +389,6 @@ public class ExecutionDashboardController {
                 try {
                     // Check if response is valid JSON object before parsing
                     if (json.trim().isEmpty()) {
-                        System.err.println("Empty response received from server");
                         Platform.runLater(() -> pushError("Empty response from server"));
                         return;
                     }
@@ -434,28 +403,21 @@ public class ExecutionDashboardController {
                         if (message.toLowerCase().contains("success") ||
                             message.toLowerCase().contains("updated")) {
                             // It's a success message - log it but don't show as error
-                            System.out.println("Server success message: " + message);
                             // Don't update UI for success messages from intermediate operations
                             return;
                         } else {
                             // It's an error message
-                            System.err.println("Server returned error message: " + message);
                             Platform.runLater(() -> pushError(message));
                             return;
                         }
                     }
 
                     ExecutionStateDTO state = GSON_INSTANCE.fromJson(json, ExecutionStateDTO.class);
-                    System.out.println("Parsed ExecutionStateDTO - Instructions: " +
-                            (state.getInstructions() != null ? state.getInstructions().size() : "null") +
-                            ", Variables: " + (state.getAllVariables() != null ? state.getAllVariables().size() : "null"));
                     Platform.runLater(() -> applyStateToPanels(state));
                 } catch (com.google.gson.JsonSyntaxException e) {
-                    System.err.println("Invalid JSON format - server may have returned an error message");
-                    System.err.println("Response was: " + json);
+
                     Platform.runLater(() -> pushError("Invalid response from server: " + shorten(json)));
                 } catch (Exception e) {
-                    System.err.println("Error parsing JSON response: " + e.getMessage());
                     e.printStackTrace();
                     Platform.runLater(() -> pushError("Error processing response: " + e.getMessage()));
                 }
@@ -483,13 +445,10 @@ public class ExecutionDashboardController {
         if (instructionTableComponentController != null) {
             List<InstructionDTO> instructions = s.getInstructions();
             if (instructions != null && !instructions.isEmpty()) {
-                System.out.println("Setting " + instructions.size() + " instructions to instruction table");
                 instructionTableComponentController.setInstructions(instructions, s.getHighlightedInstructionId());
             } else {
-                System.out.println("No instructions received from server");
             }
         } else {
-            System.out.println("InstructionTableController is null - cannot set instructions");
         }
 
         // 3) Variables (all + inputs) + changed set + cycles
@@ -498,15 +457,12 @@ public class ExecutionDashboardController {
             List<VariableDTO> inputVars = s.getInputVariables();
             Set<String> changed = s.getChangedVariableNames();
             if (allVars != null && !allVars.isEmpty()) {
-                System.out.println("Setting " + allVars.size() + " variables to execution panel");
                 executionPanelComponentController.setVariables(allVars, inputVars, changed);
             } else {
-                System.out.println("No variables received from server");
             }
             executionPanelComponentController.setCyclesLabel(s.getCycles());
             executionPanelComponentController.updateDebugButtons(s.isDebugging());
         } else {
-            System.out.println("ExecutionPanelController is null - cannot set variables");
         }
 
         // 4) History text/trace (server can render a list of strings or nodes)
@@ -518,7 +474,6 @@ public class ExecutionDashboardController {
 
     private void pushError(String msg) {
         // You can route this to a status line if you have one
-        System.err.println("[EXEC] " + msg);
     }
 
     /**
@@ -556,7 +511,6 @@ public class ExecutionDashboardController {
      * Update input variable value on the server
      */
     public void updateInputValue(String variableName, int value) {
-        System.out.println("ExecutionDashboardController: updateInputValue called - " + variableName + " = " + value);
 
         HttpUrl url = HttpUrl.parse(Constants.EXEC_UPDATE_INPUT)
                 .newBuilder()
@@ -564,7 +518,6 @@ public class ExecutionDashboardController {
                 .addQueryParameter("value", String.valueOf(value))
                 .build();
 
-        System.out.println("Sending input update request: " + url.toString());
         callAndApply(url);
     }
 
@@ -577,11 +530,9 @@ public class ExecutionDashboardController {
                 .addQueryParameter("commandId", String.valueOf(commandId))
                 .build();
 
-        System.out.println("Fetching parent chain for command ID: " + commandId);
         HttpClientUtil.runAsync(url.toString(), new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                System.err.println("Failed to fetch parent chain: " + e.getMessage());
                 Platform.runLater(() -> {
                     if (historyPanelComponentController != null) {
                         historyPanelComponentController.setHistoryChain(List.of());
@@ -592,7 +543,6 @@ public class ExecutionDashboardController {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String json = response.body() != null ? response.body().string() : "";
-                System.out.println("Parent chain response: " + json);
 
                 if (!response.isSuccessful()) {
                     Platform.runLater(() -> {
@@ -611,16 +561,13 @@ public class ExecutionDashboardController {
                     Platform.runLater(() -> {
                         if (historyPanelComponentController != null) {
                             if (parentChain.isEmpty()) {
-                                System.out.println("No parent command chain found for command ID: " + commandId);
                                 historyPanelComponentController.setHistoryChain(List.of());
                             } else {
-                                System.out.println("Displaying " + parentChain.size() + " history chain entries");
                                 historyPanelComponentController.setHistoryChain(parentChain);
                             }
                         }
                     });
                 } catch (Exception e) {
-                    System.err.println("Error parsing parent chain JSON: " + e.getMessage());
                     e.printStackTrace();
                     Platform.runLater(() -> {
                         if (historyPanelComponentController != null) {
@@ -636,10 +583,8 @@ public class ExecutionDashboardController {
      * Apply pre-filled input values (used during Re-Run)
      */
     private void applyPreFilledInputs(List<VariableDTO> preFilledInputs) {
-        System.out.println("ExecutionDashboardController: Applying " + preFilledInputs.size() + " pre-filled inputs");
 
         for (VariableDTO input : preFilledInputs) {
-            System.out.println("  Setting input: " + input.getName() + " = " + input.getValue());
             updateInputValue(input.getName(), input.getValue());
         }
 
