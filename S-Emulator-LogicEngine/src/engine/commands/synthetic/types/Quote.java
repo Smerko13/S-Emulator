@@ -178,12 +178,18 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
     @Override
     public void initializeExpandedCommands() {
-        if(!this.didInitialize) {
+        if(this.didInitialize) {
+            // CRITICAL FIX: Clear and re-expand if already initialized
+            // This handles the case when expand is called multiple times (degree 6+)
+            this.getExpandedCommands().clear();
             expansionLogic();
-            this.didInitialize = true;
-            // V2 RESTORE: Set levelOfExpansion after expansion is complete
             this.levelOfExpansion = calculateActualExpansionDepth();
+            return;
         }
+        expansionLogic();
+        this.didInitialize = true;
+        // V2 RESTORE: Set levelOfExpansion after expansion is complete
+        this.levelOfExpansion = calculateActualExpansionDepth();
     }
 
     // Helper method to calculate actual expansion depth like v2 did
@@ -224,7 +230,8 @@ public class Quote extends SyntheticCommand implements Cloneable {
                 Map<String,String> inputBind = new HashMap<>(); // e.g. "x1" -> "z155"
                 Program clonedSubFunction = e.clone();
 
-                List<Command> subFunctionCommands = clonedSubFunction.getCommands();
+                // CRITICAL FIX: Get a copy of the commands list to avoid modification during iteration
+                List<Command> subFunctionCommands = new ArrayList<>(clonedSubFunction.getCommands());
                 for (Command cmd : subFunctionCommands) {
                     cmd.setParent(this);
                     cmd.setAssociatedEngine(this.associatedProgram);
@@ -278,8 +285,10 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     }
                 }
 
+                // CRITICAL FIX: Iterate over a copy of variables to avoid concurrent modification
+                List<Variable> variablesCopy = new ArrayList<>(clonedSubFunction.getVariables());
                 int index = 0;
-                for(Variable v : clonedSubFunction.getVariables()) {
+                for(Variable v : variablesCopy) {
                     if (v instanceof WorkVariable) {
                         String newWorkVarName = generateNewWorkVariableName();
                         WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
@@ -370,6 +379,10 @@ public class Quote extends SyntheticCommand implements Cloneable {
                     }
                 }
 
+                // CRITICAL FIX: After all variable replacements, clear the cloned function's variable references
+                // This ensures no lingering references that could cause variable aliasing during execution
+                clonedSubFunction.getVariables().clear();
+
                 this.ExpandedCommands.addAll(subFunctionCommands);
 
                 if (outputTempVar != null) {
@@ -396,8 +409,10 @@ public class Quote extends SyntheticCommand implements Cloneable {
                 (this.ExpandedCommands.size() == 1 && this.ExpandedCommands.get(0) instanceof Neutral)) {
             Program targetFunction = getGlobalFunction(functionName);
             if (targetFunction != null) {
-                // Process global function using the same logic as above
-                processTargetFunction(targetFunction);
+                // CRITICAL FIX: Deep clone the global function to ensure complete isolation
+                // This prevents state pollution when the same global function is used multiple times
+                Program deepClone = targetFunction.clone();
+                processTargetFunction(deepClone);
             }
         }
 
@@ -419,7 +434,8 @@ public class Quote extends SyntheticCommand implements Cloneable {
         Map<String,String> inputBind = new HashMap<>();
         Program clonedSubFunction = targetFunction.clone();
 
-        List<Command> subFunctionCommands = clonedSubFunction.getCommands();
+        // CRITICAL FIX: Get a copy of the commands list to avoid modification during iteration
+        List<Command> subFunctionCommands = new ArrayList<>(clonedSubFunction.getCommands());
         for (Command cmd : subFunctionCommands) {
             cmd.setParent(this);
             cmd.setAssociatedEngine(this.associatedProgram);
@@ -476,8 +492,10 @@ public class Quote extends SyntheticCommand implements Cloneable {
         // CRITICAL FIX: Store argument evaluation commands separately to ensure correct execution order
         List<Command> argumentEvaluationCommands = new ArrayList<>();
 
+        // CRITICAL FIX: Iterate over a copy of variables to avoid concurrent modification
+        List<Variable> variablesCopy = new ArrayList<>(clonedSubFunction.getVariables());
         int index = 0;
-        for(Variable v : clonedSubFunction.getVariables()) {
+        for(Variable v : variablesCopy) {
             if (v instanceof WorkVariable) {
                 String newWorkVarName = generateNewWorkVariableName();
                 WorkVariable newWorkVar = new WorkVariable(newWorkVarName);
@@ -544,6 +562,10 @@ public class Quote extends SyntheticCommand implements Cloneable {
 
         // Add all argument evaluation commands BEFORE the function's main commands
         this.ExpandedCommands.addAll(argumentEvaluationCommands);
+
+        // CRITICAL FIX: After all variable replacements, clear the cloned function's variable references
+        // This ensures no lingering references that could cause variable aliasing during execution
+        clonedSubFunction.getVariables().clear();
 
         for (Command cmd : subFunctionCommands) {
             if (cmd instanceof Quote q) {
