@@ -81,31 +81,41 @@ public class ExecutionPanelController implements Initializable {
                              java.util.List<VariableDTO> inputVars,
                              java.util.Set<String> changedNames) {
 
+        // Sort variables for each table
+        // Left table: y and z* variables (work/output variables)
+        // Right table: x* variables (input variables)
+        // After execution: sort by value (non-zero first), then by numeric suffix
+        boolean afterExecution = (changedNames != null);
 
+        java.util.List<VariableDTO> sortedAllVars = sortVariablesForDisplay(allVars, afterExecution);
+        java.util.List<VariableDTO> sortedInputVars = sortVariablesByValueAndIndex(inputVars, afterExecution);
 
-        // Left table: all/work/output variables
-        var all = javafx.collections.FXCollections.observableArrayList(allVars);
+        // Left table: y (first) and z1, z2, z3... (sorted by value if after execution)
+        var all = javafx.collections.FXCollections.observableArrayList(sortedAllVars);
         allVarsTable.setItems(all);
 
-        // Right table: inputs
-        var inputs = javafx.collections.FXCollections.observableArrayList(inputVars);
+        // Right table: x1, x2, x3... (sorted by value if after execution)
+        var inputs = javafx.collections.FXCollections.observableArrayList(sortedInputVars);
         inputVarsTable.setItems(inputs);
 
-        // simple highlight for changed names
+        // Highlight non-zero values (end-of-run highlighting)
+        // Only highlight if changedNames is provided (indicating execution completed)
         allVarsTable.setRowFactory(tv -> new TableRow<VariableDTO>() {
             @Override protected void updateItem(VariableDTO item, boolean empty) {
                 super.updateItem(item, empty);
-                boolean changed = !empty && item != null && changedNames != null
-                        && changedNames.contains(item.getName());
-                setStyle(changed ? "-fx-background-color: lightgreen;" : "");
+                // Highlight if value ≠ 0 and changedNames is not null (execution completed)
+                boolean shouldHighlight = !empty && item != null && changedNames != null
+                        && item.getValue() != 0;
+                setStyle(shouldHighlight ? "-fx-background-color: lightgreen;" : "");
             }
         });
         inputVarsTable.setRowFactory(tv -> new TableRow<VariableDTO>() {
             @Override protected void updateItem(VariableDTO item, boolean empty) {
                 super.updateItem(item, empty);
-                boolean changed = !empty && item != null && changedNames != null
-                        && changedNames.contains(item.getName());
-                setStyle(changed ? "-fx-background-color: lightgreen;" : "");
+                // Highlight if value ≠ 0 and changedNames is not null (execution completed)
+                boolean shouldHighlight = !empty && item != null && changedNames != null
+                        && item.getValue() != 0;
+                setStyle(shouldHighlight ? "-fx-background-color: lightgreen;" : "");
             }
         });
 
@@ -234,6 +244,123 @@ public class ExecutionPanelController implements Initializable {
         inputVarsTable.refresh();
     }
 
+    /**
+     * Sort variables for display: y first, then z1..zm
+     * After execution: sort by value (non-zero first), then by numeric index
+     */
+    private java.util.List<VariableDTO> sortVariablesForDisplay(java.util.List<VariableDTO> vars, boolean afterExecution) {
+        java.util.List<VariableDTO> result = new java.util.ArrayList<>();
+        java.util.List<VariableDTO> yVars = new java.util.ArrayList<>();
+        java.util.List<VariableDTO> zVars = new java.util.ArrayList<>();
+
+        // Separate variables by type
+        for (VariableDTO var : vars) {
+            String name = var.getName();
+            if (name.equals("y")) {
+                yVars.add(var);
+            } else if (name.startsWith("z")) {
+                zVars.add(var);
+            }
+        }
+
+        if (afterExecution) {
+            // Sort by value first (non-zero before zero), then by numeric suffix
+            zVars.sort((v1, v2) -> {
+                // Non-zero values come first
+                boolean v1NonZero = v1.getValue() != 0;
+                boolean v2NonZero = v2.getValue() != 0;
+                if (v1NonZero != v2NonZero) {
+                    return v1NonZero ? -1 : 1;
+                }
+                // Within same value group, sort by numeric suffix
+                return compareVariableNames(v1, v2);
+            });
+        } else {
+            // Before execution: just sort by numeric suffix
+            zVars.sort(this::compareVariableNames);
+        }
+
+        // Combine: y first, then z*
+        result.addAll(yVars);
+        result.addAll(zVars);
+
+        return result;
+    }
+
+    /**
+     * Sort input variables by value (non-zero first) after execution, then by numeric suffix
+     */
+    private java.util.List<VariableDTO> sortVariablesByValueAndIndex(java.util.List<VariableDTO> vars, boolean afterExecution) {
+        java.util.List<VariableDTO> sorted = new java.util.ArrayList<>(vars);
+
+        if (afterExecution) {
+            // Sort by value first (non-zero before zero), then by numeric suffix
+            sorted.sort((v1, v2) -> {
+                // Non-zero values come first
+                boolean v1NonZero = v1.getValue() != 0;
+                boolean v2NonZero = v2.getValue() != 0;
+                if (v1NonZero != v2NonZero) {
+                    return v1NonZero ? -1 : 1;
+                }
+                // Within same value group, sort by numeric suffix
+                return compareVariableNames(v1, v2);
+            });
+        } else {
+            // Before execution: just sort by numeric suffix
+            sorted.sort(this::compareVariableNames);
+        }
+
+        return sorted;
+    }
+
+    /**
+     * Compare two variable names by their numeric suffix
+     * Handles cases like x2 < x10 (numeric comparison, not lexicographic)
+     */
+    private int compareVariableNames(VariableDTO v1, VariableDTO v2) {
+        String name1 = v1.getName();
+        String name2 = v2.getName();
+
+        // Extract numeric suffix
+        Integer num1 = extractNumericSuffix(name1);
+        Integer num2 = extractNumericSuffix(name2);
+
+        // If both have numeric suffixes, compare numerically
+        if (num1 != null && num2 != null) {
+            return num1.compareTo(num2);
+        }
+
+        // Fallback to lexicographic comparison
+        return name1.compareTo(name2);
+    }
+
+    /**
+     * Extract numeric suffix from variable name (e.g., "x12" -> 12, "z5" -> 5)
+     */
+    private Integer extractNumericSuffix(String name) {
+        if (name == null || name.length() <= 1) {
+            return null;
+        }
+
+        // Find where digits start
+        int digitStart = -1;
+        for (int i = 1; i < name.length(); i++) {
+            if (Character.isDigit(name.charAt(i))) {
+                digitStart = i;
+                break;
+            }
+        }
+
+        if (digitStart == -1) {
+            return null;
+        }
+
+        try {
+            return Integer.parseInt(name.substring(digitStart));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 
     public void setMainController(ExecutionDashboardController parent) {
         this.parent = parent;
