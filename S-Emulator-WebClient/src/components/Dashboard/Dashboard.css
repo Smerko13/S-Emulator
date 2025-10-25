@@ -74,7 +74,7 @@
   flex: 1;
   padding: 2rem;
   display: grid;
-  grid-template-columns: 320px 1fr 350px;
+  grid-template-columns: 320px 1fr;
   gap: 1.5rem;
   grid-template-rows: auto auto auto;
 }
@@ -129,12 +129,6 @@
   grid-row: 3;
 }
 
-.chat-panel {
-  grid-column: 3;
-  grid-row: 1 / 4;
-  display: flex;
-  flex-direction: column;
-}
 
 .empty-state {
   color: #999;
@@ -338,28 +332,53 @@
   border: 1px solid #eee;
   border-radius: 6px;
   background-color: #fafafa;
+  transition: all 0.3s;
+}
+
+.history-item:hover {
+  border-color: #667eea;
+  background-color: #f0f0ff;
 }
 
 .history-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 0.5rem;
 }
 
 .history-header strong {
   color: #667eea;
+  font-size: 0.95rem;
 }
 
-.history-time {
-  font-size: 0.85rem;
-  color: #666;
+.history-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  background-color: #667eea;
+  color: white;
+  font-weight: 600;
 }
 
 .history-details {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   font-size: 0.85rem;
   color: #666;
+}
+
+.history-details span {
+  white-space: nowrap;
+}
+
+.history-mode {
+  background-color: #eee;
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #667eea;
 }
 
 @media (max-width: 1400px) {
@@ -371,14 +390,9 @@
   .left-column,
   .programs-panel,
   .functions-panel,
-  .execution-history-panel,
-  .chat-panel {
+  .execution-history-panel {
     grid-column: 1;
     grid-row: auto;
-  }
-
-  .chat-panel {
-    min-height: 500px;
   }
 }
 

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
-import Chat from '../Chat/Chat'
 import AddCredits from '../AddCredits/AddCredits'
 import './Dashboard.css'
 
-function Dashboard({ currentUser, onLogout, onOpenExecution }) {
+function Dashboard({ currentUser, onOpenExecution }) {
   const [users, setUsers] = useState([])
   const [programs, setPrograms] = useState([])
   const [functions, setFunctions] = useState([])
@@ -115,7 +114,6 @@ function Dashboard({ currentUser, onLogout, onOpenExecution }) {
         <div className="header-info">
           <span className="credits-badge">Credits: <strong>{userCredits}</strong></span>
           <span className="user-badge">Logged in as: <strong>{currentUser}</strong></span>
-          <button onClick={onLogout} className="logout-btn">Logout</button>
         </div>
       </header>
 
@@ -250,12 +248,15 @@ function Dashboard({ currentUser, onLogout, onOpenExecution }) {
                 {executionHistory.map((execution, idx) => (
                   <div key={idx} className="history-item">
                     <div className="history-header">
-                      <strong>{execution.programName}</strong>
-                      <span className="history-time">{new Date(execution.timestamp).toLocaleString()}</span>
+                      <strong>#{execution.runId}: {execution.programFunctionName}</strong>
+                      <span className="history-badge">{execution.executionType}</span>
                     </div>
                     <div className="history-details">
-                      <span>Duration: {execution.duration}ms</span>
-                      <span>Steps: {execution.steps}</span>
+                      <span>Architecture: Generation {execution.architectureType}</span>
+                      <span>Degree: {execution.expansionDegree}</span>
+                      <span>Cycles: {execution.cpuCyclesUsed}</span>
+                      <span>Result (y): {execution.finalYValue}</span>
+                      <span className="history-mode">{execution.executionLevel}</span>
                     </div>
                   </div>
                 ))}
@@ -263,10 +264,6 @@ function Dashboard({ currentUser, onLogout, onOpenExecution }) {
             )}
           </div>
         )}
-
-        <div className="panel chat-panel">
-          <Chat currentUser={currentUser} />
-        </div>
       </div>
     </div>
   )

@@ -8,6 +8,7 @@ function ExecutionScreen({ currentUser, program, onBack }) {
   const [inputs, setInputs] = useState({})
   const [outputs, setOutputs] = useState({})
   const [degree, setDegree] = useState(1)
+  const [maxDegree, setMaxDegree] = useState(5) // Store actual max degree from server
   const [isRunning, setIsRunning] = useState(false)
   const [error, setError] = useState('')
   const [expandedLevel, setExpandedLevel] = useState(0)
@@ -25,7 +26,16 @@ function ExecutionScreen({ currentUser, program, onBack }) {
   useEffect(() => {
     // Open the program for execution
     openProgram()
-  }, [program])
+    // Fetch credits separately since /exec/open doesn't include them
+    fetchCredits()
+
+    // Poll credits every 2 seconds to keep them updated
+    const creditsInterval = setInterval(() => {
+      fetchCredits()
+    }, 2000)
+
+    return () => clearInterval(creditsInterval)
+  }, [program, currentUser])
 
   useEffect(() => {
     if (isRunning) {
@@ -35,6 +45,22 @@ function ExecutionScreen({ currentUser, program, onBack }) {
       return () => clearInterval(interval)
     }
   }, [isRunning])
+
+  const fetchCredits = async () => {
+    try {
+      const response = await fetch(`/credits?userId=${encodeURIComponent(currentUser)}`, {
+        credentials: 'include'
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data.credits !== undefined) {
+          setUserCredits(data.credits)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch credits:', err)
+    }
+  }
 
   const openProgram = async () => {
     try {
@@ -62,9 +88,10 @@ function ExecutionScreen({ currentUser, program, onBack }) {
 
         if (data.allVariables && Array.isArray(data.allVariables)) {
           data.allVariables.forEach(variable => {
-            if (variable.type === 'Input') {
+            if (variable.type === 'Input' || variable.type === 'InputVariable') {
               initialInputs[variable.name] = variable.value || 0
-            } else if (variable.type === 'Output' || variable.type === 'Work') {
+            } else if (variable.type === 'Output' || variable.type === 'OutputVariable' ||
+                       variable.type === 'Work' || variable.type === 'WorkVariable') {
               initialOutputs[variable.name] = variable.value || 0
             }
           })
@@ -85,10 +112,11 @@ function ExecutionScreen({ currentUser, program, onBack }) {
           setDegree(data.currentDegree)
         }
 
-        // Extract user credits
-        if (data.userCredits !== undefined) {
-          setUserCredits(data.userCredits)
+        // Set max degree from response
+        if (data.maxDegree !== undefined) {
+          setMaxDegree(data.maxDegree)
         }
+
 
         // Store the initial execution state
         setExecutionState(data)
@@ -112,17 +140,17 @@ function ExecutionScreen({ currentUser, program, onBack }) {
         const data = await response.json()
         setExecutionState(data)
 
-        // Update user credits
-        if (data.userCredits !== undefined) {
-          setUserCredits(data.userCredits)
-        }
+        // Refresh user credits immediately after execution
+        await fetchCredits()
 
         // Extract outputs from allVariables (filter for output/work variables)
         if (data.allVariables && Array.isArray(data.allVariables)) {
           const outputValues = {}
           data.allVariables.forEach(variable => {
             // Include both Output and Work variables in outputs
-            if (variable.type === 'Output' || variable.type === 'Work') {
+            // Handle both short form ('Output', 'Work') and class name form ('OutputVariable', 'WorkVariable')
+            if (variable.type === 'Output' || variable.type === 'OutputVariable' ||
+                variable.type === 'Work' || variable.type === 'WorkVariable') {
               outputValues[variable.name] = variable.value
             }
           })
@@ -157,19 +185,27 @@ function ExecutionScreen({ currentUser, program, onBack }) {
 
     try {
       // First, update input variables on the server
+      // The server expects 'name' and 'value' as query parameters, NOT JSON body
       for (const [name, value] of Object.entries(inputs)) {
-        await fetch('/exec/updateInput', {
+        console.log(`Updating input: ${name} = ${value}`)
+        const updateResponse = await fetch(`/exec/updateInput?name=${encodeURIComponent(name)}&value=${encodeURIComponent(value)}`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            variableName: name,
-            newValue: value.toString()
-          })
+          credentials: 'include'
         })
+
+        if (!updateResponse.ok) {
+          const errorText = await updateResponse.text()
+          console.error(`Failed to update input ${name}:`, errorText)
+          setError(`Failed to update input ${name}: ${errorText}`)
+          setIsRunning(false)
+          return
+        } else {
+          const result = await updateResponse.text()
+          console.log(`Input ${name} updated:`, result)
+        }
       }
+
+      console.log('All inputs updated, now executing...')
 
       // Execute with the selected architecture
       const requestBody = {
@@ -188,6 +224,11 @@ function ExecutionScreen({ currentUser, program, onBack }) {
       if (response.ok) {
         const data = await response.json()
 
+        // Debug: Log the execution response to see what we're getting
+        console.log('Execution response:', data)
+        console.log('All variables:', data.allVariables)
+        console.log('Cycles:', data.cycles)
+
         // Check if there's a validation error
         if (data.validation && !data.validation.valid) {
           const incompatibleInstructions = data.validation.incompatibleInstructionIds || []
@@ -196,8 +237,36 @@ function ExecutionScreen({ currentUser, program, onBack }) {
           return
         }
 
-        // Execution is synchronous, so get the updated state
-        await pollExecutionState()
+        // The response IS an ExecutionStateDTO with all updated variables
+        // Update the execution state directly from the response
+        setExecutionState(data)
+
+        // Update instructions if included in response
+        if (data.instructions && Array.isArray(data.instructions)) {
+          setInstructions(data.instructions)
+        }
+
+        // Extract and update ALL output and work variables from the execution result
+        // Include ALL non-input variables (both from allVariables and inputVariables)
+        const outputValues = {}
+
+        // First, get all variables from allVariables
+        if (data.allVariables && Array.isArray(data.allVariables)) {
+          data.allVariables.forEach(variable => {
+            // Include ALL non-input variables (Output, Work, and any other type)
+            const varType = variable.type || ''
+            if (!varType.toLowerCase().includes('input')) {
+              outputValues[variable.name] = variable.value
+              console.log(`Found variable: ${variable.name} = ${variable.value} (type: ${variable.type})`)
+            }
+          })
+        }
+
+        console.log('Output values to display:', outputValues)
+        setOutputs(outputValues)
+
+        // Refresh credits immediately
+        await fetchCredits()
         setIsRunning(false)
       } else if (response.status === 402) {
         // HTTP 402 Payment Required - insufficient credits
@@ -217,6 +286,7 @@ function ExecutionScreen({ currentUser, program, onBack }) {
 
   const handleDegreeChange = async (newDegree) => {
     setDegree(newDegree)
+    setExpandedLevel(newDegree) // Keep expanded level in sync
     try {
       // Use the setDegree endpoint with 'value' parameter
       const response = await fetch(`/exec/setDegree?value=${newDegree}`, {
@@ -234,15 +304,6 @@ function ExecutionScreen({ currentUser, program, onBack }) {
       }
     } catch (err) {
       console.error('Failed to set degree:', err)
-    }
-  }
-
-  const handleLevelChange = async (level) => {
-    // In the web client, we're simplifying this - the degree controls what instructions are shown
-    // The server returns instructions at the current degree level
-    setExpandedLevel(level)
-    if (level !== degree) {
-      await handleDegreeChange(level)
     }
   }
 
@@ -285,11 +346,11 @@ function ExecutionScreen({ currentUser, program, onBack }) {
           </div>
 
           <div className="panel outputs-panel">
-            <h2>Output Variables</h2>
+            <h2>Output & Work Variables</h2>
             {Object.keys(outputs).length === 0 ? (
               <p className="empty-state">No outputs yet</p>
             ) : (
-              <div className="variables-list">
+              <div className="variables-list scrollable">
                 {Object.entries(outputs).map(([name, value]) => (
                   <div key={name} className="variable-item">
                     <label>{name}:</label>
@@ -329,16 +390,19 @@ function ExecutionScreen({ currentUser, program, onBack }) {
             </div>
 
             <div className="control-item">
-              <label>Expansion Degree:</label>
+              <label>Expansion Degree (View Level):</label>
               <select
                 value={degree}
                 onChange={(e) => handleDegreeChange(parseInt(e.target.value))}
                 disabled={isRunning}
               >
-                {[...Array(program.maxDegree || 5)].map((_, i) => (
-                  <option key={i + 1} value={i + 1}>{i + 1}</option>
+                {[...Array(maxDegree + 1)].map((_, i) => (
+                  <option key={i} value={i}>Level {i}</option>
                 ))}
               </select>
+              <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.3rem' }}>
+                Controls instruction expansion and view level
+              </div>
             </div>
 
             <button
@@ -351,28 +415,15 @@ function ExecutionScreen({ currentUser, program, onBack }) {
 
             {executionState && (
               <div className="execution-status">
-                <strong>Current Degree:</strong> {executionState.currentDegree} / {executionState.maxDegree}
-                <br/>
-                <strong>Cycles Used:</strong> {executionState.cycles}
+                <div>
+                  <strong>Current Degree:</strong> <span className="status-value">{executionState.currentDegree} / {executionState.maxDegree}</span>
+                </div>
+                <div>
+                  <strong>Cycles Used:</strong> <span className="status-value">{executionState.cycles}</span>
+                </div>
                 {executionState.debugging && (
-                  <><br/><strong>Mode:</strong> Debug</>
+                  <div><strong>Mode:</strong> <span className="status-value">Debug</span></div>
                 )}
-              </div>
-            )}
-          </div>
-
-          <div className="panel functions-panel">
-            <h2>Functions ({functions.length})</h2>
-            {functions.length === 0 ? (
-              <p className="empty-state">No functions defined</p>
-            ) : (
-              <div className="functions-list">
-                {functions.map((func, idx) => (
-                  <div key={idx} className="function-item">
-                    <strong>{func.name}</strong>
-                    <span className="function-type">{func.type || 'Custom'}</span>
-                  </div>
-                ))}
               </div>
             )}
           </div>
@@ -380,20 +431,7 @@ function ExecutionScreen({ currentUser, program, onBack }) {
 
         <div className="right-panel">
           <div className="panel instructions-panel">
-            <div className="panel-header">
-              <h2>Instructions ({instructions.length})</h2>
-              <div className="level-control">
-                <label>View Level:</label>
-                <select
-                  value={expandedLevel}
-                  onChange={(e) => handleLevelChange(parseInt(e.target.value))}
-                >
-                  {[...Array(degree + 1)].map((_, i) => (
-                    <option key={i} value={i}>Level {i}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <h2>Instructions ({instructions.length})</h2>
             {instructions.length === 0 ? (
               <p className="empty-state">No instructions at this level</p>
             ) : (
@@ -404,12 +442,7 @@ function ExecutionScreen({ currentUser, program, onBack }) {
                     className={`instruction-item ${executionState?.highlightedInstructionId === instruction.id ? 'current' : ''}`}
                   >
                     <span className="instruction-number">{instruction.id || (idx + 1)}</span>
-                    <span className="instruction-command">{instruction.type || instruction.instruction}</span>
-                    {instruction.arguments && (
-                      <span className="instruction-args">
-                        ({instruction.arguments})
-                      </span>
-                    )}
+                    <span className="instruction-command">{instruction.instruction || instruction.text}</span>
                   </div>
                 ))}
               </div>
