@@ -1,0 +1,86 @@
+.add-credits-container {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-credits-container h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #ffa500;
+  padding-bottom: 0.5rem;
+}
+
+.add-credits-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.credits-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.credits-input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.credits-input:focus {
+  outline: none;
+  border-color: #ffa500;
+}
+
+.credits-input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.add-credits-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.add-credits-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 165, 0, 0.4);
+}
+
+.add-credits-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.credits-error {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 0.75rem;
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+.credits-success {
+  background-color: #efe;
+  border: 1px solid #cfc;
+  color: #3a3;
+  padding: 0.75rem;
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+

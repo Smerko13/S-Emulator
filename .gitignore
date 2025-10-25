@@ -16,6 +16,8 @@
 !/S-Emulator-LogicEngine/**
 !/S-Emulator-API/
 !/S-Emulator-API/**
+!/S-Emulator-WebClient/
+!/S-Emulator-WebClient/**
 
 # IDE/build junk inside the modules
 S-Emulator/.idea/
